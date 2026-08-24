@@ -1,0 +1,24 @@
+# Datos pesados - viven en Drive, no en git
+proyecto/datos/
+*.h5
+*.hdf5
+*.ckpt
+*.pth
+
+# LaTeX auxiliares (si no usas Overleaf sync)
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Sistema
+.DS_Store
+Thumbs.db

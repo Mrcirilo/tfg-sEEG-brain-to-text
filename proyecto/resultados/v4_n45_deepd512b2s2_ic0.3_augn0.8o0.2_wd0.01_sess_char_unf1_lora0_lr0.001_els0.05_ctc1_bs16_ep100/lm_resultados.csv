@@ -1,0 +1,5 @@
+exp_tag,metodo,alpha,beta,cer,wer,n_trials
+v4_n45_deepd512b2s2_ic0.3_augn0.8o0.2_wd0.01_sess_char_unf1_lora0_lr0.001_els0.05_ctc1_bs16_ep100,greedy,,,0.5091946236078122,0.8052350039294185,1426
+v4_n45_deepd512b2s2_ic0.3_augn0.8o0.2_wd0.01_sess_char_unf1_lora0_lr0.001_els0.05_ctc1_bs16_ep100,2-grama,0.6,3.0,0.5018949317562301,0.7087168767898493,1426
+v4_n45_deepd512b2s2_ic0.3_augn0.8o0.2_wd0.01_sess_char_unf1_lora0_lr0.001_els0.05_ctc1_bs16_ep100,3-grama,0.6,3.0,0.5064575961712631,0.7180167984670501,1426
+v4_n45_deepd512b2s2_ic0.3_augn0.8o0.2_wd0.01_sess_char_unf1_lora0_lr0.001_els0.05_ctc1_bs16_ep100,oraculo,,,0.48549094484764643,0.740966178446584,1426

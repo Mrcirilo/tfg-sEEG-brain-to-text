@@ -1,0 +1,422 @@
+%==============================================================================
+%  PLANTILLA TFG — Trabajo de Fin de Grado
+%  Adaptación de OWSM con LoRA a señales sEEG (Brain-to-Text '25)
+%  Autor: Kiril Ivaylov Tzenkov — Grado en Ciencia de Datos (UPV)
+%
+%  Compilar con:  pdflatex TFG  ->  biber TFG  ->  pdflatex TFG  ->  pdflatex TFG
+%  (o simplemente usa latexmk -pdf TFG.tex)
+%==============================================================================
+
+\documentclass[12pt,a4paper,oneside]{report}
+
+%------------------------------------------------------------------ Idioma y fuentes
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+%------------------------------------------------------------------ Márgenes y espaciado
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parskip}{0.4em}
+
+%------------------------------------------------------------------ Matemáticas y tablas
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{siunitx}
+
+%------------------------------------------------------------------ Figuras
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage[font=small,labelfont=bf]{caption}
+\graphicspath{{figuras/}}
+
+%------------------------------------------------------------------ Código
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Paleta técnico-minimalista
+\definecolor{codebg}{HTML}{F7F7F8}
+\definecolor{codekw}{HTML}{222229}
+\definecolor{codecomment}{HTML}{6A737D}
+\definecolor{codestring}{HTML}{C7254E}
+\definecolor{accent}{HTML}{F5A623}
+
+\lstdefinestyle{tfg}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestring},
+  numbers=left,
+  numberstyle=\tiny\color{codecomment},
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{codecomment!40},
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  captionpos=b,
+  xleftmargin=12pt,
+  framexleftmargin=12pt,
+}
+\lstset{style=tfg}
+
+%------------------------------------------------------------------ Enlaces y referencias
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=accent,
+  pdftitle={TFG - Adaptacion de OWSM a senales sEEG},
+  pdfauthor={Kiril Ivaylov Tzenkov},
+}
+\usepackage[noabbrev,spanish]{cleveref}
+
+%------------------------------------------------------------------ Bibliografía (biblatex + biber)
+\usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
+\addbibresource{referencias.bib}
+
+%------------------------------------------------------------------ Encabezados
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%------------------------------------------------------------------ Datos del trabajo (EDITAR)
+\newcommand{\tfgtitulo}{Adaptación del modelo OWSM mediante LoRA para la decodificación de señales sEEG en el reto Brain-to-Text '25}
+\newcommand{\tfgautor}{Kiril Ivaylov Tzenkov}
+\newcommand{\tfgtutor}{Nombre del Tutor}
+\newcommand{\tfgcotutor}{Nombre del Cotutor}
+\newcommand{\tfggrado}{Grado en Ciencia de Datos}
+\newcommand{\tfgcurso}{2025--2026}
+
+%==============================================================================
+\begin{document}
+%==============================================================================
+
+%------------------------------------------------------------------ PORTADA
+\begin{titlepage}
+  \centering
+  \vspace*{1cm}
+
+  % \includegraphics[width=0.45\textwidth]{logo_upv.png}\par\vspace{1cm}
+
+  {\scshape\large Universitat Politècnica de València\par}
+  {\scshape Escuela Técnica Superior de Ingeniería Informática\par}
+  \vspace{0.5cm}
+  {\large \tfggrado\par}
+  \vspace{2.5cm}
+
+  \rule{\linewidth}{0.5pt}\par\vspace{0.6cm}
+  {\huge\bfseries \tfgtitulo \par}
+  \vspace{0.6cm}
+  \rule{\linewidth}{0.5pt}\par
+
+  \vspace{1cm}
+  {\large Trabajo de Fin de Grado\par}
+
+  \vfill
+
+  \begin{flushleft}
+  \textbf{Autor:} \tfgautor\par
+  \vspace{0.3cm}
+  \textbf{Tutor:} \tfgtutor\par
+  \textbf{Cotutor:} \tfgcotutor\par
+  \end{flushleft}
+
+  \vspace{0.8cm}
+  {\large Curso \tfgcurso\par}
+\end{titlepage}
+
+%------------------------------------------------------------------ Numeración romana para preliminares
+\pagenumbering{roman}
+
+%------------------------------------------------------------------ RESUMEN
+\chapter*{Resumen}
+\addcontentsline{toc}{chapter}{Resumen}
+\markboth{Resumen}{Resumen}
+
+Las interfaces cerebro-computador (BCI) para el habla buscan restaurar la comunicación en
+personas con pérdida de la capacidad de hablar. Este trabajo estudia la viabilidad de
+adaptar OWSM, un modelo de reconocimiento de voz pre-entrenado de propósito general,
+a la decodificación de señales intracorticales (sEEG) del reto \textit{Brain-to-Text '25}.
+Mediante la eliminación del \textit{frontend} acústico, la incorporación de una proyección
+lineal del espacio de \textit{features} neuronales y el ajuste fino mediante LoRA, se evalúa
+en qué medida un modelo de habla puede transferirse a un dominio para el que no fue concebido.
+% TODO: completar con los resultados principales y la conclusión cuantitativa.
+
+\vspace{0.5cm}
+\noindent\textbf{Palabras clave:} interfaz cerebro-computador, sEEG, decodificación neuronal, OWSM, LoRA, ajuste fino.
+
+%------------------------------------------------------------------ ABSTRACT
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\markboth{Abstract}{Abstract}
+
+Speech brain–computer interfaces (BCIs) aim to restore communication for people who have
+lost the ability to speak. This work investigates the feasibility of adapting OWSM, a
+general-purpose pre-trained speech recognition model, to decode intracortical (sEEG)
+signals from the \textit{Brain-to-Text '25} challenge. By removing the acoustic frontend,
+introducing a linear projection of the neural feature space, and applying LoRA fine-tuning,
+we assess to what extent a speech model can be transferred to a domain it was not designed for.
+% TODO: complete with main results and quantitative conclusion.
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} brain–computer interface, sEEG, neural decoding, OWSM, LoRA, fine-tuning.
+
+%------------------------------------------------------------------ ÍNDICES
+\tableofcontents
+\listoffigures
+\listoftables
+
+%------------------------------------------------------------------ CUERPO: numeración arábiga
+\cleardoublepage
+\pagenumbering{arabic}
+
+%==============================================================================
+\chapter{Introducción}
+\label{cap:introduccion}
+%==============================================================================
+
+\section{Motivación clínica}
+\label{sec:motivacion}
+% Comunicación asistida, ELA, parálisis. ¿Por qué importa este problema?
+% Contextualiza con la magnitud del problema (número de pacientes, impacto vital).
+
+\section{Objetivos del trabajo}
+\label{sec:objetivos}
+% Objetivo general + objetivos específicos en lista.
+\begin{itemize}
+  \item Objetivo específico 1.
+  \item Objetivo específico 2.
+  \item Objetivo específico 3.
+\end{itemize}
+
+% Recomendación: enmarca esto como un ESTUDIO DE VIABILIDAD, no como un
+% sistema que compite con el estado del arte. La pregunta de investigación es
+% "¿es posible adaptar OWSM con LoRA a sEEG, y qué factores determinan el resultado?"
+
+\section{Estructura del documento}
+\label{sec:estructura}
+% Breve descripción de cada capítulo (un párrafo).
+
+%==============================================================================
+\chapter{Estado del arte}
+\label{cap:estado-arte}
+%==============================================================================
+
+\section{Interfaces cerebro-computador para el habla}
+\label{sec:bci-panorama}
+
+\section{Señales intracorticales: sEEG, ECoG y EEG}
+\label{sec:senales}
+% Comparativa de modalidades: resolución espacial/temporal, invasividad.
+
+\section{Enfoques de decodificación: cascaded vs. end-to-end}
+\label{sec:enfoques}
+
+\section{Modelos de habla pre-entrenados reutilizados para BCI}
+\label{sec:modelos-preentrenados}
+% Whisper, OWSM, WavLM... y por qué tiene sentido reutilizarlos.
+
+\section{El reto Brain-to-Text '25}
+\label{sec:reto-b2t}
+% Descripción del challenge, métricas oficiales, mejores resultados publicados.
+% Aquí reconoces honestamente la brecha con el SOTA.
+
+%==============================================================================
+\chapter{Dataset y problema}
+\label{cap:dataset}
+%==============================================================================
+
+\section{Descripción del dataset B2T'25}
+\label{sec:descripcion-dataset}
+
+\section{Estructura de los datos sEEG}
+\label{sec:estructura-datos}
+% Canales, timesteps, features (T, 512), formato HDF5, sesiones, splits.
+
+\section{Distribución de transcripciones y vocabulario}
+\label{sec:vocabulario}
+
+\section{Análisis exploratorio de datos}
+\label{sec:eda}
+% Distribución temporal, variabilidad inter-sesión, correlación feature-canal.
+% Esta sección da solidez a todo lo que viene después. No la subestimes.
+
+%==============================================================================
+\chapter{Arquitectura del sistema}
+\label{cap:arquitectura}
+%==============================================================================
+
+\section{OWSM v3.1 E-Branchformer}
+\label{sec:owsm}
+% Descripción de la arquitectura y motivación de su elección.
+
+\section{Adaptación de la entrada: eliminación del frontend acústico}
+\label{sec:adaptacion-entrada}
+
+\section{Proyección de features sEEG al espacio del encoder}
+\label{sec:proyeccion}
+
+\section{Ajuste fino mediante LoRA}
+\label{sec:lora}
+% Fundamentos teóricos + configuración (módulos, rango, parámetros entrenables).
+
+\begin{table}[H]
+  \centering
+  \caption{Parámetros del modelo: totales vs. entrenables.}
+  \label{tab:parametros}
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Componente} & \textbf{Parámetros} & \textbf{\% del total} \\
+    \midrule
+    Modelo completo (OWSM)      & --- & 100\,\% \\
+    Proyección lineal (nueva)   & --- & --- \\
+    Adaptadores LoRA            & --- & --- \\
+    \midrule
+    \textbf{Total entrenable}   & --- & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Comparación con alternativas}
+\label{sec:alternativas}
+% Por qué no Whisper, por qué no entrenar desde cero.
+
+%==============================================================================
+\chapter{Metodología experimental}
+\label{cap:metodologia}
+%==============================================================================
+
+\section{Entorno y recursos computacionales}
+\label{sec:entorno}
+% Kaggle Notebooks, GPU T4, ESPnet-EZ, limitaciones de hardware.
+
+\section{Preprocesado de señales}
+\label{sec:preprocesado}
+% Normalización z-score por trial, manejo de longitudes variables.
+
+\section{Protocolo de entrenamiento}
+\label{sec:protocolo}
+% Hiperparámetros, splits, criterio de parada.
+
+\section{Métricas de evaluación}
+\label{sec:metricas}
+% WER, CER, BLEU. Definición formal de cada una.
+
+\begin{equation}
+  \mathrm{WER} = \frac{S + D + I}{N}
+  \label{eq:wer}
+\end{equation}
+% donde S = sustituciones, D = eliminaciones, I = inserciones, N = palabras de referencia.
+
+\section{Diseño de experimentos}
+\label{sec:experimentos}
+
+\begin{table}[H]
+  \centering
+  \caption{Resumen de los experimentos realizados.}
+  \label{tab:experimentos}
+  \begin{tabular}{cll}
+    \toprule
+    \textbf{Exp.} & \textbf{Descripción} & \textbf{Objetivo} \\
+    \midrule
+    0 & OWSM sin adaptación        & Baseline / referencia \\
+    1 & Proyección + LoRA          & Sistema propuesto \\
+    2 & Ablación de LoRA           & Aportación de LoRA \\
+    3 & Variación de normalización & Sensibilidad al preprocesado \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% Ejemplo de inclusión de código:
+% \begin{lstlisting}[language=Python,caption={Carga del modelo OWSM con ESPnet-EZ.}]
+% import espnetez as ez
+% ...
+% \end{lstlisting}
+
+%==============================================================================
+\chapter{Resultados y análisis}
+\label{cap:resultados}
+%==============================================================================
+
+\section{Resultados cuantitativos}
+\label{sec:resultados-cuant}
+
+\begin{table}[H]
+  \centering
+  \caption{Resultados por experimento.}
+  \label{tab:resultados}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Experimento} & \textbf{WER} $\downarrow$ & \textbf{CER} $\downarrow$ & \textbf{BLEU} $\uparrow$ \\
+    \midrule
+    Baseline (Exp. 0)    & --- & --- & --- \\
+    Propuesta (Exp. 1)   & --- & --- & --- \\
+    Sin LoRA (Exp. 2)    & --- & --- & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Análisis de errores}
+\label{sec:analisis-errores}
+% Análisis cualitativo: tipos de error, palabras frecuentes, alucinaciones.
+
+\section{Comportamiento por sesión}
+\label{sec:por-sesion}
+
+\section{Curvas de entrenamiento}
+\label{sec:curvas}
+% Overfitting con dataset pequeño y modelo grande: documentar y explicar.
+
+\section{Discusión}
+\label{sec:discusion}
+% ¿Qué explica el rendimiento obtenido?
+
+%==============================================================================
+\chapter{Limitaciones y trabajo futuro}
+\label{cap:limitaciones}
+%==============================================================================
+
+\section{Limitaciones computacionales}
+\section{Limitaciones del enfoque (dominio cruzado audio\,$\rightarrow$\,sEEG)}
+\section{Líneas de trabajo futuro}
+
+%==============================================================================
+\chapter{Conclusiones}
+\label{cap:conclusiones}
+%==============================================================================
+
+% Cierre honesto: qué se ha demostrado, qué se ha aprendido, sin disculparse
+% por las limitaciones de un estudio de viabilidad.
+
+%------------------------------------------------------------------ BIBLIOGRAFÍA
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliografía}
+\printbibliography[title={Bibliografía}]
+
+%------------------------------------------------------------------ ANEXOS
+\appendix
+\chapter{Código del pipeline de entrenamiento}
+\label{anexo:codigo}
+
+\chapter{Configuraciones de ESPnet-EZ}
+\label{anexo:config}
+
+\chapter{Análisis exploratorio adicional}
+\label{anexo:eda}
+
+%==============================================================================
+\end{document}
+%==============================================================================

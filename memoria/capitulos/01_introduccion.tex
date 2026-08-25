@@ -1,0 +1,135 @@
+% =====================================================================
+%  CAPÍTULO 1 — INTRODUCCIÓN
+%  TFG · Decodificación de actividad neuronal a texto mediante la
+%        adaptación de un modelo de habla preentrenado (OWSM)
+% =====================================================================
+% NOTA DE TERMINOLOGÍA (leer antes de tocar nada):
+% Los datos del Brain-to-Text '25 NO son sEEG. Son registros
+% intracorticales obtenidos con cuatro matrices de microelectrodos de
+% alta densidad (64 canales cada una, 256 electrodos en total) en la
+% corteza motora del habla. Si en algún sitio has escrito sEEG,
+% cámbialo. Ver la nota que te he dejado en el chat.
+% =====================================================================
+
+\chapter{Introducción}
+\label{cap:introduccion}
+
+\section{Contexto}
+\label{sec:contexto}
+
+La comunicación verbal es una de las capacidades más básicas de la vida en sociedad y, sin embargo, puede perderse por completo mientras el resto de las funciones cognitivas permanecen intactas. Enfermedades neurodegenerativas como la esclerosis lateral amiotrófica (ELA), los ictus de tronco encefálico o determinadas lesiones medulares altas pueden provocar disartria severa, anartria o incluso el síndrome de cautiverio (\textit{locked-in syndrome}): un estado en el que la persona conserva la conciencia y el lenguaje, pero carece de la vía motora necesaria para articularlo \cite{card2024}. El intento de hablar sigue produciéndose en la corteza motora; lo que falla es el músculo, no el mensaje.
+
+Las tecnologías de apoyo a la comunicación actualmente disponibles, como los teclados controlados por seguimiento ocular, permiten sortear parcialmente esa barrera, pero a un coste elevado en velocidad y esfuerzo: sus tasas de comunicación se sitúan en el orden de unas pocas palabras por minuto, frente a las aproximadamente 150 palabras por minuto del habla conversacional \cite{willett2023}. Esa diferencia de más de un orden de magnitud no es un detalle técnico, sino la distancia que separa el poder deletrear una necesidad del poder mantener una conversación.
+
+Las interfaces cerebro-computador (\textit{Brain-Computer Interfaces}, BCI) abordan el problema desde el otro extremo del canal: en lugar de aprovechar el residuo motor que le quede al usuario, registran directamente la actividad cortical asociada a la intención y la traducen a una acción externa. Una BCI se compone, de forma general, de cuatro etapas: adquisición de la señal neuronal, extracción de características, decodificación mediante un modelo aprendido y realimentación al usuario. Las tecnologías de adquisición se ordenan en un compromiso claro entre invasividad y calidad de señal, que va desde la electroencefalografía (EEG) de superficie, no invasiva pero de baja relación señal-ruido y escasa resolución espacial, hasta los registros intracorticales con matrices de microelectrodos implantadas en el tejido, que resuelven la actividad de poblaciones neuronales locales y son, hoy por hoy, la única modalidad con la que se han alcanzado prestaciones compatibles con una conversación \cite{willett2023,card2024}.
+
+% TODO: si quieres, aquí encaja una figura del pipeline genérico de una BCI
+% (adquisición -> características -> decodificador -> salida).
+
+\section{Del control motor al habla: los sistemas \textit{brain-to-text}}
+\label{sec:brain-to-text}
+
+Durante la última década, las BCI intracorticales han pasado de controlar cursores y brazos robóticos a decodificar lenguaje. Un primer salto cualitativo se produjo al decodificar la escritura manual imaginada, alcanzando unos 90 caracteres por minuto en un participante con tetraplejia \cite{willett2021}. Poco después, dos trabajos simultáneos demostraron la decodificación del habla intentada: uno mediante electrocorticografía \cite{metzger2023} y otro mediante matrices intracorticales en la corteza premotora ventral, con una tasa de error por palabra (\textit{Word Error Rate}, WER) del \SI{23.8}{\percent} sobre un vocabulario de 125.000 palabras a unas 62 palabras por minuto \cite{willett2023}.
+
+El referente actual, y el que da origen a los datos empleados en este trabajo, es la neuroprótesis descrita por Card \textit{et al.} \cite{card2024}: en un participante con ELA avanzada y disartria severa, el sistema alcanzó un \SI{99.6}{\percent} de acierto con un vocabulario de 50 palabras el primer día de uso y un \SI{90.2}{\percent} sobre un vocabulario de 125.000 palabras el segundo día, sosteniendo posteriormente en torno al \SI{97.5}{\percent} de acierto durante más de ocho meses y permitiendo conversaciones autónomas a unas 32 palabras por minuto a lo largo de más de 248 horas acumuladas de uso. Estos resultados sitúan el problema en una fase distinta: la viabilidad clínica ya no está en discusión, y la pregunta se desplaza hacia la eficiencia, la reproducibilidad y la generalización de los decodificadores.
+
+Resulta especialmente relevante para este trabajo la forma que adopta la arquitectura de estos sistemas. Prácticamente todos ellos comparten la misma estructura: una secuencia de características neuronales muestreada a intervalos regulares se procesa mediante una red recurrente o un \textit{transformer}, se entrena con una pérdida CTC (\textit{Connectionist Temporal Classification}) \cite{graves2006ctc} para emitir una secuencia de fonemas, y esa secuencia se convierte en texto mediante un modelo de lenguaje $n$-grama y, en los sistemas más recientes, un reordenamiento posterior con un modelo de lenguaje de gran tamaño. Es, punto por punto, la arquitectura clásica del reconocimiento automático del habla (\textit{Automatic Speech Recognition}, ASR), con la única diferencia de que la entrada no es un espectrograma sino actividad cortical.
+
+Esa coincidencia estructural plantea una pregunta natural que este trabajo toma como punto de partida. En procesamiento del lenguaje, visión por computador y reconocimiento del habla, el paradigma dominante consiste en preentrenar un modelo de gran capacidad sobre cantidades masivas de datos y adaptarlo después a la tarea concreta con una fracción mínima de datos y cómputo. En decodificación neuronal, en cambio, lo habitual sigue siendo entrenar el decodificador desde cero para cada participante, precisamente en el escenario donde los datos son más caros de obtener: cada hora de entrenamiento exige la colaboración activa de una persona enferma en una sesión clínica supervisada. Si un codificador de habla preentrenado hubiera aprendido algo genuinamente transferible sobre la estructura temporal de la producción del lenguaje, ese conocimiento debería poder reutilizarse aunque la modalidad de entrada cambie por completo.
+
+\section{Planteamiento del trabajo}
+\label{sec:planteamiento}
+
+Este Trabajo de Fin de Grado estudia la viabilidad de reutilizar un modelo de reconocimiento del habla preentrenado a gran escala como codificador de señal neuronal para una tarea \textit{brain-to-text}. Concretamente, se adapta OWSM v3.1 (\textit{Open Whisper-style Speech Model}) \cite{peng2024owsmv31}, una alternativa abierta y reproducible a Whisper \cite{radford2023whisper} construida sobre la arquitectura E-Branchformer \cite{kim2023ebranchformer}, para decodificar a texto la actividad intracortical del conjunto de datos público del Brain-to-Text~'25 \cite{b2t25,card2024}, registrada en el participante T15 mediante 256 microelectrodos a lo largo de 45 sesiones y 20 meses.
+
+La adaptación requiere resolver un desajuste de modalidad: el modelo espera un banco de filtros mel derivado de audio y recibe, en su lugar, un vector de 512 características neuronales por ventana temporal. Para salvarlo se sustituye el \textit{frontend} acústico original por un módulo adaptador entrenado desde cero, se antepone una transformación afín específica de cada sesión que absorbe la deriva de la señal entre días de registro, y se entrena el conjunto con un objetivo CTC puro, prescindiendo del decodificador autorregresivo del modelo original. Sobre esa base se estudian, mediante ablaciones controladas, las cuatro decisiones de diseño que determinan el comportamiento del sistema: cuánto aporta realmente el preentrenamiento, a qué granularidad lingüística conviene leer la corteza, cuántos parámetros hace falta adaptar y qué parte del conocimiento lingüístico acaba residiendo en el decodificador y qué parte en el modelo de lenguaje externo.
+
+Conviene precisar desde el principio el carácter del trabajo. No se persigue competir con los sistemas que encabezan el \textit{benchmark} oficial, que recurren a conjuntos de decenas de modelos y a modelos de lenguaje de gran tamaño para la fusión final de hipótesis, y cuyos requisitos de cómputo y memoria exceden con mucho los recursos disponibles aquí. El objetivo es distinto y complementario: producir evidencia experimental limpia y reproducible sobre \textit{qué transfiere y qué no} de un modelo de habla a una modalidad que no es habla, obtenida íntegramente con herramientas de código abierto, datos públicos y una única GPU de gama media.
+
+\section{Motivación}
+\label{sec:motivacion}
+
+\subsection{Motivación clínica y social}
+
+La ELA presenta una incidencia aproximada de 2 casos por cada 100.000 habitantes y año en poblaciones europeas, y la mayoría de las personas afectadas desarrolla algún grado de deterioro del habla a lo largo de la enfermedad \cite{longinetti2019}. % TODO: verificar esta cifra y la referencia antes de la entrega.
+A esta población se suman los supervivientes de ictus de tronco y otras lesiones neurológicas que cursan con anartria. Para todas ellas, la pérdida del habla no supone únicamente una limitación funcional: supone la pérdida de la autonomía en la relación con los demás, y aparece de forma sistemática entre las prioridades más valoradas por los propios pacientes cuando se les pregunta qué función desearían recuperar.
+
+Las neuroprótesis del habla han demostrado ya que esa capacidad puede restituirse con calidad conversacional \cite{card2024}. El cuello de botella se ha desplazado, por tanto, hacia cuestiones de ingeniería que condicionan su despliegue real: cuántos datos de calibración necesita el sistema, cuánto tarda en estar operativo tras el implante, y en qué medida sigue funcionando en una sesión nueva, un día distinto, sin recalibración. Cualquier avance que reduzca la cantidad de datos que hay que pedirle a un paciente enfermo tiene un impacto clínico directo, y el aprendizaje por transferencia es, precisamente, la familia de técnicas diseñada para ello.
+
+\subsection{Motivación científica y técnica}
+
+Desde el punto de vista técnico, el interés del trabajo reside en que plantea una pregunta que rara vez se formula de manera explícita: ¿qué es exactamente lo que aprende un modelo de habla preentrenado? La respuesta habitual, que aprende a reconocer voz, es demasiado gruesa. Un modelo como OWSM contiene, al menos, tres tipos de conocimiento superpuestos: un \textit{frontend} acústico especializado en la señal de audio, un codificador que modela dependencias temporales de largo alcance en secuencias con estructura de lenguaje, y una cabeza de salida sobre un vocabulario de subpalabras que incorpora estadística ortográfica del inglés. Sustituir la entrada por actividad cortical desacopla estos tres componentes y permite medirlos por separado. Que las unidades de salida a nivel de carácter superen a las subpalabras preentrenadas, por ejemplo, no es un contratiempo experimental, sino una medida informativa sobre dónde reside y dónde no reside el conocimiento transferible.
+
+Existe además un argumento neurocientífico que estructura buena parte de los experimentos. La corteza motora del habla codifica articulación, no ortografía. La unidad de salida a priori correcta es, por tanto, el fonema, y de hecho es la que utilizan tanto el sistema de referencia de este conjunto de datos como la práctica totalidad de las entradas del \textit{benchmark}, que seleccionan modelo por tasa de error de fonema. Comparar sistemáticamente distintas granularidades de salida sobre un mismo eje de evaluación permite contrastar esa hipótesis con datos propios en lugar de asumirla.
+
+\subsection{Motivación de accesibilidad y reproducibilidad}
+
+Los sistemas que encabezan actualmente el \textit{benchmark} combinan decenas de modelos entrenados con semillas distintas y emplean modelos de lenguaje de gran tamaño para la fusión de sus salidas; incluso el modelo de lenguaje $n$-grama oficial de la competición requiere una cantidad de memoria muy superior a la disponible en un entorno de trabajo estándar. Este trabajo se desarrolla íntegramente sobre datos públicos, bibliotecas de código abierto y una única GPU accesible mediante un servicio en la nube de bajo coste, y documenta de forma explícita el presupuesto de cómputo de cada experimento. Mostrar qué parte del problema sigue siendo abordable en esas condiciones tiene valor por sí mismo, tanto para grupos de investigación con recursos limitados como para el propio criterio de reproducibilidad de los resultados publicados.
+
+\subsection{Motivación personal}
+
+% TODO (Kiril): reescribe este párrafo entero con tus palabras. Te dejo un
+% andamiaje para que no partas de cero, pero esto tiene que sonar a ti.
+El interés personal por este trabajo surge de la confluencia de dos ámbitos que hasta ahora había abordado por separado a lo largo del grado: el procesamiento de señal y el aprendizaje profundo aplicado a secuencias, por un lado, y la aplicación de ambos a un problema con una finalidad médica tangible, por otro. Enfrentarse a un problema en el que el modelo no funciona hasta que se entienden simultáneamente la física de la señal, la arquitectura del modelo y la naturaleza lingüística de la salida ha resultado ser, además, la mejor forma posible de cerrar la formación del grado.
+
+\section{Objetivos}
+\label{sec:objetivos}
+
+\subsection{Objetivo general}
+
+El objetivo general de este trabajo es \textbf{evaluar la viabilidad de reutilizar un modelo de reconocimiento del habla preentrenado a gran escala (OWSM v3.1) como codificador de actividad neuronal intracortical en una tarea de decodificación \textit{brain-to-text}}, cuantificando de forma experimental qué componentes de dicho preentrenamiento transfieren a una modalidad no acústica, bajo qué configuración de adaptación lo hacen, y cómo se reparte el conocimiento lingüístico entre el decodificador neuronal y el modelo de lenguaje externo.
+
+\subsection{Preguntas de investigación}
+
+El objetivo general se concreta en tres preguntas de investigación que vertebran el diseño experimental y la discusión de resultados:
+
+\begin{description}
+  \item[PI1. Transferencia.] ¿Qué parte de un modelo de habla preentrenado transfiere a una modalidad que no es habla? Es decir, ¿aporta el preentrenamiento de OWSM una ventaja medible frente a la misma arquitectura inicializada aleatoriamente, y cuántos parámetros del codificador es necesario adaptar para materializarla?
+  \item[PI2. Granularidad.] ¿A qué granularidad lingüística puede leerse la corteza motora del habla? ¿Cómo se comportan las unidades de salida de carácter, fonema, subpalabra y palabra cuando se comparan sobre un mismo eje de evaluación, y qué papel juega en ello el número de ejemplos de entrenamiento disponibles por clase?
+  \item[PI3. Localización del conocimiento lingüístico.] ¿Dónde reside el conocimiento lingüístico del sistema completo, en el codificador neuronal o en el modelo de lenguaje externo? ¿Es el modelo de lenguaje un mero reordenador de hipótesis acústicas o debe guiar activamente la búsqueda durante la decodificación?
+\end{description}
+
+\subsection{Objetivos específicos}
+
+Para dar respuesta a lo anterior se plantean los siguientes objetivos específicos, cada uno asociado a un bloque experimental concreto:
+
+\begin{enumerate}[label=\textbf{OE\arabic*.}, leftmargin=*, itemsep=0.4em]
+
+  \item \textbf{Construir una cadena de procesado y entrenamiento reproducible} que permita ingerir los registros neuronales del Brain-to-Text~'25 en formato HDF5 y entrenar sobre ellos un modelo OWSM mediante ESPnet-EZ \cite{someki2024espnetez,watanabe2018espnet}, incluyendo la verificación de integridad de los datos, la parametrización completa de cada experimento mediante identificadores trazables y el registro sistemático de resultados y curvas de entrenamiento.
+
+  \item \textbf{Diseñar el módulo de adaptación de modalidad} que sustituya al \textit{frontend} acústico del modelo, de forma que las 512 características neuronales por ventana temporal se proyecten al espacio de entrada esperado por el codificador, e incorporar un mecanismo de normalización por sesión que compense la deriva de la señal entre días de registro.
+
+  \item \textbf{Cuantificar la aportación real del preentrenamiento} (PI1) mediante un control científico explícito que compare, con presupuesto de cómputo idéntico, tres condiciones: codificador preentrenado y ajustado, codificador preentrenado y congelado, y codificador con inicialización aleatoria y ajustado.
+
+  \item \textbf{Determinar la granularidad de salida más adecuada} (PI2) comparando objetivos CTC de carácter, fonema, subpalabra específica del corpus, palabra de vocabulario cerrado y subpalabra original del modelo preentrenado, evaluando todas las variantes sobre la tasa de error por palabra del texto finalmente decodificado, que constituye el único eje de comparación común entre unidades distintas.
+
+  \item \textbf{Caracterizar el compromiso entre capacidad y coste del módulo adaptador}, comparando arquitecturas de complejidad creciente bajo una receta de entrenamiento idéntica y reportando, junto al rendimiento, el número de parámetros y el tiempo de entrenamiento por época, de modo que las comparaciones queden libres de las confusiones experimentales presentes en las primeras iteraciones del trabajo.
+
+  \item \textbf{Analizar la relación entre parámetros entrenables y rendimiento} (PI1) mediante estrategias de adaptación de coste creciente, desde la adaptación de bajo rango (LoRA) \cite{hu2022lora} sobre un codificador congelado hasta el descongelado progresivo de sus capas superiores, obteniendo una curva que permita identificar el punto de operación más eficiente.
+
+  \item \textbf{Evaluar la generalización a sesiones no observadas}, escenario que reproduce la situación real de despliegue clínico, midiendo la degradación del sistema sobre sesiones excluidas del entrenamiento y cuantificando el compromiso que introduce la capa específica de sesión, así como el coste de una adaptación mínima a una sesión nueva.
+
+  \item \textbf{Determinar el papel del modelo de lenguaje externo} (PI3) integrando un decodificador CTC por búsqueda en haz con un modelo de lenguaje $n$-grama \cite{heafield2011kenlm}, explorando el espacio de sus hiperparámetros de fusión, comparando distintos órdenes del modelo y contrastando su rendimiento con el límite superior que impone la lista de hipótesis acústicas (análisis \textit{oracle}), lo que permite discriminar si el modelo de lenguaje reordena o guía la búsqueda.
+
+  \item \textbf{Consolidar la configuración final y estimar su variabilidad}, entrenando el mejor sistema resultante con varias semillas de inicialización para reportar los resultados con una medida de dispersión que permita distinguir las diferencias reales entre configuraciones del ruido experimental, y situar dichos resultados en el contexto del sistema de referencia oficial del conjunto de datos.
+
+\end{enumerate}
+
+\subsection{Alcance y limitaciones}
+\label{sec:alcance}
+
+Para delimitar con precisión qué se puede y qué no se puede concluir de este trabajo, se hacen explícitas desde el inicio las siguientes restricciones:
+
+\begin{itemize}
+  \item \textbf{Un único participante.} Todos los experimentos se realizan sobre los datos del participante T15. Las conclusiones sobre transferencia y granularidad son, por tanto, específicas de este sujeto, de la localización de sus implantes y del inglés como lengua objetivo, y no pueden extrapolarse sin más a otros participantes o idiomas.
+  \item \textbf{Decodificación fuera de línea.} El sistema se evalúa en diferido sobre grabaciones ya adquiridas. No se aborda la ejecución en tiempo real ni la latencia percibida por el usuario, ambas condiciones necesarias para un uso conversacional.
+  \item \textbf{Presupuesto de cómputo acotado.} El trabajo se ejecuta sobre una única GPU de gama media en un entorno en la nube. Esto excluye por construcción las técnicas de conjunto de decenas de modelos y el uso de modelos de lenguaje de gran tamaño para la fusión de hipótesis, que son las que sostienen los primeros puestos del \textit{benchmark}. Los resultados absolutos deben leerse teniendo esto presente.
+  \item \textbf{Modelo de lenguaje propio.} El modelo de lenguaje $n$-grama oficial de la competición requiere una cantidad de memoria principal que excede la disponible en el entorno de trabajo, por lo que se entrena un modelo propio de orden reducido sobre las transcripciones del corpus. Esta restricción condiciona los valores absolutos de tasa de error por palabra, aunque no invalida las comparaciones relativas, que se realizan siempre con el mismo modelo de lenguaje.
+  \item \textbf{Ablaciones con presupuesto igualado, no hasta convergencia.} Las comparaciones entre configuraciones se realizan asignando a todas las variantes el mismo número de épocas y desactivando la parada temprana, de modo que la comparación sea justa. Los valores reportados en las ablaciones no corresponden, por tanto, al rendimiento máximo alcanzable por cada configuración, sino a su rendimiento bajo un presupuesto común.
+\end{itemize}
+
+\section{Estructura de la memoria}
+\label{sec:estructura}
+
+% TODO: ajusta esta lista a los títulos definitivos de tus capítulos.
+El resto de la memoria se organiza como sigue. El \cref{cap:estado-del-arte} revisa el estado del arte en neuroprótesis del habla y en la adaptación de modelos de habla preentrenados, y sitúa la aportación de este trabajo respecto a ambas líneas. El \cref{cap:datos} describe el conjunto de datos empleado, su proceso de adquisición y sus particularidades, y lo compara con los conjuntos de datos alternativos disponibles en el campo. El \cref{cap:metodologia} detalla la arquitectura del sistema propuesto, la función de pérdida empleada y el procedimiento de entrenamiento y evaluación. El \cref{cap:experimentos} presenta el diseño experimental, organizado en bloques que responden a cada una de las preguntas de investigación planteadas. El \cref{cap:resultados} recoge y discute los resultados obtenidos. Finalmente, el \cref{cap:conclusiones} resume las conclusiones del trabajo y apunta las líneas de continuación que se consideran más prometedoras.

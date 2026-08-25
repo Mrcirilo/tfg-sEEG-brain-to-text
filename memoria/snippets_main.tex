@@ -1,0 +1,105 @@
+% =====================================================================
+%  SNIPPETS PARA TU main.tex
+%  No compiles este archivo: son trozos para copiar y pegar.
+% =====================================================================
+
+
+% ---------------------------------------------------------------------
+% (1) AÑADIR AL PREÁMBULO — paquetes que necesita el capítulo 1
+% ---------------------------------------------------------------------
+\usepackage{enumitem}     % listas con etiquetas personalizadas (OE1, OE2...)
+\usepackage{csquotes}     % biblatex se queja si no está, con babel es obligatorio
+
+
+% ---------------------------------------------------------------------
+% (2) ARREGLOS DE LOS AVISOS QUE SALEN EN TU main.log
+% ---------------------------------------------------------------------
+
+% 2a. "Package biblatex Warning: 'babel' detected but 'csquotes' missing"
+%     -> csquotes SIEMPRE antes de biblatex:
+%        \usepackage{csquotes}
+%        \usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+
+% 2b. "Package fancyhdr Warning: \headheight is too small (12.0pt)"
+\setlength{\headheight}{14.5pt}
+\addtolength{\topmargin}{-2.5pt}
+
+% 2c. Decimales con coma en las cifras de siunitx (memoria en español)
+\sisetup{output-decimal-marker={,}}
+
+% 2d. "Font shape T1/lmr/bx/sc undefined" -> versalitas en negrita no existen
+%     en Latin Modern. O quitas la negrita, o cargas una fuente que sí las
+%     tenga. La opción más simple:
+%     \usepackage{newtxtext}   % en lugar de lmodern
+%     Si te gusta cómo se ve ahora, ignora el aviso: es cosmético.
+
+
+% ---------------------------------------------------------------------
+% (3) DIVIDIR LA MEMORIA EN VARIOS FICHEROS
+%     Estructura de carpetas recomendada:
+%
+%     memoria/
+%       main.tex
+%       bibliografia.bib
+%       portada.tex
+%       capitulos/
+%         01_introduccion.tex
+%         02_estado_del_arte.tex
+%         03_datos.tex
+%         04_metodologia.tex
+%         05_experimentos.tex
+%         06_resultados.tex
+%         07_conclusiones.tex
+%         A_anexos.tex
+%       figuras/
+%
+%     Y el cuerpo de main.tex queda así:
+% ---------------------------------------------------------------------
+
+\begin{document}
+
+\input{portada}                       % \input = pegar tal cual, sin salto de página
+
+\frontmatter                          % (si usas book; con report, usa \pagenumbering{roman})
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter                           % (con report: \pagenumbering{arabic})
+
+\include{capitulos/01_introduccion}   % \include = capítulo, empieza en página nueva
+\include{capitulos/02_estado_del_arte}
+\include{capitulos/03_datos}
+\include{capitulos/04_metodologia}
+\include{capitulos/05_experimentos}
+\include{capitulos/06_resultados}
+\include{capitulos/07_conclusiones}
+
+\appendix
+\include{capitulos/A_anexos}
+
+\printbibliography[heading=bibintoc,title={Bibliografía}]
+
+\end{document}
+
+
+% ---------------------------------------------------------------------
+% (4) TRUCO: compilar solo el capítulo en el que estás trabajando
+%     Con \includeonly, LaTeX salta el resto pero mantiene numeración
+%     de páginas, referencias cruzadas y citas correctas.
+%     Lo pones en el PREÁMBULO y lo comentas cuando quieras el PDF entero:
+% ---------------------------------------------------------------------
+\includeonly{capitulos/01_introduccion}
+
+
+% ---------------------------------------------------------------------
+% (5) ETIQUETAS QUE TIENES QUE PONER EN CADA CAPÍTULO
+%     El capítulo 1 las referencia con \cref{...}. Si no existen,
+%     te saldrán interrogantes en el PDF.
+% ---------------------------------------------------------------------
+% \chapter{Estado del arte}      \label{cap:estado-del-arte}
+% \chapter{Conjunto de datos}    \label{cap:datos}
+% \chapter{Metodología}          \label{cap:metodologia}
+% \chapter{Diseño experimental}  \label{cap:experimentos}
+% \chapter{Resultados}           \label{cap:resultados}
+% \chapter{Conclusiones}         \label{cap:conclusiones}

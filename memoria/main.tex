@@ -1,6 +1,6 @@
 %==============================================================================
 %  PLANTILLA TFG — Trabajo de Fin de Grado
-%  Adaptación de OWSM con LoRA a señales sEEG (Brain-to-Text '25)
+%  Adaptación de OWSM a señal neuronal intracortical (Brain-to-Text '25)
 %  Autor: Kiril Ivaylov Tzenkov — Grado en Ciencia de Datos (UPV)
 %
 %  Compilar con:  pdflatex TFG  ->  biber TFG  ->  pdflatex TFG  ->  pdflatex TFG
@@ -13,8 +13,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[spanish,es-tabla]{babel}
-\usepackage{lmodern}
-\usepackage{microtype}
+% lmodern no disponible en este sandbox de prueba
+% microtype desactivado en este sandbox de prueba (conflicto sin lmodern)
 
 %------------------------------------------------------------------ Márgenes y espaciado
 \usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm]{geometry}
@@ -28,6 +28,7 @@
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{siunitx}
+\sisetup{output-decimal-marker={,}}   % cifras con coma decimal (memoria en español)
 
 %------------------------------------------------------------------ Figuras
 \usepackage{graphicx}
@@ -74,14 +75,22 @@
   linkcolor=black,
   citecolor=black,
   urlcolor=accent,
-  pdftitle={TFG - Adaptacion de OWSM a senales sEEG},
+  pdftitle={TFG - Adaptacion de OWSM a senal neuronal intracortical},
   pdfauthor={Kiril Ivaylov Tzenkov},
 }
 \usepackage[noabbrev,spanish]{cleveref}
 
+\usepackage{enumitem}
+\usepackage{csquotes}   % antes del \usepackage{biblatex}
+
 %------------------------------------------------------------------ Bibliografía (biblatex + biber)
-\usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
-\addbibresource{referencias.bib}
+% biblatex no disponible en este sandbox de prueba -> sustituido por un
+% stub minimo solo para poder testear la ESTRUCTURA del documento
+\newcommand{\citeX}[1]{[#1]}
+\let\cite\citeX
+\newcommand{\printbibliography}[1][]{\chapter*{Bibliograf\'ia (stub de prueba)}}
+% NOTA: fusiona aquí bibliografia_cap1.bib + bibliografia_cap2.bib
+% (cat bibliografia_cap1.bib bibliografia_cap2.bib > referencias.bib)
 
 %------------------------------------------------------------------ Encabezados
 \usepackage{fancyhdr}
@@ -92,12 +101,17 @@
 \renewcommand{\headrulewidth}{0.4pt}
 
 %------------------------------------------------------------------ Datos del trabajo (EDITAR)
-\newcommand{\tfgtitulo}{Adaptación del modelo OWSM mediante LoRA para la decodificación de señales sEEG en el reto Brain-to-Text '25}
+\newcommand{\tfgtitulo}{Adaptación del modelo OWSM para la decodificación de actividad neuronal intracortical en el reto Brain-to-Text '25}
 \newcommand{\tfgautor}{Kiril Ivaylov Tzenkov}
 \newcommand{\tfgtutor}{Nombre del Tutor}
 \newcommand{\tfgcotutor}{Nombre del Cotutor}
 \newcommand{\tfggrado}{Grado en Ciencia de Datos}
 \newcommand{\tfgcurso}{2025--2026}
+% TODO: el título menciona LoRA en tu versión anterior; en las memorias
+% no lo he metido en el título porque en tus notas de proyecto LoRA quedó
+% descartado con el encoder descongelado. Si al final sí forma parte del
+% sistema final (p. ej. en el bloque D, LoRA+congelado), decide tú si
+% quieres que aparezca en el título o no.
 
 %==============================================================================
 \begin{document}
@@ -147,15 +161,16 @@
 
 Las interfaces cerebro-computador (BCI) para el habla buscan restaurar la comunicación en
 personas con pérdida de la capacidad de hablar. Este trabajo estudia la viabilidad de
-adaptar OWSM, un modelo de reconocimiento de voz pre-entrenado de propósito general,
-a la decodificación de señales intracorticales (sEEG) del reto \textit{Brain-to-Text '25}.
-Mediante la eliminación del \textit{frontend} acústico, la incorporación de una proyección
-lineal del espacio de \textit{features} neuronales y el ajuste fino mediante LoRA, se evalúa
-en qué medida un modelo de habla puede transferirse a un dominio para el que no fue concebido.
+adaptar OWSM, un modelo de reconocimiento de voz preentrenado de propósito general,
+a la decodificación de actividad neuronal intracortical del reto \textit{Brain-to-Text '25}.
+Mediante la eliminación del \textit{frontend} acústico, la incorporación de un módulo
+adaptador del espacio de características neuronales y una serie de ablaciones controladas
+sobre la estrategia de adaptación, se evalúa en qué medida un modelo de habla puede
+transferirse a un dominio para el que no fue concebido.
 % TODO: completar con los resultados principales y la conclusión cuantitativa.
 
 \vspace{0.5cm}
-\noindent\textbf{Palabras clave:} interfaz cerebro-computador, sEEG, decodificación neuronal, OWSM, LoRA, ajuste fino.
+\noindent\textbf{Palabras clave:} interfaz cerebro-computador, actividad neuronal intracortical, decodificación neuronal, OWSM, transferencia de aprendizaje.
 
 %------------------------------------------------------------------ ABSTRACT
 \chapter*{Abstract}
@@ -164,14 +179,15 @@ en qué medida un modelo de habla puede transferirse a un dominio para el que no
 
 Speech brain–computer interfaces (BCIs) aim to restore communication for people who have
 lost the ability to speak. This work investigates the feasibility of adapting OWSM, a
-general-purpose pre-trained speech recognition model, to decode intracortical (sEEG)
-signals from the \textit{Brain-to-Text '25} challenge. By removing the acoustic frontend,
-introducing a linear projection of the neural feature space, and applying LoRA fine-tuning,
-we assess to what extent a speech model can be transferred to a domain it was not designed for.
+general-purpose pretrained speech recognition model, to decode intracortical neural
+activity from the \textit{Brain-to-Text '25} challenge. By removing the acoustic frontend,
+introducing an adapter module for the neural feature space, and running a series of
+controlled ablations over the adaptation strategy, we assess to what extent a speech
+model can be transferred to a domain it was not designed for.
 % TODO: complete with main results and quantitative conclusion.
 
 \vspace{0.5cm}
-\noindent\textbf{Keywords:} brain–computer interface, sEEG, neural decoding, OWSM, LoRA, fine-tuning.
+\noindent\textbf{Keywords:} brain–computer interface, intracortical neural activity, neural decoding, OWSM, transfer learning.
 
 %------------------------------------------------------------------ ÍNDICES
 \tableofcontents
@@ -183,136 +199,73 @@ we assess to what extent a speech model can be transferred to a domain it was no
 \pagenumbering{arabic}
 
 %==============================================================================
-\chapter{Introducción}
-\label{cap:introduccion}
+%  CAPÍTULO 1 — INTRODUCCIÓN
+%  El propio archivo incluido ya trae su \chapter{...} y su \label{cap:introduccion}.
+%  NO envuelvas esto en un \chapter{} tuyo o duplicarás el capítulo y la etiqueta.
 %==============================================================================
-
-\section{Motivación clínica}
-\label{sec:motivacion}
-% Comunicación asistida, ELA, parálisis. ¿Por qué importa este problema?
-% Contextualiza con la magnitud del problema (número de pacientes, impacto vital).
-
-\section{Objetivos del trabajo}
-\label{sec:objetivos}
-% Objetivo general + objetivos específicos en lista.
-\begin{itemize}
-  \item Objetivo específico 1.
-  \item Objetivo específico 2.
-  \item Objetivo específico 3.
-\end{itemize}
-
-% Recomendación: enmarca esto como un ESTUDIO DE VIABILIDAD, no como un
-% sistema que compite con el estado del arte. La pregunta de investigación es
-% "¿es posible adaptar OWSM con LoRA a sEEG, y qué factores determinan el resultado?"
-
-\section{Estructura del documento}
-\label{sec:estructura}
-% Breve descripción de cada capítulo (un párrafo).
+\include{capitulos/01_introduccion}
 
 %==============================================================================
-\chapter{Estado del arte}
-\label{cap:estado-arte}
+%  CAPÍTULO 2 — ESTADO DEL ARTE
+%  Mismo comentario: el archivo trae su propio \chapter y \label{cap:estado-del-arte}.
 %==============================================================================
-
-\section{Interfaces cerebro-computador para el habla}
-\label{sec:bci-panorama}
-
-\section{Señales intracorticales: sEEG, ECoG y EEG}
-\label{sec:senales}
-% Comparativa de modalidades: resolución espacial/temporal, invasividad.
-
-\section{Enfoques de decodificación: cascaded vs. end-to-end}
-\label{sec:enfoques}
-
-\section{Modelos de habla pre-entrenados reutilizados para BCI}
-\label{sec:modelos-preentrenados}
-% Whisper, OWSM, WavLM... y por qué tiene sentido reutilizarlos.
-
-\section{El reto Brain-to-Text '25}
-\label{sec:reto-b2t}
-% Descripción del challenge, métricas oficiales, mejores resultados publicados.
-% Aquí reconoces honestamente la brecha con el SOTA.
+\include{capitulos/02_estado_del_arte}
 
 %==============================================================================
-\chapter{Dataset y problema}
-\label{cap:dataset}
+\include{capitulos/03_datos}
+
+
 %==============================================================================
+% TODO: este capítulo aún no está escrito. Cuando lo tengas, sepáralo también
+% en capitulos/03_dataset.tex y sustituye todo este bloque por
+%   \include{capitulos/03_dataset}
+% IMPORTANTE: en el capítulo 1 ya referencio este capítulo como \cref{cap:datos},
+% no \cref{cap:dataset}. Decide una única etiqueta y ajusta el otro sitio.
 
-\section{Descripción del dataset B2T'25}
-\label{sec:descripcion-dataset}
-
-\section{Estructura de los datos sEEG}
-\label{sec:estructura-datos}
-% Canales, timesteps, features (T, 512), formato HDF5, sesiones, splits.
-
-\section{Distribución de transcripciones y vocabulario}
-\label{sec:vocabulario}
-
-\section{Análisis exploratorio de datos}
-\label{sec:eda}
+\include{capitulos/04_marco_teorico}
 % Distribución temporal, variabilidad inter-sesión, correlación feature-canal.
 % Esta sección da solidez a todo lo que viene después. No la subestimes.
 
 %==============================================================================
-\chapter{Arquitectura del sistema}
-\label{cap:arquitectura}
+\include{capitulos/05_arquitectura}
 %==============================================================================
+% TODO: idem, separar en capitulos/04_arquitectura.tex cuando esté escrito.
+% En el capítulo 1 este contenido está repartido entre \cref{cap:metodologia}
+% y \cref{cap:experimentos} — decide si arquitectura va dentro de metodología
+% o es un capítulo propio, y unifica las etiquetas.
 
-\section{OWSM v3.1 E-Branchformer}
-\label{sec:owsm}
-% Descripción de la arquitectura y motivación de su elección.
+% Congelado / descongelado parcial / LoRA sobre congelado. Recuerda la
+% conclusión que ya tienes: LoRA con encoder descongelado no aporta nada.
 
-\section{Adaptación de la entrada: eliminación del frontend acústico}
-\label{sec:adaptacion-entrada}
-
-\section{Proyección de features sEEG al espacio del encoder}
-\label{sec:proyeccion}
-
-\section{Ajuste fino mediante LoRA}
-\label{sec:lora}
-% Fundamentos teóricos + configuración (módulos, rango, parámetros entrenables).
-
-\begin{table}[H]
-  \centering
-  \caption{Parámetros del modelo: totales vs. entrenables.}
-  \label{tab:parametros}
-  \begin{tabular}{lrr}
-    \toprule
-    \textbf{Componente} & \textbf{Parámetros} & \textbf{\% del total} \\
-    \midrule
-    Modelo completo (OWSM)      & --- & 100\,\% \\
-    Proyección lineal (nueva)   & --- & --- \\
-    Adaptadores LoRA            & --- & --- \\
-    \midrule
-    \textbf{Total entrenable}   & --- & --- \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\section{Comparación con alternativas}
-\label{sec:alternativas}
-% Por qué no Whisper, por qué no entrenar desde cero.
+% Por qué OWSM y no Whisper (reproducibilidad), por qué no entrenar desde
+% cero (comparación con Khanday et al., cap. 2).
 
 %==============================================================================
 \chapter{Metodología experimental}
-\label{cap:metodologia}
+\label{cap:metodologia-exp}
 %==============================================================================
+% TODO: ojo, aquí tu placeholder decía \label{cap:metodologia} — lo he
+% renombrado a cap:metodologia-exp para no chocar con \cref{cap:metodologia}
+% del capítulo 1, que apunta a un capítulo de metodología distinto (más
+% centrado en arquitectura + CTC + entrenamiento). Vuelve a mirar el capítulo 1
+% y decide el mapeo final de capítulos antes de tocar más etiquetas.
 
 \section{Entorno y recursos computacionales}
 \label{sec:entorno}
-% Kaggle Notebooks, GPU T4, ESPnet-EZ, limitaciones de hardware.
+% Google Colab, GPU L4, ESPnet-EZ, presupuesto de cómputo por bloque.
 
 \section{Preprocesado de señales}
 \label{sec:preprocesado}
-% Normalización z-score por trial, manejo de longitudes variables.
+% Normalización, manejo de longitudes variables, verificación de integridad HDF5.
 
 \section{Protocolo de entrenamiento}
 \label{sec:protocolo}
-% Hiperparámetros, splits, criterio de parada.
+% Hiperparámetros de la RECETA, splits, criterio de parada (el bug de
+% early_stopping_criterion que arreglaste).
 
 \section{Métricas de evaluación}
 \label{sec:metricas}
-% WER, CER, BLEU. Definición formal de cada una.
+% CER, PER, WER. Definición formal de cada una.
 
 \begin{equation}
   \mathrm{WER} = \frac{S + D + I}{N}
@@ -320,30 +273,11 @@ we assess to what extent a speech model can be transferred to a domain it was no
 \end{equation}
 % donde S = sustituciones, D = eliminaciones, I = inserciones, N = palabras de referencia.
 
-\section{Diseño de experimentos}
+\section{Diseño experimental por bloques}
 \label{sec:experimentos}
-
-\begin{table}[H]
-  \centering
-  \caption{Resumen de los experimentos realizados.}
-  \label{tab:experimentos}
-  \begin{tabular}{cll}
-    \toprule
-    \textbf{Exp.} & \textbf{Descripción} & \textbf{Objetivo} \\
-    \midrule
-    0 & OWSM sin adaptación        & Baseline / referencia \\
-    1 & Proyección + LoRA          & Sistema propuesto \\
-    2 & Ablación de LoRA           & Aportación de LoRA \\
-    3 & Variación de normalización & Sensibilidad al preprocesado \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-% Ejemplo de inclusión de código:
-% \begin{lstlisting}[language=Python,caption={Carga del modelo OWSM con ESPnet-EZ.}]
-% import espnetez as ez
-% ...
-% \end{lstlisting}
+% Aquí van tus bloques A-G tal cual los tienes definidos: control científico,
+% unidad de salida, frontend, LoRA/congelación, generalización a sesiones,
+% modelo de lenguaje, campeón final.
 
 %==============================================================================
 \chapter{Resultados y análisis}
@@ -355,33 +289,30 @@ we assess to what extent a speech model can be transferred to a domain it was no
 
 \begin{table}[H]
   \centering
-  \caption{Resultados por experimento.}
+  \caption{Resultados por bloque experimental.}
   \label{tab:resultados}
   \begin{tabular}{lccc}
     \toprule
-    \textbf{Experimento} & \textbf{WER} $\downarrow$ & \textbf{CER} $\downarrow$ & \textbf{BLEU} $\uparrow$ \\
+    \textbf{Experimento} & \textbf{WER} $\downarrow$ & \textbf{CER} $\downarrow$ & \textbf{PER} $\downarrow$ \\
     \midrule
-    Baseline (Exp. 0)    & --- & --- & --- \\
-    Propuesta (Exp. 1)   & --- & --- & --- \\
-    Sin LoRA (Exp. 2)    & --- & --- & --- \\
+    A1 (init. aleatoria)  & --- & --- & --- \\
+    A2 (encoder congelado) & --- & --- & --- \\
+    v3 (preentrenado, ref.) & --- & --- & --- \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \section{Análisis de errores}
 \label{sec:analisis-errores}
-% Análisis cualitativo: tipos de error, palabras frecuentes, alucinaciones.
 
 \section{Comportamiento por sesión}
 \label{sec:por-sesion}
 
 \section{Curvas de entrenamiento}
 \label{sec:curvas}
-% Overfitting con dataset pequeño y modelo grande: documentar y explicar.
 
 \section{Discusión}
 \label{sec:discusion}
-% ¿Qué explica el rendimiento obtenido?
 
 %==============================================================================
 \chapter{Limitaciones y trabajo futuro}
@@ -389,14 +320,14 @@ we assess to what extent a speech model can be transferred to a domain it was no
 %==============================================================================
 
 \section{Limitaciones computacionales}
-\section{Limitaciones del enfoque (dominio cruzado audio\,$\rightarrow$\,sEEG)}
+\section{Limitaciones del enfoque}
 \section{Líneas de trabajo futuro}
+% POWSM (phoneme-pretrained), por ejemplo.
 
 %==============================================================================
 \chapter{Conclusiones}
 \label{cap:conclusiones}
 %==============================================================================
-
 % Cierre honesto: qué se ha demostrado, qué se ha aprendido, sin disculparse
 % por las limitaciones de un estudio de viabilidad.
 

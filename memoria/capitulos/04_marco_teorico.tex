@@ -1,0 +1,237 @@
+% =====================================================================
+%  CAPÍTULO 4 — MARCO TEÓRICO
+% =====================================================================
+% Requiere en el preámbulo: amsmath, amssymb, booktabs, enumitem,
+% cleveref, siunitx
+% =====================================================================
+
+\chapter{Marco teórico}
+\label{cap:marco-teorico}
+
+Este capítulo describe los fundamentos de los modelos y algoritmos empleados en el trabajo. A diferencia del \cref{cap:estado-del-arte}, que revisa qué se ha hecho en el campo, aquí se detalla \textit{cómo funciona} cada componente del sistema: la arquitectura del codificador preentrenado, el objetivo de entrenamiento que permite aprender sin alineamiento, la técnica de adaptación eficiente evaluada, el mecanismo de decodificación con modelo de lenguaje y las métricas con las que se cuantifican los resultados. La instanciación concreta de estos componentes en el sistema propuesto se aborda en el \cref{cap:arquitectura}.
+
+\section{Planteamiento formal del problema}
+\label{sec:planteamiento-formal}
+
+Sea $\mathbf{X} = (\mathbf{x}_1, \dots, \mathbf{x}_T)$ una secuencia de $T$ vectores de características neuronales, con $\mathbf{x}_t \in \mathbb{R}^{512}$, obtenida durante un intento de habla, y sea $\mathbf{y} = (y_1, \dots, y_L)$ la secuencia de unidades lingüísticas correspondiente a la frase que el participante intentaba pronunciar, con $y_l \in \mathcal{V}$ para un vocabulario $\mathcal{V}$ de caracteres, fonemas, subpalabras o palabras.
+
+El problema consiste en aprender una función $f_\theta: \mathbb{R}^{T \times 512} \rightarrow \mathcal{V}^{*}$ que estime $\mathbf{y}$ a partir de $\mathbf{X}$. Presenta tres características que determinan las decisiones metodológicas del trabajo:
+
+\begin{enumerate}[label=(\alph*), leftmargin=*]
+  \item \textbf{Es una tarea de transducción de secuencias de longitud variable}, con $T \gg L$: a \SI{50}{\hertz}, una frase de pocos segundos produce cientos de ventanas temporales frente a unas decenas de unidades de salida.
+  \item \textbf{No se dispone de alineamiento} entre las posiciones de $\mathbf{X}$ y las de $\mathbf{y}$. Al no existir audio de referencia, no puede establecerse qué ventanas corresponden a qué unidad.
+  \item \textbf{El orden se preserva}, esto es, la correspondencia entre entrada y salida es monótona: a diferencia de la traducción automática, la unidad $y_l$ nunca precede temporalmente a $y_{l-1}$.
+\end{enumerate}
+
+La combinación de (b) y (c) es exactamente el escenario para el que se diseñó la clasificación temporal conexionista, descrita en la \cref{sec:ctc}.
+
+\section{Modelado de secuencias con codificadores atencionales}
+\label{sec:transformers}
+
+\subsection{Autoatención multicabeza}
+
+El bloque fundamental de las arquitecturas empleadas es la autoatención por producto escalar escalado. Dada una secuencia de representaciones $\mathbf{H} \in \mathbb{R}^{T \times d}$, se proyecta en consultas, claves y valores mediante matrices aprendidas $\mathbf{W}^Q, \mathbf{W}^K, \mathbf{W}^V$, y se calcula
+
+\begin{equation}
+  \mathrm{Atención}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \mathrm{softmax}\!\left( \frac{\mathbf{Q}\mathbf{K}^{\top}}{\sqrt{d_k}} \right) \mathbf{V},
+  \label{eq:atencion}
+\end{equation}
+
+donde el factor $\sqrt{d_k}$ evita que el producto escalar crezca con la dimensión y sature la función \textit{softmax}. En la variante multicabeza se realizan $h$ proyecciones independientes en paralelo, cada una con dimensión $d/h$, y sus salidas se concatenan y se proyectan de nuevo, lo que permite que cada cabeza atienda a un tipo de relación distinto.
+
+La propiedad relevante de este mecanismo es que su campo receptivo es \textbf{global}: cada posición puede atender a cualquier otra en una única capa, con coste cuadrático $\mathcal{O}(T^2)$ en tiempo y memoria.
+
+\subsection{El compromiso entre contexto local y global en señales temporales}
+
+La autoatención pura resulta subóptima para señales de habla. Los fenómenos relevantes operan a dos escalas muy distintas: la estructura articulatoria es fundamentalmente \textbf{local} —transiciones entre fonemas contiguos, coarticulación—, mientras que la prosodia y la coherencia de la frase son \textbf{globales}. Un mecanismo puramente global debe aprender la localidad desde los datos, lo que resulta ineficiente en muestra.
+
+La respuesta del campo ha sido combinar atención y convolución. El \textbf{Conformer} las encadena en serie dentro de cada bloque; el \textbf{Branchformer} las dispone en dos ramas paralelas cuyas salidas se combinan, lo que aporta interpretabilidad y flexibilidad; y el \textbf{E-Branchformer} \cite{kim2023ebranchformer}, que es el codificador empleado por el modelo de este trabajo, mejora la etapa de combinación de esas dos ramas.
+
+\subsection{E-Branchformer}
+\label{sec:ebranchformer}
+
+Cada bloque E-Branchformer procesa la entrada por dos ramas paralelas:
+
+\begin{description}
+  \item[Rama global.] Autoatención multicabeza según la \cref{eq:atencion}, que modela dependencias de largo alcance.
+  \item[Rama local.] Un cgMLP (\textit{convolutional gating MLP}), un perceptrón con una puerta convolucional de profundidad que captura patrones locales con un coste muy inferior al de la atención.
+\end{description}
+
+La aportación específica de E-Branchformer frente a Branchformer está en el \textbf{módulo de combinación}: en lugar de sumar o promediar las salidas de ambas ramas, las concatena y aplica una convolución de profundidad antes de la proyección final, lo que permite que la combinación dependa del contexto temporal en lugar de ser un promedio fijo. Los bloques incorporan además redes \textit{feed-forward} en disposición macarrón, es decir, media red antes y media después del bloque de ramas.
+
+En la configuración de referencia, la dimensión de las cabezas de atención es $d/64$ y las dimensiones intermedias del cgMLP y de la red \textit{feed-forward} son $6d$ y $4d$ respectivamente \cite{kim2023ebranchformer}. Los bloques se apilan sobre un módulo de submuestreo convolucional que reduce la resolución temporal por un factor de cuatro, lo que mitiga el coste cuadrático de la atención.
+
+\section{OWSM v3.1}
+\label{sec:owsm-teoria}
+
+\subsection{Origen y motivación}
+
+OWSM (\textit{Open Whisper-style Speech Model}) reproduce el estilo de entrenamiento de Whisper \cite{radford2023whisper} empleando exclusivamente datos públicos y la herramienta de código abierto ESPnet \cite{watanabe2018espnet}, publicando datos, recetas, registros de entrenamiento y pesos \cite{peng2023owsm}. La versión v3.1 \cite{peng2024owsmv31} sustituye el codificador Transformer de la versión anterior por E-Branchformer y se entrena sobre \SI{180000}{\hour} de habla pública, mejorando simultáneamente precisión y velocidad de inferencia.
+
+Esta reproducibilidad es la razón por la que se escoge OWSM y no Whisper: dado que el trabajo pretende cuantificar \textit{qué transfiere del preentrenamiento}, resulta metodológicamente preferible partir de un modelo cuyos datos y procedimiento de entrenamiento son conocidos y auditables.
+
+\subsection{Arquitectura}
+
+OWSM v3.1 es un modelo codificador-decodificador compuesto por cuatro etapas:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{\textit{Frontend} acústico}, que transforma la forma de onda en un banco de filtros logarítmico en escala mel.
+  \item \textbf{Módulo de submuestreo convolucional}, que reduce la resolución temporal y proyecta a la dimensión del codificador.
+  \item \textbf{Codificador E-Branchformer}, que produce una secuencia de representaciones contextualizadas.
+  \item \textbf{Decodificador Transformer autorregresivo}, que genera la transcripción sobre un vocabulario de subpalabras.
+\end{enumerate}
+
+El modelo se publica en tres escalas: base con 101 millones de parámetros, \textit{small} con 367 millones y \textit{medium} con 1,02 mil millones \cite{peng2024owsmv31}.
+% TODO (Kiril): indica AQUÍ el identificador exacto del modelo que usas
+% (p. ej. espnet/owsm_v3.1_ebf_base) y el recuento real de parámetros que
+% te devuelve el código, desglosado en encoder / decoder / frontend nuevo /
+% capa de sesión. Ojo: "espnet/owsm_v3.1_ebf" a secas es el de 1,02B, no el
+% base. Tus notas dicen ~118M, que no coincide con ninguna de las tres
+% cifras publicadas: verifica si esa cuenta incluye tu frontend nuevo y
+% excluye el decodificador.
+
+\subsection{Objetivo conjunto CTC-atención}
+
+Durante el preentrenamiento, OWSM se optimiza con una pérdida híbrida que combina la rama CTC sobre la salida del codificador con la entropía cruzada del decodificador autorregresivo \cite{kim2017jointctc}:
+
+\begin{equation}
+  \mathcal{L} = \lambda\, \mathcal{L}_{\mathrm{CTC}} + (1-\lambda)\, \mathcal{L}_{\mathrm{att}}, \qquad \lambda \in [0,1].
+  \label{eq:joint-ctc-att}
+\end{equation}
+
+La motivación original de este esquema es que CTC impone una correspondencia monótona entre entrada y salida, lo que estabiliza el aprendizaje del alineamiento del decodificador atencional, que por sí solo es demasiado flexible y converge con dificultad.
+
+Para este trabajo, la consecuencia práctica es determinante: al existir una rama CTC entrenada sobre la salida del codificador, \textbf{el modelo puede operarse en régimen puramente CTC} fijando $\lambda = 1$ y prescindiendo por completo del decodificador autorregresivo. Esto elimina la dependencia del vocabulario de subpalabras preentrenado y del comportamiento generativo del decodificador, dos elementos que en un régimen de datos escasos resultan más un lastre que una ventaja.
+
+\section{Clasificación temporal conexionista (CTC)}
+\label{sec:ctc}
+
+\subsection{Formulación}
+
+CTC \cite{graves2006ctc} resuelve el problema de entrenar con pares $(\mathbf{X}, \mathbf{y})$ sin alineamiento conocido. Introduce un símbolo adicional en blanco, $\varnothing$, ampliando el vocabulario a $\mathcal{V}' = \mathcal{V} \cup \{\varnothing\}$, y define un \textbf{alineamiento} $\boldsymbol{\pi} \in \mathcal{V}'^{\,T}$ como una asignación de un símbolo a cada una de las $T$ posiciones de la secuencia de entrada.
+
+La función de colapso $\mathcal{B}: \mathcal{V}'^{\,T} \rightarrow \mathcal{V}^{*}$ transforma un alineamiento en una etiqueta eliminando primero las repeticiones consecutivas y después los blancos. Así, tanto $(\text{h},\text{h},\varnothing,\text{o},\text{o})$ como $(\varnothing,\text{h},\varnothing,\varnothing,\text{o})$ colapsan a \texttt{ho}. El blanco es necesario precisamente para poder representar símbolos repetidos legítimos: \texttt{oo} exige un blanco intercalado.
+
+Asumiendo independencia condicional entre posiciones dada la entrada, la probabilidad de un alineamiento es el producto de las probabilidades por posición, y la probabilidad de una etiqueta es la suma sobre todos los alineamientos que colapsan a ella:
+
+\begin{align}
+  p(\boldsymbol{\pi} \mid \mathbf{X}) &= \prod_{t=1}^{T} p(\pi_t \mid \mathbf{X}), \label{eq:ctc-alineamiento}\\[0.3em]
+  p(\mathbf{y} \mid \mathbf{X}) &= \sum_{\boldsymbol{\pi} \in \mathcal{B}^{-1}(\mathbf{y})} p(\boldsymbol{\pi} \mid \mathbf{X}). \label{eq:ctc-marginal}
+\end{align}
+
+La pérdida es la log-verosimilitud negativa, $\mathcal{L}_{\mathrm{CTC}} = -\log p(\mathbf{y} \mid \mathbf{X})$. El número de alineamientos crece exponencialmente con $T$, pero la suma de la \cref{eq:ctc-marginal} se calcula de forma exacta en tiempo $\mathcal{O}(T \cdot L)$ mediante un algoritmo de programación dinámica hacia delante y hacia atrás, análogo al empleado en modelos ocultos de Markov.
+
+\subsection{Decodificación voraz}
+
+La decodificación más simple toma el símbolo más probable en cada posición y aplica la función de colapso:
+
+\begin{equation}
+  \hat{\mathbf{y}}_{\mathrm{voraz}} = \mathcal{B}\!\left( \arg\max_{\pi_t} p(\pi_t \mid \mathbf{X}) \;\forall t \right).
+  \label{eq:ctc-greedy}
+\end{equation}
+
+Es una aproximación al máximo a posteriori, no su solución exacta, porque la etiqueta más probable puede no corresponder al alineamiento más probable. Su interés en este trabajo es que \textbf{aísla la calidad del codificador} de la del modelo de lenguaje: es la métrica adecuada para comparar codificadores entre sí.
+
+\subsection{Regularización intermedia (InterCTC)}
+
+Una técnica habitual en codificadores profundos consiste en aplicar una pérdida CTC auxiliar sobre la salida de una capa intermedia, además de la pérdida principal sobre la última capa:
+
+\begin{equation}
+  \mathcal{L} = (1-\alpha_{\mathrm{ic}})\,\mathcal{L}_{\mathrm{CTC}}^{(N)} + \alpha_{\mathrm{ic}}\, \mathcal{L}_{\mathrm{CTC}}^{(k)}, \qquad k < N.
+  \label{eq:interctc}
+\end{equation}
+
+El efecto es doble: proporciona una señal de gradiente más directa a las capas inferiores, mitigando problemas de propagación en redes profundas, y actúa como regularizador al forzar que las representaciones intermedias sean ya linealmente decodificables.
+
+\subsection{Propiedades y limitaciones}
+
+La hipótesis de independencia condicional de la \cref{eq:ctc-alineamiento} es la clave de la tratabilidad del método y, a la vez, su principal debilidad: el modelo no condiciona la predicción de una posición a lo emitido en las anteriores, por lo que \textbf{no incorpora ningún modelo de lenguaje implícito}. Esto explica por qué la salida CTC voraz de un sistema \textit{brain-to-text} produce cadenas fonéticamente plausibles pero ortográficamente incorrectas, y por qué la etapa de decodificación con modelo de lenguaje externo resulta imprescindible.
+
+Conviene señalar una consecuencia práctica que afecta a la interpretación de los resultados: \textbf{la pérdida CTC y la tasa de error no siempre se mueven en la misma dirección}. La pérdida mide la masa de probabilidad asignada al conjunto de alineamientos correctos, mientras que la tasa de error mide el acierto de la decodificación voraz. Un modelo puede volverse más confiado en alineamientos correctos sin cambiar su predicción de máximo, o al revés. Por ello, la selección de modelo debe realizarse sobre la métrica de error y no sobre la pérdida de validación.
+
+\section{Adaptación eficiente en parámetros: LoRA}
+\label{sec:lora-teoria}
+
+LoRA \cite{hu2022lora} parte de la hipótesis de que la actualización de pesos necesaria para adaptar un modelo preentrenado a una tarea nueva tiene rango intrínseco bajo. Dada una matriz de pesos preentrenada $\mathbf{W}_0 \in \mathbb{R}^{d \times k}$, en lugar de aprender una actualización densa $\Delta\mathbf{W}$ se la factoriza como producto de dos matrices de rango $r \ll \min(d,k)$:
+
+\begin{equation}
+  \mathbf{W} = \mathbf{W}_0 + \Delta\mathbf{W} = \mathbf{W}_0 + \frac{\alpha}{r}\,\mathbf{B}\mathbf{A}, \qquad \mathbf{B} \in \mathbb{R}^{d \times r},\; \mathbf{A} \in \mathbb{R}^{r \times k}.
+  \label{eq:lora}
+\end{equation}
+
+Durante el entrenamiento $\mathbf{W}_0$ permanece congelada y sólo se actualizan $\mathbf{A}$ y $\mathbf{B}$, lo que reduce el número de parámetros entrenables de $d \times k$ a $r(d+k)$. La matriz $\mathbf{A}$ se inicializa de forma aleatoria y $\mathbf{B}$ a cero, de modo que $\Delta\mathbf{W} = \mathbf{0}$ al inicio y el modelo parte exactamente del comportamiento preentrenado. El factor $\alpha/r$ desacopla la magnitud efectiva de la actualización de la elección del rango.
+
+Es esencial subrayar la condición de aplicabilidad: \textbf{LoRA presupone que $\mathbf{W}_0$ está congelada}. Su beneficio no procede de añadir capacidad, sino de \textit{restringir} la adaptación a un subespacio de rango bajo, lo que actúa como regularización y reduce el coste. Aplicado sobre un modelo cuyos pesos base también se actualizan, la restricción desaparece: la suma $\mathbf{W}_0 + \frac{\alpha}{r}\mathbf{B}\mathbf{A}$ con ambos términos entrenables es simplemente una reparametrización redundante de una matriz densa entrenable. Cualquier evaluación experimental de LoRA debe, por tanto, controlar explícitamente el estado de congelación del modelo base.
+
+\section{Modelado de lenguaje y decodificación}
+\label{sec:lm-teoria}
+
+\subsection{Modelos de lenguaje de $n$-gramas}
+
+Un modelo de lenguaje asigna una probabilidad a una secuencia de palabras. Bajo la aproximación de Markov de orden $n-1$, la probabilidad de cada palabra depende únicamente de las $n-1$ anteriores:
+
+\begin{equation}
+  P(w_1, \dots, w_M) \approx \prod_{i=1}^{M} P(w_i \mid w_{i-n+1}, \dots, w_{i-1}).
+  \label{eq:ngram}
+\end{equation}
+
+Las probabilidades se estiman por máxima verosimilitud sobre un corpus y se corrigen mediante técnicas de suavizado y retroceso, que reasignan masa de probabilidad a los $n$-gramas no observados. Sin suavizado, cualquier secuencia que contenga un $n$-grama ausente del corpus recibiría probabilidad nula.
+
+La elección del orden $n$ es un compromiso: un orden mayor captura más contexto, pero el número de $n$-gramas posibles crece exponencialmente y, con un corpus limitado, la mayoría queda sin observar, de modo que el modelo se apoya cada vez más en el retroceso y su ventaja se desvanece. Con corpus del orden de unos pocos miles de frases, órdenes bajos resultan preferibles. Para la consulta eficiente de estos modelos se emplea KenLM \cite{heafield2011kenlm}, que utiliza estructuras de datos optimizadas en memoria y tiempo de acceso.
+
+\subsection{Búsqueda en haz sobre salidas CTC}
+
+La decodificación voraz de la \cref{eq:ctc-greedy} no permite incorporar información lingüística. La alternativa es una búsqueda en haz que mantiene, en cada instante $t$, un conjunto acotado de las $k$ hipótesis parciales más prometedoras, extendiéndolas símbolo a símbolo. La particularidad del caso CTC es que hipótesis distintas pueden colapsar a la misma etiqueta, por lo que la búsqueda debe operar sobre etiquetas colapsadas y acumular la probabilidad de todos los alineamientos que conducen a cada una.
+
+\subsection{Fusión superficial}
+
+La integración del modelo de lenguaje se realiza mediante fusión superficial, sumando su contribución a la puntuación de cada hipótesis durante la búsqueda:
+
+\begin{equation}
+  s(\mathbf{y}) = \log p_{\mathrm{CTC}}(\mathbf{y} \mid \mathbf{X}) + \alpha \log P_{\mathrm{LM}}(\mathbf{y}) + \beta\,|\mathbf{y}|_{w},
+  \label{eq:shallow-fusion}
+\end{equation}
+
+donde $\alpha$ pondera la influencia del modelo de lenguaje y $\beta$ es una bonificación por inserción de palabra que compensa el sesgo del término lingüístico hacia hipótesis cortas, ya que cada palabra adicional multiplica por una probabilidad menor que uno. Ambos hiperparámetros se ajustan empíricamente sobre la partición de validación.
+
+\subsection{Guiado frente a reordenamiento, y el límite \textit{oracle}}
+\label{sec:oracle}
+
+Existen dos regímenes cualitativamente distintos de uso del modelo de lenguaje, y distinguirlos es una de las preguntas de investigación de este trabajo:
+
+\begin{description}
+  \item[Reordenamiento.] El modelo acústico genera una lista de las $n$ mejores hipótesis y el modelo de lenguaje se limita a reordenarla. Su rendimiento está acotado superiormente por la mejor hipótesis contenida en esa lista.
+  \item[Guiado.] El modelo de lenguaje interviene \textit{durante} la búsqueda, según la \cref{eq:shallow-fusion}, alterando qué hipótesis se expanden y cuáles se podan. Puede así alcanzar transcripciones que nunca habrían figurado en la lista $n$-mejor puramente acústica.
+\end{description}
+
+El \textbf{límite \textit{oracle}} de la lista $n$-mejor —el error que se obtendría seleccionando siempre la mejor hipótesis disponible, usando la referencia para elegir— cuantifica ese techo. Es una cota que ningún método de reordenamiento puede superar. En consecuencia, si un sistema con fusión superficial obtiene un error \textit{inferior} al límite \textit{oracle} de su propia lista $n$-mejor acústica, queda demostrado empíricamente que el modelo de lenguaje no está reordenando sino guiando la búsqueda, y que una parte del conocimiento lingüístico del sistema completo reside fuera del codificador neuronal.
+
+\section{Métricas de evaluación}
+\label{sec:metricas-teoria}
+
+\subsection{Distancia de edición}
+
+Todas las métricas empleadas derivan de la distancia de Levenshtein entre la secuencia predicha y la de referencia, definida como el número mínimo de operaciones de sustitución ($S$), eliminación ($D$) e inserción ($I$) necesarias para transformar una en otra. Normalizada por la longitud $N$ de la referencia, produce una tasa de error:
+
+\begin{equation}
+  \mathrm{Tasa\ de\ error} = \frac{S + D + I}{N}.
+  \label{eq:tasa-error}
+\end{equation}
+
+Nótese que la tasa \textbf{no está acotada superiormente por la unidad}: una hipótesis mucho más larga que la referencia puede producir valores superiores al \SI{100}{\percent} por acumulación de inserciones.
+
+\subsection{CER, PER y WER}
+
+Según la unidad sobre la que se aplique la \cref{eq:tasa-error} se obtienen tres métricas:
+
+\begin{description}
+  \item[CER (\textit{Character Error Rate}).] Sobre caracteres. Es la métrica natural para evaluar un codificador entrenado con objetivo de carácter y decodificación voraz, ya que no depende de ningún componente lingüístico externo.
+  \item[PER (\textit{Phoneme Error Rate}).] Sobre fonemas. Es la métrica de selección de modelo habitual en la literatura de neuroprótesis del habla, por ser el fonema la unidad de salida dominante.
+  \item[WER (\textit{Word Error Rate}).] Sobre palabras del texto final. Es la métrica oficial de los \textit{benchmarks} y la única con relevancia directa para el usuario, ya que mide el resultado que efectivamente aparecería en pantalla.
+\end{description}
+
+\subsection{Comparabilidad entre métricas}
+
+Un punto metodológico que condiciona el diseño experimental: \textbf{CER, PER y WER no son comparables entre sí}. Se calculan sobre unidades de distinta granularidad y sobre denominadores distintos, de modo que un CER de \num{0,25} y un PER de \num{0,25} no representan sistemas equivalentes.
+
+La consecuencia es que la comparación entre modelos entrenados con \textit{unidades de salida distintas} sólo puede realizarse sobre el WER del texto final decodificado, que es el único eje común. Toda comparación de granularidad exige, por tanto, decodificar hasta texto, con las mismas condiciones de modelo de lenguaje para todas las variantes. Por el contrario, la comparación entre modelos que comparten unidad de salida puede y debe hacerse sobre la métrica correspondiente con decodificación voraz, que aísla mejor la contribución del codificador.

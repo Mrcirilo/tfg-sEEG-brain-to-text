@@ -1,0 +1,202 @@
+% =====================================================================
+%  CAPÍTULO 3 — CONJUNTO DE DATOS
+% =====================================================================
+% Requiere en el preámbulo: booktabs, enumitem, cleveref, siunitx, multirow
+% =====================================================================
+
+\chapter{Conjunto de datos}
+\label{cap:datos}
+
+La elección del conjunto de datos condiciona el resto del trabajo: determina qué preguntas pueden formularse, qué arquitecturas son viables y con qué resultados publicados es posible compararse. Este capítulo justifica esa elección frente a las alternativas evaluadas, describe en detalle el conjunto finalmente seleccionado y analiza los retos específicos que plantea, varios de los cuales explican decisiones de diseño posteriores.
+
+\section{Criterios de selección}
+\label{sec:criterios-datos}
+
+Antes de fijar el conjunto de trabajo se evaluaron cuatro corpus públicos de decodificación de habla a partir de señal cerebral. Los criterios aplicados fueron los siguientes:
+
+\begin{enumerate}[label=\textbf{C\arabic*.}, leftmargin=*, itemsep=0.3em]
+  \item \textbf{Tarea compatible con el modelo.} El sistema propuesto reutiliza un codificador de reconocimiento del habla entrenado sobre secuencias largas. Requiere, por tanto, un corpus de \textbf{frases continuas}, no de palabras o sílabas aisladas: un modelo diseñado para modelar dependencias temporales de varios segundos no puede evaluarse sobre estímulos de dos segundos.
+  \item \textbf{Salida textual.} El objetivo es \textit{brain-to-text}, no \textit{brain-to-speech}. Los corpus orientados a la reconstrucción de audio requieren una cadena de síntesis (mel-espectrograma más vocoder) y un tipo de evaluación distinto, ajenos a este trabajo.
+  \item \textbf{Volumen suficiente.} El ajuste de un modelo de más de cien millones de parámetros exige un número de muestras que descarta los corpus de pocos minutos por sujeto.
+  \item \textbf{Relación señal-ruido.} La hipótesis de partida —que un codificador de habla puede extraer estructura temporal de la señal neuronal— sólo es contrastable si la señal contiene esa estructura. Las modalidades de baja resolución espacial la comprometen.
+  \item \textbf{Comparabilidad.} La existencia de particiones fijas, métrica oficial y resultados publicados permite situar los resultados propios en un contexto objetivo, en lugar de reportarlos de forma aislada.
+  \item \textbf{Coste de acceso y preparación.} Formato documentado, código de carga disponible y datos ya organizados en particiones reducen el tiempo dedicado a ingeniería de datos, escaso en un trabajo de esta duración.
+\end{enumerate}
+
+\section{Alternativas evaluadas}
+\label{sec:alternativas-datos}
+
+La \cref{tab:datasets-comparativa} resume los cuatro conjuntos considerados.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Comparativa de los conjuntos de datos evaluados para este trabajo.}
+  \label{tab:datasets-comparativa}
+  \scriptsize
+  \begin{tabular}{p{2.3cm} p{2.2cm} p{2.2cm} p{2.2cm} p{2.4cm}}
+    \toprule
+    \textbf{Característica} & \textbf{UGR-MINDVOICE} & \textbf{sEEG2Speech} & \textbf{SingleWord Dutch} & \textbf{Brain-to-Text '25} \\
+    \midrule
+    Tipo de señal      & EEG (64 can.)      & sEEG              & sEEG (1.103 can.) & Microelectrodos intracorticales (256) \\
+    Participantes      & 15                 & 3                 & 10                & 1 \\
+    Idioma             & Español            & Neerlandés        & Neerlandés        & Inglés \\
+    Nivel de tarea     & Palabras y sílabas & Frases (5--7 pal.)& Palabras aisladas & Frases (habla continua) \\
+    Tipo de habla      & \textit{Overt} y \textit{covert} & Solo \textit{overt} & Solo \textit{overt} & Intento vocalizado y silente \\
+    Volumen            & 60 pal. + 30 pseudo + 95 sílabas & 100 frases & 100 palabras & 10.948 frases \\
+    Duración           & 2,5--3 h/sesión    & 10--20 min/sujeto & $\sim$5 min/sujeto & 45 sesiones / 20 meses \\
+    Frec.\ muestreo    & \SI{1000}{\hertz}  & 1024--\SI{2048}{\hertz} & \SI{1024}{\hertz} & Ventanas de \SI{20}{\milli\second} \\
+    Salida objetivo    & Clasificación / texto & Audio & Espectrograma / audio & Texto \\
+    Formato            & MNE/EDF            & Propio (OSF)      & BIDS / NWB        & HDF5 con particiones \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{UGR-MINDVOICE}
+
+Corpus multimodal de EEG de superficie con 15 participantes nativos de español, que incluye tanto habla pronunciada (\textit{overt}) como imaginada (\textit{covert}), con estímulos de 95 sílabas consonante-vocal que cubren el inventario fonético del español, 60 palabras de seis categorías semánticas y 30 pseudopalabras. Es el único corpus en español para esta tarea y su diseño experimental es cuidadoso, con datos y código públicos.
+
+Fue descartado por dos razones. La primera es el nivel de la tarea: los estímulos son palabras y sílabas aisladas, incompatibles con el criterio C1. La segunda es la modalidad: el EEG de superficie tiene una resolución espacial y una relación señal-ruido muy inferiores a las de los registros invasivos, lo que compromete el criterio C4 y, con él, la posibilidad de interpretar un resultado negativo, ya que un fallo del sistema no permitiría distinguir entre ausencia de transferencia y ausencia de señal decodificable.
+
+\subsection{sEEG2Speech}
+
+Corpus de estereoelectroencefalografía en tres pacientes con epilepsia, que leen 100 frases de cinco a siete palabras en neerlandés. La señal se filtra en la banda gamma alta (70--\SI{170}{\hertz}) y el objetivo es la reconstrucción directa de audio mediante mel-espectrogramas y un vocoder.
+
+Cumple el criterio C1 pero incumple el C2 —el objetivo es audio, no texto— y sobre todo el C3: entre diez y veinte minutos por sujeto, de los cuales una fracción considerable es silencio, es un volumen incompatible con el ajuste de un modelo de gran tamaño.
+
+\subsection{SingleWordProductionDutch}
+
+Diez pacientes con epilepsia y 1.103 canales sEEG en total, leyendo 100 palabras aisladas en neerlandés, con formato BIDS bien documentado y una cadena de referencia basada en filtrado en gamma alta, reducción dimensional y regresión hacia el log-mel espectrograma.
+
+Es el corpus con más participantes de los evaluados, lo que lo haría interesante para estudios de generalización entre sujetos, pero incumple C1 (palabras aisladas), C2 (salida de audio) y C3 (unos cinco minutos por sujeto).
+
+\subsection{Brain-to-Text '25}
+
+Es el único de los cuatro que satisface todos los criterios simultáneamente: frases continuas, salida textual, volumen de casi once mil frases, registros intracorticales de alta relación señal-ruido, particiones oficiales con clasificación pública y resultados publicados, y datos organizados en HDF5 con código de carga proporcionado por los autores. Es, en consecuencia, el conjunto empleado en este trabajo.
+
+Conviene señalar que esta elección tiene un coste evidente: \textbf{un único participante}. Las conclusiones obtenidas son específicas de T15, de la localización de sus implantes y del inglés, y no pueden extrapolarse sin verificación a otros sujetos. Se asume este compromiso porque los tres corpus alternativos, aunque más diversos en participantes, no permiten formular la pregunta de investigación de este trabajo.
+
+\section{El conjunto Brain-to-Text '25}
+\label{sec:b2t25}
+
+\subsection{Origen y participante}
+
+Los datos proceden del ensayo clínico descrito por Card \textit{et al.} \cite{card2024} y se publicaron posteriormente como \textit{benchmark} abierto y competición \cite{b2t25}. El participante, identificado como T15, es un varón con esclerosis lateral amiotrófica avanzada y disartria severa, con el habla ininteligible pero con la corteza motora del habla funcionalmente intacta.
+
+El protocolo es una tarea de copia: se presenta una frase en pantalla y, tras una señal de inicio, el participante intenta pronunciarla a su propio ritmo. Se registra la actividad neuronal durante ese intento. Es importante subrayar que \textbf{no existe audio de referencia} con el que alinear la señal, ya que la parálisis impide la producción de habla inteligible; de ahí que el entrenamiento deba recurrir necesariamente a un objetivo que no requiera alineamiento explícito, como CTC.
+
+\subsection{Adquisición y características neuronales}
+
+El registro se realiza mediante cuatro matrices de microelectrodos de alta densidad de 64 canales cada una, implantadas en la corteza motora del habla del hemisferio izquierdo, lo que suma 256 electrodos \cite{b2t25}.
+% TODO: consulta Card et al. 2024 para citar las cuatro áreas concretas
+% (giro precentral izquierdo; se mencionan 6v ventral y dorsal, área 4 y 55b
+% en la literatura secundaria, pero verifícalo en la fuente primaria).
+
+De cada electrodo se extraen dos características, lo que produce un vector de \textbf{512 dimensiones por ventana temporal}:
+
+\begin{description}
+  \item[Cruces de umbral (\textit{threshold crossings}).] Recuento de eventos en que la señal filtrada cruza un umbral fijado en $-4{,}5$ veces el valor eficaz del ruido del canal. Es una aproximación a la tasa de disparo de la población neuronal próxima al electrodo, sin necesidad de clasificar espigas individuales.
+  \item[Potencia en la banda de espigas (\textit{spike band power}).] Energía de la señal en la banda de frecuencia asociada a la actividad de espiga, que aporta información complementaria y es más robusta frente a variaciones del umbral.
+\end{description}
+
+Ambas se agregan en ventanas de \SI{20}{\milli\second}, produciendo una secuencia a \SI{50}{\hertz}, y se normalizan mediante puntuación z dentro de cada bloque de registro \cite{lightbeam}. Esta normalización por bloque es la primera línea de defensa frente a la no estacionariedad, pero, como se verá, resulta insuficiente por sí sola.
+
+\subsection{Organización de los datos}
+
+Los datos se distribuyen en ficheros HDF5 organizados por sesión de registro. Cada sesión se identifica por su fecha (\texttt{t15.AAAA.MM.DD}) y contiene hasta tres ficheros, correspondientes a las particiones de entrenamiento, validación y prueba. No todas las sesiones aportan a las tres particiones: algunas contienen únicamente datos de entrenamiento.
+
+Dentro de cada fichero, cada ensayo se almacena como un grupo independiente con los siguientes elementos \cite{b2t25}:
+
+\begin{description}
+  \item[\texttt{input\_features}.] Matriz de características neuronales de dimensiones $T \times 512$, donde $T$ es el número de ventanas del ensayo.
+  \item[\texttt{seq\_class\_ids}.] Secuencia de identificadores de fonema correspondiente a la frase, es decir, la etiqueta fonémica de referencia.
+  \item[\texttt{transcription}.] Transcripción de la frase.
+  \item[Atributos.] Número de ventanas temporales, longitud de la secuencia de etiquetas, etiqueta textual de la frase, e identificadores de sesión, bloque y ensayo.
+\end{description}
+
+Es relevante para el diseño experimental que el conjunto \textbf{ya incluye la secuencia de fonemas de referencia}: el experimento de decodificación a nivel de fonema no requiere ningún sistema de conversión grafema-fonema ni diccionario de pronunciación adicional, lo que reduce sustancialmente su coste de preparación.
+
+\subsection{Particiones y composición por corpus}
+
+La \cref{tab:b2t25-splits} resume la composición del conjunto. El reparto es de 8.072 ensayos de entrenamiento, 1.426 de validación y 1.450 de prueba, estos últimos sin etiquetas, reservados para la evaluación oficial \cite{lightbeam}. Los ensayos se agrupan en bloques de entre 5 y 50 frases; el conjunto de entrenamiento comprende 198 bloques repartidos por las 45 sesiones, mientras que validación y prueba suman 67 bloques procedentes de 41 de esas 45 sesiones.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Composición del conjunto Brain-to-Text '25 por corpus de origen. Datos tomados de \cite{lightbeam}.}
+  \label{tab:b2t25-splits}
+  \small
+  \begin{tabular}{lrrl}
+    \toprule
+    \textbf{Corpus de origen} & \textbf{Bloques} & \textbf{Frases} & \textbf{Partición} \\
+    \midrule
+    Switchboard              & 182 & 7.672 & Entrenamiento y validación/prueba \\
+    Palabras frecuentes      &  48 & 2.050 & Entrenamiento y validación/prueba \\
+    Vocabulario de 50 palabras & 25 & 1.091 & Solo entrenamiento \\
+    OpenWebText              &   5 &   172 & Solo validación/prueba \\
+    Frases Harvard           &   3 &    98 & Solo validación/prueba \\
+    Secuencias aleatorias    &   2 &    79 & Solo validación/prueba \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Esta tabla merece atención porque revela un rasgo del \textit{benchmark} que no es evidente a primera vista y que tiene consecuencias directas sobre la interpretación de los resultados. \textbf{Tres de los seis corpus de origen aparecen exclusivamente en validación y prueba, y nunca en entrenamiento}: OpenWebText, las frases Harvard y las secuencias aleatorias de palabras suman 349 frases que el modelo evalúa sin haber visto material lingüístico de esa procedencia. En sentido inverso, el vocabulario cerrado de 50 palabras aparece únicamente en entrenamiento.
+
+Es decir, la partición de validación no es una muestra homogénea de la de entrenamiento: incorpora por diseño un \textbf{desplazamiento de dominio lingüístico}. Las secuencias aleatorias de palabras son, además, el caso adverso extremo para cualquier modelo de lenguaje, puesto que carecen por construcción de estructura sintáctica explotable. Esto explica parcialmente la marcada divergencia entre pérdida de entrenamiento y pérdida de validación que reportan los participantes de la competición, y obliga a matizar cualquier atribución de esa divergencia únicamente al sobreajuste del codificador.
+
+\subsection{Estrategias de habla no etiquetadas}
+
+Un último rasgo relevante: la mayor parte de los datos corresponde a intentos de habla \textit{vocalizada}, pero una fracción corresponde a intentos de habla \textit{silente}, y los organizadores decidieron deliberadamente \textbf{no proporcionar la etiqueta de estrategia} de cada bloque, con el objetivo de aproximar mejor las condiciones reales de uso \cite{b2t25}.
+
+Se trata, por tanto, de una variable oculta que modula la señal y que el modelo debe absorber implícitamente. Ninguna de las variantes evaluadas en este trabajo la modela de forma explícita, lo que constituye una limitación reconocida y, a la vez, una línea de mejora identificable.
+
+\section{Análisis exploratorio}
+\label{sec:eda}
+
+% TODO (Kiril): esta sección la tienes que rellenar con tus propios números y
+% figuras a partir del notebook de análisis. Te dejo la estructura y qué
+% debería mostrar cada figura, porque es la sección que da solidez a todo lo
+% que viene después y es lo primero que va a mirar un tribunal técnico.
+
+\subsection{Distribución de longitudes}
+
+% Figura sugerida: histograma de T (nº de ventanas por ensayo) y de la
+% longitud de la transcripción en caracteres y en fonemas.
+% Comenta: rango, mediana, cola larga, e implicación para el batching y el
+% coste de memoria (los ensayos largos dominan el consumo).
+
+\subsection{Variabilidad entre sesiones}
+
+% Figura sugerida (la más importante del capítulo): estadísticos de las
+% características neuronales (media y desviación por canal) a lo largo de las
+% 45 sesiones, ordenadas cronológicamente. Si hay deriva, se verá.
+% Alternativa complementaria: matriz de distancias entre sesiones sobre la
+% distribución de features. Esta figura es la que justifica la capa de sesión.
+
+\subsection{Cobertura léxica y ejemplos por clase}
+
+% Figura sugerida, y es de coste casi cero: número de ejemplos de
+% entrenamiento por clase para cada unidad de salida candidata (carácter,
+% fonema, subpalabra, palabra). En escala logarítmica.
+% Esta figura sola justifica todo el bloque experimental de granularidad:
+% con ~8.000 frases, el carácter tiene miles de ejemplos por clase mientras
+% que buena parte del vocabulario de palabras aparece una o dos veces.
+
+\subsection{Distribución temporal del registro}
+
+% Figura sugerida: número de ensayos por sesión a lo largo de los 20 meses,
+% distinguiendo partición. Sirve para mostrar que los datos no están
+% uniformemente repartidos en el tiempo.
+
+\section{Retos que plantea el conjunto y consecuencias de diseño}
+\label{sec:retos-datos}
+
+Del análisis anterior se derivan cinco retos que condicionan directamente las decisiones tomadas en los capítulos siguientes:
+
+\begin{enumerate}[label=\textbf{R\arabic*.}, leftmargin=*, itemsep=0.4em]
+  \item \textbf{No estacionariedad a lo largo de 20 meses.} Es el horizonte temporal más amplio de los \textit{benchmarks} disponibles y multiplica por cinco el del conjunto anterior. La normalización por bloque no basta: motiva la incorporación de una transformación afín específica de cada sesión, y convierte la evaluación sobre sesiones no vistas en un experimento con valor propio.
+  \item \textbf{Ausencia de alineamiento temporal.} Al no existir audio de referencia, no se dispone de correspondencia entre ventanas de señal y unidades emitidas. Determina el uso de CTC como objetivo de entrenamiento.
+  \item \textbf{Escala de datos frente a escala de modelo.} Poco más de ocho mil frases de entrenamiento para un modelo de más de cien millones de parámetros sitúan el problema en un régimen de alto riesgo de sobreajuste, y hacen inviables las unidades de salida con vocabularios grandes: repartir ese número de frases entre decenas de miles de clases de subpalabra deja la mayoría de las clases con un puñado de ejemplos o ninguno.
+  \item \textbf{Desplazamiento de dominio lingüístico entre particiones.} Los corpus presentes solo en validación penalizan a los sistemas que dependan en exceso del modelo de lenguaje, y en particular las secuencias aleatorias de palabras actúan como caso adverso deliberado. Debe tenerse en cuenta al interpretar la diferencia entre las métricas de entrenamiento y validación.
+  \item \textbf{Variable oculta de estrategia de habla.} La mezcla no etiquetada de intento vocalizado y silente introduce una fuente de variabilidad no modelada que se suma a la variabilidad entre sesiones.
+\end{enumerate}
+
+Estos cinco puntos, junto con el marco de referencia establecido en el \cref{cap:estado-del-arte}, definen el espacio de diseño del sistema que se describe a continuación.

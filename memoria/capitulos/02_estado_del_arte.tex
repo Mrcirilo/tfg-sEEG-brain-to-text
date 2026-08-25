@@ -1,0 +1,145 @@
+% =====================================================================
+%  CAPÍTULO 2 — ESTADO DEL ARTE
+% =====================================================================
+% Requiere en el preámbulo: booktabs, enumitem, cleveref, siunitx
+% =====================================================================
+
+\chapter{Estado del arte}
+\label{cap:estado-del-arte}
+
+Este capítulo revisa el contexto científico y técnico en el que se inscribe el trabajo. Se organiza en tres bloques. El primero (\cref{sec:sota-bci,sec:sota-neuroprotesis,sec:sota-anatomia,sec:sota-benchmarks}) recorre la evolución de las neuroprótesis del habla hasta los sistemas actuales y disecciona la arquitectura que todos ellos comparten. El segundo (\cref{sec:sota-habla,sec:sota-peft}) resume el estado del arte en modelos de habla preentrenados y en las técnicas de adaptación eficiente que hacen viable su reutilización. El tercero (\cref{sec:sota-transferencia,sec:sota-posicionamiento}) revisa los trabajos que han intentado explícitamente cruzar ambos campos y sitúa la aportación de esta memoria respecto a ellos.
+
+\section{Modalidades de registro en interfaces cerebro-computador}
+\label{sec:sota-bci}
+
+La elección de la técnica de registro condiciona por completo el tipo de información que puede extraerse y, en consecuencia, la clase de decodificador que tiene sentido construir. Las modalidades empleadas en BCI del habla se ordenan en un compromiso entre invasividad y calidad de señal:
+
+\begin{description}
+  \item[Electroencefalografía (EEG).] No invasiva, de bajo coste y ampliamente disponible. Registra la actividad sumada de grandes poblaciones neuronales a través del cráneo, lo que impone una resolución espacial de centímetros y una relación señal-ruido baja. Es adecuada para paradigmas de selección discreta, pero los intentos de decodificar habla continua a partir de EEG han producido resultados cuya validez ha sido cuestionada de forma reiterada, en buena medida por problemas de partición de datos y por métricas que premian la similitud semántica en lugar de la recuperación literal del estímulo.
+  \item[Estereoelectroencefalografía (sEEG).] Electrodos de profundidad implantados con fines diagnósticos, habitualmente en pacientes con epilepsia refractaria. Ofrecen buena resolución temporal y acceso a estructuras profundas, pero su colocación responde a criterios clínicos y no a la conveniencia del decodificador, y los registros suelen ser de corta duración.
+  \item[Electrocorticografía (ECoG).] Rejillas de electrodos colocadas sobre la superficie cortical, sin penetrar en el tejido. Combinan una cobertura espacial amplia con una estabilidad crónica notable, y sobre ellas se construyeron los primeros sistemas de habla en tiempo real \cite{moses2021,metzger2023}.
+  \item[Matrices intracorticales de microelectrodos.] Conjuntos de electrodos penetrantes (típicamente matrices tipo Utah) que registran la actividad de poblaciones neuronales locales con resolución de unidad múltiple. Es la modalidad de mayor riesgo quirúrgico y, a la vez, la única con la que se han alcanzado prestaciones compatibles con la conversación \cite{willett2023,card2024}. Es también la modalidad de los datos empleados en este trabajo.
+\end{description}
+
+De las características extraídas de estos registros, dos se han impuesto como estándar en las matrices intracorticales: el recuento de cruces de umbral (\textit{threshold crossings}), que cuenta los eventos en que la señal filtrada cae por debajo de un umbral proporcional al valor eficaz del ruido, y la potencia en la banda de espigas (\textit{spike band power}). Ambas se agregan en ventanas de \SI{20}{\milli\second}, lo que produce una secuencia a \SI{50}{\hertz} \cite{b2t25}.
+
+\section{Evolución de las neuroprótesis del habla}
+\label{sec:sota-neuroprotesis}
+
+Los primeros sistemas de comunicación basados en BCI operaban por selección: el usuario elegía letras o comandos de un conjunto discreto. El salto hacia la producción continua de lenguaje llegó por dos vías simultáneas.
+
+La primera fue la decodificación de la escritura manual imaginada, que alcanzó unos 90 caracteres por minuto con una precisión superior al \SI{99}{\percent} empleando corrección automática \cite{willett2021}. Aunque el gesto decodificado no es el habla, ese trabajo introdujo dos elementos que siguen siendo estándar: el entrenamiento con pérdida CTC sobre secuencias sin alineamiento explícito, y las capas de entrada específicas de cada día de registro para compensar la deriva de la señal.
+
+La segunda vía atacó directamente el habla intentada. Moses \textit{et al.} \cite{moses2021} demostraron la decodificación en tiempo real en una persona con anartria mediante ECoG, con un vocabulario cerrado de 50 palabras. Dos años después, dos trabajos publicados simultáneamente ampliaron el problema a vocabulario abierto: Metzger \textit{et al.} \cite{metzger2023} con ECoG de alta densidad, incorporando síntesis de voz y control de un avatar, y Willett \textit{et al.} \cite{willett2023} con matrices intracorticales en la corteza premotora ventral, alcanzando un \SI{23.8}{\percent} de tasa de error por palabra sobre un vocabulario de 125.000 palabras a unas 62 palabras por minuto.
+
+El referente actual es el sistema descrito por Card \textit{et al.} \cite{card2024}, del que proceden los datos de este trabajo. Sus resultados marcan un cambio de fase respecto a los anteriores: \SI{99.6}{\percent} de acierto con vocabulario de 50 palabras el primer día de uso, \SI{90.2}{\percent} sobre 125.000 palabras el segundo día tras \num{1.4} horas adicionales de datos, y en torno al \SI{97.5}{\percent} de acierto sostenido durante más de ocho meses, con más de 248 horas acumuladas de conversación autónoma a unas 32 palabras por minuto. La \cref{tab:sota-sistemas} resume esta progresión.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Progresión de los sistemas de decodificación de habla de vocabulario abierto. WER: tasa de error por palabra. PPM: palabras por minuto.}
+  \label{tab:sota-sistemas}
+  \small
+  \begin{tabular}{llllll}
+    \toprule
+    Trabajo & Registro & Participante & Vocabulario & WER & PPM \\
+    \midrule
+    Moses \textit{et al.} \cite{moses2021}    & ECoG          & Anartria        & 50 palabras   & ---            & $\sim$15 \\
+    Willett \textit{et al.} \cite{willett2021}& Intracortical & Tetraplejia     & Escritura     & $<$\,1\,\%$^{*}$ & 90 cpm \\
+    Metzger \textit{et al.} \cite{metzger2023}& ECoG          & Ictus de tronco & 1.024 palabras& ---            & $\sim$78 \\
+    Willett \textit{et al.} \cite{willett2023}& Intracortical & T12 (ELA)       & 125.000       & 23,8\,\%       & 62 \\
+    Card \textit{et al.} \cite{card2024}      & Intracortical & T15 (ELA)       & 125.000       & $\sim$2,5\,\%  & 32 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.4em}
+  {\footnotesize $^{*}$ Tasa de error por carácter con corrección automática, no WER. CPM: caracteres por minuto.}
+  % TODO: verifica las cifras de Moses y Metzger antes de la entrega; las he
+  % dejado aproximadas a propósito. La de Willett 2021 es tasa de error por
+  % carácter con autocorrección, no WER: ojo al pie de tabla.
+\end{table}
+
+\section{Anatomía de un decodificador \textit{brain-to-text}}
+\label{sec:sota-anatomia}
+
+Pese a la diversidad de grupos y modalidades, los sistemas anteriores comparten una arquitectura común que conviene desglosar, porque es exactamente la arquitectura de un sistema de reconocimiento automático del habla y es esa coincidencia la que motiva este trabajo.
+
+\subsection{Características de entrada y no estacionariedad}
+
+La entrada es una secuencia de vectores de características neuronales a \SI{50}{\hertz}. Un problema transversal, y probablemente el más limitante en la práctica, es la \textbf{no estacionariedad}: la relación entre actividad registrada e intención cambia entre sesiones por micromovimientos del implante, gliosis, variaciones en el estado del participante y degradación progresiva del electrodo. Un decodificador entrenado con datos de una sesión se degrada de forma apreciable en la siguiente. La solución estándar, introducida en \cite{willett2021} y presente en prácticamente todos los sistemas posteriores, consiste en aprender una transformación de entrada específica de cada sesión (típicamente afín) que proyecta los datos de cada día a un espacio común, dejando que el resto del modelo sea compartido. Los sistemas más recientes refinan esta idea con proyecciones jerárquicas de bajo rango a nivel de mes y de día \cite{brainwhisperer}.
+
+\subsection{El codificador neuronal}
+
+El codificador transforma la secuencia de características en una secuencia de distribuciones sobre unidades lingüísticas. El modelo de referencia de ambos \textit{benchmarks} es una red recurrente con unidades GRU, y resulta llamativo lo difícil que ha sido superarla: los intentos de sustituirla por modelos de espacio de estados de tipo Mamba igualaron la pérdida CTC y la tasa de error de fonema, pero quedaron por detrás en tasa de error por palabra, y las variantes basadas en Transformer tampoco mejoraron de forma clara el modelo recurrente \cite{b2t24lessons}. Se ha sugerido que la tarea no depende de forma significativa de la información de largo alcance, lo que retiraría la principal ventaja de las arquitecturas atencionales. Trabajos posteriores han obtenido resultados competitivos con codificadores Conformer \cite{khanday2026}, de modo que la cuestión no está cerrada.
+
+\subsection{Objetivo de entrenamiento y unidad lingüística}
+
+El entrenamiento se realiza casi universalmente con la pérdida CTC \cite{graves2006ctc}, que permite aprender a partir de pares secuencia-etiqueta sin alineamiento temporal explícito, introduciendo un símbolo en blanco y marginalizando sobre todos los alineamientos compatibles con la etiqueta. Es la elección natural aquí, porque no se dispone de la correspondencia temporal entre actividad cortical y unidades emitidas: en un participante con parálisis no hay audio de referencia con el que alinear.
+
+La unidad de salida dominante es el \textbf{fonema}, con la justificación neurocientífica de que la corteza motora del habla codifica articulación y no ortografía. Es la unidad del sistema de referencia de ambos \textit{benchmarks} y la que emplean casi todas las entradas, que además seleccionan modelo por tasa de error de fonema. Se han explorado alternativas de granularidad más fina: el equipo ganador del Brain-to-Text~'24 obtuvo su mejora principal empleando difonos, es decir, transiciones entre fonemas, con el argumento de que capturan mejor la coarticulación \cite{b2t24lessons}. En el extremo opuesto, algunos trabajos recientes han demostrado que la decodificación directa a nivel de \textbf{carácter} es viable de forma totalmente extremo a extremo \cite{khanday2026}, lo que resulta especialmente relevante para esta memoria.
+
+\subsection{El modelo de lenguaje y la formación de palabras}
+
+La salida del codificador es una secuencia de distribuciones sobre unidades sublexicales que, por sí sola, produce texto con una tasa de error inaceptable. La conversión a texto se realiza mediante una búsqueda que combina esa evidencia acústica con un modelo de lenguaje. El procedimiento estándar en los sistemas de referencia es un decodificador ponderado de estados finitos que integra un modelo $n$-grama de orden alto para generar una lista de hipótesis, seguido de una segunda etapa de reordenamiento con un modelo de lenguaje de gran tamaño \cite{b2t24lessons}.
+
+Esta etapa aporta una parte muy sustancial del rendimiento final del sistema, hasta el punto de que la comparación entre codificadores sólo es significativa si se realiza con el mismo decodificador lingüístico. Tiene además un coste de recursos considerable: el modelo de 5-gramas empleado en el \textit{benchmark} requiere del orden de \SI{300}{\giga\byte} de memoria principal y el de 3-gramas unos \SI{60}{\giga\byte}, cifras fuera del alcance de un entorno de trabajo estándar, lo que ha llevado a varios participantes a entrenar modelos propios de orden reducido \cite{cheng2026}. Existen implementaciones más eficientes en memoria específicamente diseñadas para este escenario \cite{lightbeam}.
+
+Conviene distinguir dos formas de emplear el modelo de lenguaje, porque la diferencia es central en esta memoria. En el \textbf{reordenamiento} (\textit{rescoring}), el modelo acústico genera una lista de hipótesis y el modelo de lenguaje se limita a ordenarla; su techo de rendimiento es, por construcción, la mejor hipótesis presente en la lista. En la \textbf{fusión superficial} (\textit{shallow fusion}), el modelo de lenguaje interviene durante la búsqueda en haz, guiando la expansión de hipótesis y pudiendo por tanto alcanzar transcripciones que nunca habrían aparecido en la lista $n$-mejor del modelo acústico. Comparar el rendimiento real con el límite \textit{oracle} de la lista $n$-mejor permite discriminar empíricamente cuál de los dos regímenes está operando.
+
+\section{Los \textit{benchmarks} Brain-to-Text}
+\label{sec:sota-benchmarks}
+
+La existencia de conjuntos de datos públicos con particiones fijas y métrica común ha sido determinante para la aceleración reciente del campo.
+
+El \textbf{Brain-to-Text~'24} se construyó sobre datos del participante T12: 12.100 frases registradas en 25 sesiones a lo largo de cuatro meses con matrices de 128 electrodos en la corteza motora ventral \cite{lightbeam}. Su modelo de referencia, la red recurrente con decodificación en dos etapas descrita anteriormente, alcanzó un \SI{9.7}{\percent} de tasa de error por palabra, mientras que la mejor entrada de la competición llegó al \SI{5.8}{\percent} \cite{b2t24lessons}.
+
+El \textbf{Brain-to-Text~'25}, empleado en este trabajo, amplía considerablemente la escala: 10.948 frases del participante T15 registradas en 45 sesiones a lo largo de 20 meses con 256 microelectrodos, agrupados en cuatro matrices de alta densidad de 64 canales cada una, de las que se extraen 512 características por ventana de \SI{20}{\milli\second} \cite{b2t25,card2024}. El horizonte temporal de 20 meses convierte la no estacionariedad en un problema de primer orden, muy por encima de lo que planteaba el conjunto anterior.
+
+Las entradas que encabezan la clasificación de este segundo \textit{benchmark} recurren de forma sistemática a conjuntos de modelos y a modelos de lenguaje de gran tamaño para la fusión de sus salidas: una de ellas combina 29 codificadores preentrenados inicializados con semillas distintas y emplea GPT-4 ajustado para fusionar las hipótesis de fonemas y frases de todos ellos \cite{crossspecies2025}. Este dato es relevante para interpretar cualquier resultado individual: la distancia entre un sistema de modelo único y la cabeza de la clasificación no es únicamente una diferencia de arquitectura, sino también de presupuesto de cómputo.
+
+\section{Modelos de habla preentrenados}
+\label{sec:sota-habla}
+
+En paralelo, el reconocimiento automático del habla ha experimentado su propia transformación. El paradigma actual consiste en preentrenar un modelo de gran capacidad sobre volúmenes masivos de audio y adaptarlo después a la tarea concreta.
+
+Dentro de este paradigma conviven dos familias. La primera es la del \textbf{aprendizaje autosupervisado}, representada por wav2vec~2.0, HuBERT y WavLM, que aprenden representaciones a partir de audio no etiquetado mediante objetivos contrastivos o de predicción enmascarada, y requieren una etapa posterior de ajuste supervisado. La segunda es la de la \textbf{supervisión débil a gran escala}, cuyo exponente es Whisper \cite{radford2023whisper}, entrenado sobre 680.000 horas de audio con transcripción de calidad heterogénea recogidas de la web, y que funciona directamente como sistema de reconocimiento multilingüe sin ajuste adicional.
+
+El principal inconveniente de Whisper para la investigación es que ni sus datos de entrenamiento ni su procedimiento son plenamente reproducibles. \textbf{OWSM} (\textit{Open Whisper-style Speech Model}) \cite{peng2023owsm} nació precisamente para cubrir ese hueco: reproduce el estilo de entrenamiento de Whisper empleando exclusivamente conjuntos de datos públicos y una herramienta de código abierto, ESPnet \cite{watanabe2018espnet}, publicando datos, recetas y pesos. La versión v3.1 \cite{peng2024owsmv31} sustituye el codificador Transformer por la arquitectura E-Branchformer \cite{kim2023ebranchformer}, que combina una rama de autoatención con una rama convolucional para capturar simultáneamente dependencias globales y patrones locales, y mejora tanto la precisión como la velocidad de inferencia respecto a la versión anterior. Arquitectónicamente, OWSM es un modelo codificador-decodificador entrenado con un objetivo conjunto CTC-atención \cite{kim2017jointctc}, lo que resulta conveniente aquí: la rama CTC puede utilizarse de forma aislada, prescindiendo por completo del decodificador autorregresivo.
+
+\section{Adaptación eficiente en parámetros}
+\label{sec:sota-peft}
+
+Ajustar la totalidad de los parámetros de un modelo preentrenado sobre un conjunto de datos pequeño es caro y propenso al sobreajuste. Las técnicas de adaptación eficiente en parámetros (\textit{Parameter-Efficient Fine-Tuning}, PEFT) abordan el problema modificando únicamente una fracción reducida de los pesos.
+
+La más extendida es \textbf{LoRA} \cite{hu2022lora}, que congela los pesos originales e introduce, en paralelo a las matrices de proyección seleccionadas, un par de matrices de rango reducido cuyo producto se suma a la salida. La hipótesis subyacente es que la actualización necesaria para adaptarse a una tarea nueva tiene rango intrínseco bajo. Alternativas habituales son los módulos adaptadores insertados entre capas, el ajuste de prefijos y, en su versión más simple, el \textbf{descongelado parcial}: mantener congeladas las capas inferiores y ajustar únicamente las superiores.
+
+Es importante subrayar un punto que condiciona el diseño experimental de esta memoria: \textbf{LoRA sólo tiene sentido sobre un modelo base congelado}. Aplicado sobre un codificador completamente descongelado, añade parámetros entrenables sin aportar ninguna restricción, por lo que no cabe esperar de él ningún beneficio. Cualquier comparación entre estrategias de adaptación debe controlar esta interacción explícitamente.
+
+\section{Transferencia de modelos de habla a señal neuronal}
+\label{sec:sota-transferencia}
+
+La idea de reutilizar un modelo entrenado sobre audio para decodificar actividad cerebral no es nueva, y conviene revisar con detalle los trabajos previos porque delimitan con precisión qué queda por responder.
+
+Una primera línea emplea modelos de habla como \textbf{espacio de representación objetivo}. Kim \textit{et al.} \cite{braintalker} entrenan un codificador que proyecta señal ECoG al espacio latente de wav2vec~2.0, para sintetizar después voz inteligible en un escenario de muy pocos datos. En una variante próxima, se ha reentrenado la arquitectura de wav2vec sobre registros ECoG no etiquetados y se han empleado las representaciones resultantes como entrada de un decodificador supervisado, con mejoras consistentes respecto a usar la señal original y con transferencia positiva incluso entre pacientes distintos \cite{ecogssl2024}. En estos trabajos, sin embargo, lo que se transfiere es la \textit{arquitectura} o el \textit{objetivo autosupervisado}, no los pesos aprendidos sobre audio.
+
+La línea directamente relevante para esta memoria es la que \textbf{transfiere los pesos preentrenados sobre habla} sustituyendo la entrada acústica por señal neuronal. Fiedler \textit{et al.} \cite{fiedler2025wav2vec2brain} reemplazan el extractor de características de audio de wav2vec~2.0 por un extractor de características neuronales entrenado desde cero y comparan sistemáticamente tres condiciones sobre los datos del participante T12: ajuste completo partiendo de los pesos preentrenados, entrenamiento desde cero con la misma arquitectura, y modelo preentrenado congelado con únicamente el extractor entrenable. El ajuste completo con pesos preentrenados obtiene la mejor tasa de error por carácter, \SI{18.54}{\percent}, superando en \num{20.46} puntos porcentuales al entrenamiento desde cero y en \num{15.92} puntos a la variante congelada. Es, hasta donde alcanza esta revisión, la evidencia más directa de que existe transferencia real desde el reconocimiento del habla hacia la decodificación neuronal.
+
+Más recientemente, BrainWhisperer \cite{brainwhisperer} lleva esta idea a Whisper y al escenario intracortical de 256 canales. Su punto de partida es un hallazgo de interpretabilidad: el codificador de Whisper aprende representaciones selectivas de fonema con atención localizada, lo que sugiere que sus capas iniciales son un extractor articulatorio reutilizable. Sobre esa base construyen un modelo con pérdida híbrida, CTC de fonemas tomada de la tercera capa del codificador y entropía cruzada sobre unidades de palabra, atención propia con ventana para capturar continuidad articulatoria, proyecciones jerárquicas de bajo rango por mes y por día frente a la no estacionariedad, e incrustaciones específicas de sujeto que habilitan el entrenamiento conjunto entre participantes. El sistema se sitúa entre las mejores entradas del Brain-to-Text~'25.
+% TODO: verifica en el propio artículo el puesto exacto y el WER (la cifra de
+% 1,78 % y el 4.º puesto de 466 la he visto sólo en prensa, no en el paper).
+
+Existe además una tercera línea, complementaria, que preentrena \textbf{modelos fundacionales específicos de señal neuronal} en lugar de reutilizar modelos de habla: encoders entrenados sobre múltiples tareas motoras, participantes e incluso especies, que se ajustan después a la tarea de habla \cite{crossspecies2025}. Esta aproximación evita el desajuste de modalidad, a costa de requerir la agregación de grandes volúmenes de datos neuronales.
+
+\section{Posicionamiento de este trabajo}
+\label{sec:sota-posicionamiento}
+
+De la revisión anterior se desprenden tres observaciones que delimitan la aportación de esta memoria.
+
+En primer lugar, \textbf{la transferencia desde modelos de habla a señal neuronal está demostrada, pero poco caracterizada}. El trabajo de Fiedler \textit{et al.} \cite{fiedler2025wav2vec2brain} establece que existe, sobre wav2vec~2.0 y el participante T12. BrainWhisperer \cite{brainwhisperer} la explota con éxito sobre Whisper, pero como parte de un sistema con múltiples modificaciones simultáneas orientado a maximizar el rendimiento en la competición, lo que hace difícil atribuir la mejora a un componente concreto. Falta, entre ambos, un estudio de ablación con presupuesto de cómputo igualado que aísle cada decisión de diseño por separado sobre el conjunto de datos más reciente.
+
+En segundo lugar, \textbf{la elección de la unidad lingüística de salida rara vez se justifica empíricamente}. El fonema se adopta por argumento neurocientífico y por continuidad con el sistema de referencia, mientras que el carácter aparece en trabajos aislados \cite{khanday2026}. No se ha encontrado una comparación sistemática de granularidades sobre un mismo modelo, un mismo presupuesto y un mismo eje de evaluación, que es la única forma de contrastar ese argumento en lugar de asumirlo.
+
+En tercer lugar, \textbf{los resultados publicados son difíciles de reproducir con recursos modestos}. Los sistemas de cabecera combinan decenas de modelos y modelos de lenguaje de gran tamaño, y hasta el modelo $n$-grama de referencia excede la memoria disponible en un entorno estándar \cite{cheng2026}. Documentar qué parte del rendimiento sigue siendo accesible con una única GPU de gama media y un modelo de lenguaje entrenado sobre el propio corpus tiene, por tanto, valor metodológico.
+
+Este trabajo se sitúa en la intersección de las tres observaciones. Adapta OWSM v3.1 \cite{peng2024owsmv31} —y no Whisper, por ser un modelo íntegramente reproducible, con datos y recetas públicos— a los datos del Brain-to-Text~'25, y en lugar de perseguir la mejor cifra posible, ejecuta un conjunto de ablaciones controladas, con una única variable modificada por experimento y presupuesto de cómputo idéntico, orientadas a responder las tres preguntas de investigación formuladas en el \cref{cap:introduccion}: qué transfiere del preentrenamiento, a qué granularidad conviene leer la corteza, y dónde reside el conocimiento lingüístico del sistema.
+
+Como punto de referencia directo para los resultados obtenidos, resulta especialmente útil el trabajo de Khanday \textit{et al.} \cite{khanday2026}, que emplea el mismo conjunto de datos, la misma unidad de salida a nivel de carácter, una capa de alineamiento específica de sesión análoga a la utilizada aquí y decodificación CTC voraz sin modelo de lenguaje externo, alcanzando una tasa de error por carácter del \SI{23.80}{\percent} sobre la partición de validación. Al compartir métrica, datos y condiciones de decodificación, constituye la comparación más informativa disponible para un codificador entrenado desde cero, y por tanto una referencia natural frente a la que contrastar la hipótesis de transferencia que motiva esta memoria.

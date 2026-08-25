@@ -1,0 +1,275 @@
+% =====================================================================
+%  CAPÍTULO 5 — ARQUITECTURA DEL SISTEMA
+% =====================================================================
+% Requiere: amsmath, amssymb, booktabs, enumitem, cleveref, siunitx,
+%           graphicx, float
+%
+% FIGURAS PENDIENTES: he dejado cajas con el texto *[FIGURA: ...]* donde
+% hace falta una figura. Sustituye cada bloque \begin{figure}...\end{figure}
+% por el \includegraphics correspondiente cuando las tengas.
+% =====================================================================
+
+\chapter{Arquitectura del sistema}
+\label{cap:arquitectura}
+
+Este capítulo describe el sistema propuesto: qué se conserva del modelo preentrenado, qué se sustituye, y qué componentes se añaden desde cero. Mientras que el \cref{cap:marco-teorico} presenta los mecanismos de forma genérica, aquí se detalla su instanciación concreta, incluyendo las decisiones de implementación que no son evidentes a partir de la descripción teórica y que condicionaron el resultado.
+
+\section{Visión general}
+\label{sec:vision-general}
+
+El sistema toma como punto de partida OWSM v3.1 en su variante \textit{base} sobre codificador E-Branchformer (\texttt{espnet/owsm\_v3.1\_ebf\_base}, 101 millones de parámetros) y lo transforma en un decodificador de actividad neuronal mediante cuatro intervenciones:
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em]
+  \item \textbf{Eliminación de la cadena acústica.} El \textit{frontend} de banco de filtros mel y la normalización global se desactivan por completo: la señal neuronal entra directamente al modelo.
+  \item \textbf{Sustitución del módulo de entrada} del codificador por un adaptador entrenado desde cero, que proyecta las 512 características neuronales al espacio de 384 dimensiones que espera el codificador y realiza el submuestreo temporal.
+  \item \textbf{Inserción de una capa específica de sesión} delante del adaptador, que compensa la deriva de la señal entre días de registro.
+  \item \textbf{Sustitución de la cabeza CTC} por una nueva, dimensionada según la unidad lingüística de salida elegida, y entrenada desde cero.
+\end{enumerate}
+
+El codificador E-Branchformer, que constituye el grueso de los parámetros, se conserva estructuralmente intacto; lo que varía entre experimentos es su inicialización y su régimen de congelación. La \cref{fig:arquitectura-general} resume el sistema completo.
+
+\begin{figure}[H]
+  \centering
+  \fbox{\parbox{0.9\textwidth}{\vspace{2.5cm}\centering\textit{[FIGURA: diagrama de bloques del sistema completo. De izquierda a derecha: tensor de entrada $(T\times512)$ $\rightarrow$ normalización y aumento $\rightarrow$ capa de sesión (con el canal 513 de índice de sesión) $\rightarrow$ módulo adaptador (submuestreo $\times4$, salida $384$) $\rightarrow$ codificación posicional $\rightarrow$ 6 bloques E-Branchformer $\rightarrow$ cabeza CTC $\rightarrow$ decodificación. Marcar en un color los bloques preentrenados y en otro los entrenados desde cero.]}\vspace{2.5cm}}}
+  \caption{Arquitectura general del sistema propuesto.}
+  \label{fig:arquitectura-general}
+\end{figure}
+
+\section{Adaptación de modalidad}
+\label{sec:adaptacion-modalidad}
+
+\subsection{Qué se conserva y qué se sustituye}
+
+La \cref{tab:conservado-sustituido} detalla el tratamiento de cada componente del modelo original.
+
+\begin{table}[H]
+  \centering
+  \caption{Tratamiento de cada componente de OWSM v3.1 en el sistema propuesto.}
+  \label{tab:conservado-sustituido}
+  \small
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Componente original} & \textbf{Tratamiento} & \textbf{Motivo} \\
+    \midrule
+    \textit{Frontend} mel        & Eliminado          & La entrada no es audio \\
+    Normalización global         & Eliminada          & Los datos ya vienen normalizados \\
+    Submuestreo convolucional    & Sustituido         & Dimensión de entrada distinta \\
+    Codificación posicional      & \textbf{Reutilizada} & Independiente de la modalidad \\
+    Codificador E-Branchformer   & Conservado         & Es el objeto del estudio \\
+    Decodificador autorregresivo & Desactivable       & Innecesario en régimen CTC puro \\
+    Cabeza CTC                   & Sustituida         & Vocabulario de salida distinto \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Merece un comentario la reutilización de la codificación posicional. El módulo original de submuestreo de OWSM contiene, además de las convoluciones, la codificación posicional sinusoidal que el codificador espera recibir. Al sustituir el módulo completo se perdería también esa codificación, de modo que el sistema la extrae del modelo original antes de reemplazarlo y la reinyecta en el nuevo adaptador. Es una operación conservadora: la codificación posicional no depende de la modalidad de entrada, sólo de la posición temporal, por lo que no hay motivo para reaprenderla.
+
+\subsection{Desactivación del decodificador}
+
+Cuando el peso de la rama CTC se fija a la unidad, ESPnet desactiva automáticamente el decodificador autorregresivo. Esto tiene dos consecuencias que conviene tener presentes al leer los registros de entrenamiento:
+
+\begin{itemize}
+  \item El sistema opera en régimen CTC puro y la única decodificación posible es voraz o por búsqueda en haz sobre la salida CTC, no generativa.
+  \item La métrica \texttt{valid\_cer} que ESPnet reporta por defecto corresponde al decodificador de atención y \textbf{deja de existir}. La métrica válida pasa a ser \texttt{valid\_cer\_ctc}. Seleccionar modelo por la métrica equivocada, o por la pérdida total, produce elecciones incorrectas: con peso de CTC bajo, la pérdida total está dominada por el término de atención, que toca fondo en pocas épocas gracias al prior del inglés preentrenado y no refleja la calidad de la decodificación neuronal.
+\end{itemize}
+
+\section{Capa específica de sesión}
+\label{sec:capa-sesion}
+
+\subsection{Motivación y formulación}
+
+Como se estableció en el \cref{cap:datos}, las 45 sesiones abarcan 20 meses y la señal asociada a un mismo fonema varía entre días por deriva y micromovimiento de los electrodos. Un adaptador único compartido tendría que aprender simultáneamente múltiples correspondencias contradictorias entre señal y unidad lingüística, además de inferir implícitamente a qué día pertenece cada ensayo.
+
+La capa de sesión aplica una transformación afín distinta por cada día de registro, seguida de una no linealidad acotada:
+
+\begin{equation}
+  \mathbf{z}_t = \mathrm{softsign}\!\left( \mathbf{W}_{s}\,\mathbf{x}_t + \mathbf{b}_{s} \right), \qquad \mathbf{W}_{s} \in \mathbb{R}^{512 \times 512},\; \mathbf{b}_{s} \in \mathbb{R}^{512},
+  \label{eq:capa-sesion}
+\end{equation}
+
+donde $s$ es el índice de la sesión a la que pertenece el ensayo. Cada matriz $\mathbf{W}_s$ se inicializa a la identidad y cada vector $\mathbf{b}_s$ a cero, de modo que al comenzar el entrenamiento la capa se limita a aplicar la función \textit{softsign} y el sistema parte de un comportamiento neutro.
+
+El coste en parámetros es de $n_{\mathrm{ses}} \times (512^2 + 512)$, es decir, unos 2,6 millones con 10 sesiones y unos 12 millones con las 45. Es una cantidad considerable, comparable a una fracción apreciable del propio codificador, y su beneficio debe por tanto justificarse experimentalmente y no asumirse.
+
+\begin{figure}[H]
+  \centering
+  \fbox{\parbox{0.9\textwidth}{\vspace{2cm}\centering\textit{[FIGURA: esquema de la capa de sesión. Mostrar el banco de $n_{\mathrm{ses}}$ matrices $\mathbf{W}_s$, la selección por índice de sesión, y cómo días distintos se proyectan a un espacio común antes del adaptador. Útil superponer un esquema de la deriva entre sesiones.]}\vspace{2cm}}}
+  \caption{Transformación afín específica de sesión.}
+  \label{fig:capa-sesion}
+\end{figure}
+
+\subsection{Transporte del índice de sesión}
+
+La capa necesita saber a qué sesión pertenece cada ensayo, pero la cadena de datos de ESPnet transporta únicamente el tensor de señal. La solución adoptada consiste en \textbf{añadir el índice de sesión como un canal adicional constante en el tiempo}, de modo que la entrada pasa de $T \times 512$ a $T \times 513$. La capa de sesión lee ese índice del primer instante temporal, lo separa del resto y aplica la transformación correspondiente.
+
+La elección del primer instante no es arbitraria: el relleno de las secuencias hasta la longitud del lote se añade \textit{al final} y con ceros, por lo que el instante inicial corresponde siempre a datos reales. Leer el índice del último instante devolvería cero para cualquier ensayo más corto que el más largo del lote.
+
+\section{Módulo adaptador}
+\label{sec:frontend}
+
+El adaptador sustituye al módulo de submuestreo original y cumple tres funciones: mezclar la información entre electrodos, reducir la resolución temporal y proyectar a la dimensión del codificador. Se implementaron cuatro variantes de complejidad creciente para poder cuantificar experimentalmente el compromiso entre capacidad y coste.
+
+\subsection{Variante convolucional bidimensional}
+
+Reutiliza el módulo original de OWSM, un submuestreo convolucional en dos dimensiones que trata la entrada como una imagen de tiempo por frecuencia. Es la opción de menor esfuerzo de implementación, pero conceptualmente cuestionable: convoluciona a lo largo del eje de electrodos como si fuera un eje de frecuencias, cuando en realidad \textbf{el orden de los electrodos es arbitrario} y no existe ninguna noción de proximidad entre índices consecutivos. Es además con diferencia la más costosa, del orden de 66 GFLOP por muestra, lo que supone entre el \SI{85}{\percent} y el \SI{90}{\percent} del coste total del modelo.
+
+\subsection{Variante lineal}
+
+Una única proyección lineal de 512 a 384 dimensiones seguida de una decimación temporal por un factor de cuatro. Es la variante de menor capacidad y sirve como cota inferior de referencia: cualquier adaptador más complejo debe justificar su coste frente a ella.
+
+\subsection{Variante convolucional unidimensional}
+
+Dos convoluciones temporales de núcleo tres y paso dos con activaciones rectificadas, que realizan simultáneamente la mezcla y el submuestreo por un factor de cuatro. Es un punto intermedio razonable en coste.
+
+\subsection{Variante profunda}
+\label{sec:frontend-deep}
+
+Es la variante diseñada específicamente para señal neuronal, y separa de forma explícita las dos operaciones que la variante bidimensional confunde:
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em]
+  \item \textbf{Proyección espacial.} Una capa lineal de 512 a $d$ dimensiones, seguida de normalización por capas, activación GELU y descarte aleatorio. Mezcla \textit{todos los electrodos con todos}, que es la operación correcta cuando el orden de los electrodos carece de significado, a diferencia de la convolución bidimensional.
+  \item \textbf{Bloques temporales.} Una pila de convoluciones unidimensionales de núcleo $k$ con normalización por capas, activación GELU, descarte y conexión residual. El submuestreo se realiza mediante el paso de la convolución, no por decimación, de modo que \textbf{ninguna muestra se descarta sin haber sido vista}. La pila se organiza en etapas: cada etapa de submuestreo por dos va seguida de $n_{\mathrm{res}}$ bloques residuales de paso unitario.
+  \item \textbf{Proyección de salida.} Una capa lineal de $d$ a 384 dimensiones y la codificación posicional heredada de OWSM.
+\end{enumerate}
+
+Los valores de referencia son $d = 512$, $n_{\mathrm{res}} = 2$ bloques residuales por etapa, núcleo $k = 5$ y descarte de $0{,}1$. El factor de submuestreo total es configurable entre uno y ocho; con ventanas de \SI{20}{\milli\second}, un factor de cuatro produce tramas de \SI{80}{\milli\second} y un factor de dos, tramas de \SI{40}{\milli\second} con el doble de coste.
+
+\begin{figure}[H]
+  \centering
+  \fbox{\parbox{0.9\textwidth}{\vspace{2.5cm}\centering\textit{[FIGURA: detalle del adaptador profundo. Mostrar la proyección espacial $512\rightarrow d$, la anulación del relleno, las etapas de bloques temporales (con la conexión residual y el bloque de paso 2 que submuestrea), y la proyección final a 384. Indicar la longitud de la secuencia en cada punto.]}\vspace{2.5cm}}}
+  \caption{Estructura del módulo adaptador profundo.}
+  \label{fig:frontend-deep}
+\end{figure}
+
+\subsection{Anulación del relleno}
+
+Un detalle de implementación con consecuencias reales: tras la proyección espacial, que incluye un término de sesgo, los instantes de relleno \textbf{dejan de valer cero}. Si no se corrigen, las convoluciones temporales posteriores mezclan ese contenido espurio con los datos reales de los instantes finales de cada secuencia. El adaptador profundo vuelve a anular explícitamente las posiciones de relleno tras la proyección espacial y antes de los bloques temporales.
+
+\section{Cabeza CTC y unidades de salida}
+\label{sec:cabeza-ctc}
+
+La proyección lineal final del modelo original mapea la salida del codificador a las 50.002 clases del vocabulario de subpalabras de OWSM. El sistema la sustituye por una nueva proyección dimensionada según la unidad de salida elegida, entrenada desde cero. Se implementaron cinco objetivos:
+
+\begin{table}[H]
+  \centering
+  \caption{Unidades de salida CTC implementadas.}
+  \label{tab:objetivos-ctc}
+  \small
+  \begin{tabular}{llll}
+    \toprule
+    \textbf{Objetivo} & \textbf{Clases} & \textbf{Origen} & \textbf{Métrica} \\
+    \midrule
+    Subpalabra de OWSM   & 50.002 & Vocabulario preentrenado           & CER/WER \\
+    Carácter             & 29     & 26 letras, apóstrofo, espacio, blanco & CER/WER \\
+    Fonema               & Variable & Etiquetas del propio HDF5        & PER \\
+    Subpalabra propia    & Ajustable (256) & \textit{SentencePiece} sobre las transcripciones de entrenamiento & CER/WER \\
+    Palabra              & Variable & Vocabulario cerrado de entrenamiento & WER \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Dos observaciones sobre este componente. La primera es que \textbf{esta capa es la que hace inviable el vocabulario de subpalabras preentrenado}: se entrena desde cero, y repartir poco más de ocho mil frases entre 50.002 clases deja a la inmensa mayoría sin ejemplos, mientras que con 29 clases de carácter cada una recibe miles.
+
+La segunda es que el objetivo de fonema no produce texto ortográfico, por lo que compararlo con la transcripción de referencia carecería de sentido. En esa configuración el sistema reporta tasa de error de fonema y deja las métricas de texto sin valor, ya que obtenerlas exigiría un decodificador con léxico. Esto es precisamente lo que motiva que la comparación entre granularidades deba hacerse sobre el texto final decodificado, según se argumentó en la \cref{sec:metricas-teoria}.
+
+Adicionalmente, el calculador de errores interno de ESPnet debe recibir la lista de símbolos del objetivo activo. De no hacerlo, las cifras que aparecen en el registro de entrenamiento se calculan con el vocabulario equivocado y \textbf{carecen de significado}, sin que nada en el registro lo advierta.
+
+\section{Estrategias de adaptación del codificador}
+\label{sec:estrategias-adaptacion}
+
+El sistema congela inicialmente la totalidad de los parámetros y descongela después de forma selectiva. El adaptador y la cabeza CTC, al ser componentes nuevos, están siempre activos. Sobre el codificador se contemplan las siguientes estrategias:
+
+\begin{description}
+  \item[Codificador congelado.] Sólo se entrenan el adaptador y la cabeza CTC. Mide cuánto puede extraerse de las representaciones preentrenadas sin modificarlas.
+  \item[Descongelado total.] Todos los parámetros del codificador se actualizan.
+  \item[Descongelado parcial.] Se descongelan únicamente las $N$ capas superiores, las más próximas a la salida y más específicas de la tarea, junto con la normalización final del codificador.
+  \item[LoRA.] Adaptadores de rango bajo sobre las proyecciones de atención y de las redes \textit{feed-forward} del codificador.
+\end{description}
+
+\subsection{Interacción entre LoRA y la congelación}
+
+Conforme al argumento formal de la \cref{sec:lora-teoria}, el sistema \textbf{desactiva LoRA automáticamente} cuando se solicita junto con el codificador completamente descongelado, y emite un aviso. En esa combinación los adaptadores de rango bajo no aportan restricción alguna y sólo añaden parámetros y ciclos de fusión. Dejar que esa configuración se ejecutase habría producido filas en la tabla de resultados que aparentan evaluar LoRA sin hacerlo.
+
+\subsection{Tasa de aprendizaje diferencial}
+
+Aplicar una misma tasa de aprendizaje a componentes preentrenados y a componentes inicializados desde cero es cuestionable: los primeros parten de un óptimo y los segundos del ruido. El sistema permite escalar la tasa del codificador preentrenado por un factor, manteniendo la tasa base para el adaptador, la cabeza CTC y los adaptadores de rango bajo. La separación se realiza por nombre de parámetro en el momento de construir el optimizador.
+
+\subsection{Codificador recortado}
+
+Una última capacidad, motivada por los resultados del control de inicialización: cuando el codificador se inicializa aleatoriamente, deja de existir la restricción de que su estructura coincida con la del modelo preentrenado, y puede reducirse su número de bloques. Esto permite formular la pregunta natural que sigue al control científico: si los pesos preentrenados no aportan, ¿aporta al menos el tamaño de la arquitectura? La configuración es incompatible con la inicialización preentrenada y el sistema lo verifica explícitamente.
+
+\subsection{El control de inicialización}
+\label{sec:control-init}
+
+El interruptor más importante del sistema no añade ningún componente: permite \textbf{omitir la carga de los pesos preentrenados}, dejando el codificador con inicialización aleatoria y manteniendo absolutamente todo lo demás idéntico. Es el control científico sobre el que descansa la primera pregunta de investigación: sin este punto de comparación, cualquier afirmación sobre la aportación del preentrenamiento sería una suposición y no una medida.
+
+\section{Preprocesado y aumento de datos}
+\label{sec:preprocesado-arq}
+
+\subsection{Normalización}
+
+Se contemplan dos regímenes: no aplicar ninguna normalización adicional, dado que los datos distribuidos ya vienen normalizados por bloque de registro y así los emplean los trabajos publicados, o aplicar una puntuación z adicional por ensayo y canal. Esta segunda opción tiene un efecto que conviene explicitar: al normalizar cada ensayo por separado, \textbf{se elimina la amplitud relativa entre ensayos}, que podría ser informativa.
+
+\subsection{Aumento de datos}
+
+Se implementaron cuatro transformaciones, aplicadas únicamente durante el entrenamiento:
+
+\begin{description}
+  \item[Ruido blanco gaussiano.] Sumado a la señal ya normalizada. Es el regularizador principal del sistema de referencia del \textit{benchmark}, no un detalle accesorio.
+  \item[Desplazamiento constante por canal.] Un valor por electrodo, sorteado una vez por ensayo, que imita la deriva de línea base \textit{dentro} de una misma sesión, que la capa de sesión no puede corregir por variar de un ensayo a otro.
+  \item[Bandas temporales anuladas.] Intervalos contiguos de tiempo puestos a cero.
+  \item[Electrodos anulados.] Un subconjunto \textbf{aleatorio, no contiguo}, de electrodos puesto a cero. La no contigüidad es deliberada y coherente con el argumento de la \cref{sec:frontend-deep}: al ser arbitrario el orden de los electrodos, anular un intervalo de índices consecutivos no tiene el significado físico que sí tiene anular una banda de frecuencias en audio.
+\end{description}
+
+% TODO (Kiril): en la memoria describe el enmascarado de electrodos como
+% "N electrodos elegidos al azar por ensayo", con N exacto. El nombre del
+% parametro (aug_max_canales) viene de SpecAugment y sugiere "hasta N",
+% pero en la implementacion el ancho NO se sortea: son exactamente
+% aug_n_canales x aug_max_canales electrodos en cada ensayo.
+
+\subsection{Suavizado temporal}
+
+El suavizado gaussiano a lo largo del eje temporal \textbf{no es aumento de datos sino preprocesado}, y por tanto se aplica por igual en entrenamiento, validación e inferencia. Se aplica después del ruido, de modo que el suavizado tenga efecto sobre él, siguiendo la práctica del sistema de referencia. Confundir ambas categorías conduciría a un desajuste entre las condiciones de entrenamiento y las de evaluación.
+
+\section{Recuento de parámetros}
+\label{sec:recuento-parametros}
+
+\begin{table}[H]
+  \centering
+  \caption{Distribución de parámetros del sistema en la configuración de referencia.}
+  \label{tab:parametros-sistema}
+  \small
+  \begin{tabular}{lrrl}
+    \toprule
+    \textbf{Componente} & \textbf{Parámetros} & \textbf{\%} & \textbf{Estado} \\
+    \midrule
+    Codificador E-Branchformer (6 bloques) & --- & --- & Según estrategia \\
+    Adaptador (variante profunda)          & --- & --- & Entrenable \\
+    Capa de sesión                         & --- & --- & Entrenable \\
+    Cabeza CTC                             & --- & --- & Entrenable \\
+    Decodificador autorregresivo           & --- & --- & Desactivado \\
+    \midrule
+    \textbf{Total entrenable}              & --- & --- & \\
+    \textbf{Total del modelo}              & --- & --- & \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% TODO (Kiril): rellena esta tabla con la salida real de count_trainable()
+% para la configuracion campeona. El notebook ya la imprime en cada run
+% ("N entrenables / M totales"). Da los numeros con 45 sesiones, porque la
+% capa de sesion escala con eso y es lo que hace la cifra interesante.
+
+\section{Decisiones de implementación}
+\label{sec:decisiones-implementacion}
+
+Varias restricciones de la herramienta condicionaron el diseño y merecen quedar documentadas, tanto por transparencia como por su utilidad para quien reproduzca el trabajo.
+
+\begin{description}
+  \item[Herencia obligada del módulo de submuestreo.] El codificador de ESPnet decide si pasar la máscara de longitudes al módulo de entrada comprobando su tipo. Los adaptadores deben, por tanto, heredar de la clase de submuestreo original aunque no utilicen su constructor; en caso contrario el codificador los invoca sin máscara, asumiendo que se trata de una incrustación de texto que no submuestrea, y la ejecución falla.
+  \item[Propagación de la máscara.] Cada adaptador debe recortar o rellenar la máscara de longitudes para que su tamaño coincida exactamente con la secuencia submuestreada, ya que las convoluciones con relleno no siempre producen la longitud que la división entera predice.
+  \item[Inyección del peso de la rama CTC.] El peso de la rama CTC debe inyectarse en la configuración del modelo y no en la del entrenamiento. Construido desde la configuración de preentrenamiento, el modelo conservaría el valor original de OWSM con independencia de lo indicado, y la pérdida optimizada no sería la esperada.
+  \item[Lectura perezosa del almacenamiento.] Con las 45 sesiones, los datos superan la memoria disponible, de modo que el conjunto almacena únicamente un índice de pares fichero-clave y lee cada ensayo bajo demanda. Los descriptores de fichero deben cerrarse antes de cualquier bifurcación de proceso, ya que la biblioteca de acceso a HDF5 no es segura frente a ello.
+  \item[Verificación de integridad de las copias.] La copia de los datos desde el almacenamiento en la nube al disco local puede interrumpirse a medias, dejando un fichero truncado que las comprobaciones de existencia dan por válido y que falla a mitad de entrenamiento con un error opaco. El sistema compara los tamaños de origen y destino y vuelve a copiar cuando no coinciden.
+  \item[Trazabilidad de los experimentos.] Cada experimento se identifica por una huella derivada de su configuración completa, lo que permite detectar experimentos ya ejecutados, reintentar los que fallaron y garantizar que dos filas de la tabla de resultados con la misma etiqueta corresponden efectivamente a la misma configuración.
+\end{description}

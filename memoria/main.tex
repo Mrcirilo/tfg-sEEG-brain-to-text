@@ -241,40 +241,8 @@ model can be transferred to a domain it was not designed for.
 % cero (comparación con Khanday et al., cap. 2).
 
 %==============================================================================
-\chapter{Metodología experimental}
-\label{cap:metodologia-exp}
-%==============================================================================
-% TODO: ojo, aquí tu placeholder decía \label{cap:metodologia} — lo he
-% renombrado a cap:metodologia-exp para no chocar con \cref{cap:metodologia}
-% del capítulo 1, que apunta a un capítulo de metodología distinto (más
-% centrado en arquitectura + CTC + entrenamiento). Vuelve a mirar el capítulo 1
-% y decide el mapeo final de capítulos antes de tocar más etiquetas.
 
-\section{Entorno y recursos computacionales}
-\label{sec:entorno}
-% Google Colab, GPU L4, ESPnet-EZ, presupuesto de cómputo por bloque.
-
-\section{Preprocesado de señales}
-\label{sec:preprocesado}
-% Normalización, manejo de longitudes variables, verificación de integridad HDF5.
-
-\section{Protocolo de entrenamiento}
-\label{sec:protocolo}
-% Hiperparámetros de la RECETA, splits, criterio de parada (el bug de
-% early_stopping_criterion que arreglaste).
-
-\section{Métricas de evaluación}
-\label{sec:metricas}
-% CER, PER, WER. Definición formal de cada una.
-
-\begin{equation}
-  \mathrm{WER} = \frac{S + D + I}{N}
-  \label{eq:wer}
-\end{equation}
-% donde S = sustituciones, D = eliminaciones, I = inserciones, N = palabras de referencia.
-
-\section{Diseño experimental por bloques}
-\label{sec:experimentos}
+\include{capitulos/06_metodologia}
 % Aquí van tus bloques A-G tal cual los tienes definidos: control científico,
 % unidad de salida, frontend, LoRA/congelación, generalización a sesiones,
 % modelo de lenguaje, campeón final.

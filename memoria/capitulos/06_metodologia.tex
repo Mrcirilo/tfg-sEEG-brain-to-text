@@ -1,0 +1,237 @@
+% =====================================================================
+%  CAPÍTULO 6 — METODOLOGÍA EXPERIMENTAL
+% =====================================================================
+% Requiere: amsmath, amssymb, booktabs, enumitem, cleveref, siunitx, float
+% =====================================================================
+
+\chapter{Metodología experimental}
+\label{cap:metodologia}
+
+Este capítulo describe cómo se ejecutan, miden y comparan los experimentos. Su objetivo es que cualquier cifra del \cref{cap:resultados} pueda interpretarse sabiendo exactamente bajo qué condiciones se obtuvo y qué diferencias entre configuraciones son atribuibles a la configuración y cuáles al ruido de medida.
+
+\section{Entorno de ejecución y presupuesto de cómputo}
+\label{sec:entorno}
+
+Todo el trabajo se ejecuta en Google Colab sobre una única GPU NVIDIA L4, empleando ESPnet \cite{watanabe2018espnet} a través de su interfaz ESPnet-EZ \cite{someki2024espnetez}, que permite construir y entrenar modelos desde Python sin recurrir a las recetas de línea de órdenes.
+
+Los datos residen en almacenamiento en la nube, pero \textbf{no se entrena leyendo directamente de él}: el servicio limita las operaciones de entrada y salida por fichero, y con lectura perezosa sobre 45 sesiones eso se convierte en el cuello de botella. Cada sesión se copia una vez al disco local de la máquina virtual, con verificación de integridad por tamaño, y el entrenamiento lee de ahí. Los puntos de control se escriben también en local y sólo el mejor se copia de vuelta al almacenamiento persistente, junto con los registros y las métricas.
+
+El coste se contabiliza en unidades de cómputo del servicio, que es la restricción efectiva del proyecto. A partir de mediciones reales sobre ejecuciones completas se calibró un estimador del coste por época en función de la configuración, que permite planificar cada bloque de experimentos antes de lanzarlo y decidir qué recortar cuando el presupuesto aprieta. Con 45 sesiones, el coste de referencia es del orden de ocho minutos por época.
+
+\section{Preparación de los datos}
+\label{sec:preparacion-datos}
+
+Los conjuntos de entrenamiento y validación se construyen recorriendo las claves de cada fichero HDF5 sin leer los datos, y almacenando únicamente un índice de tripletas fichero-clave-sesión. Cada ensayo se lee bajo demanda durante el entrenamiento, lo que permite trabajar con las 45 sesiones sin que quepan en memoria.
+
+Un detalle relevante para la capa de sesión: \textbf{el índice de sesión es global}, es decir, corresponde a la posición del día en la lista completa de sesiones y no en el subconjunto empleado. De este modo, cada día dispone de su propia matriz aunque sólo aparezca en validación, lo que es imprescindible para el experimento de generalización a días no vistos.
+
+Se emplean las 45 sesiones disponibles, incluidas las cuatro que sólo aportan datos de entrenamiento por carecer de partición de validación. La partición de prueba oficial no se utiliza, al no distribuirse con etiquetas: todas las cifras reportadas corresponden a la partición de validación.
+
+\section{Receta de entrenamiento}
+\label{sec:receta}
+
+Todos los experimentos comparten una receta base, sobre la que cada experimento modifica únicamente los parámetros bajo estudio. La \cref{tab:receta} recoge sus valores.
+
+\begin{table}[H]
+  \centering
+  \caption{Receta de entrenamiento de referencia.}
+  \label{tab:receta}
+  \small
+  \begin{tabular}{llp{6.2cm}}
+    \toprule
+    \textbf{Parámetro} & \textbf{Valor} & \textbf{Comentario} \\
+    \midrule
+    Sesiones            & 45            & Todas las disponibles \\
+    Épocas              & 30            & 70 en el experimento final \\
+    Optimizador         & AdamW         & Necesario para que el decaimiento regularice \\
+    Decaimiento de pesos & $10^{-2}$    & Valor estándar de AdamW \\
+    Tasa de aprendizaje & $10^{-3}$     & Componentes nuevos \\
+    Escala del codificador & $0{,}05$   & Tasa reducida para pesos preentrenados \\
+    Calentamiento       & 1.500 pasos   & \\
+    Recorte de gradiente & $100$        & Véase el comentario más abajo \\
+    Tamaño de lote      & 16 (ordenado) & Con acumulación de 2 \\
+    Precisión mixta     & Activada      & \\
+    Adaptador           & Profundo      & $d=512$, 2 bloques residuales, submuestreo $\times 2$ \\
+    Capa de sesión      & Activada      & \\
+    Objetivo CTC        & Carácter      & 29 clases \\
+    Peso de CTC         & $1{,}0$       & Decodificador desactivado \\
+    InterCTC            & $0{,}3$ en la capa 2 & \\
+    Normalización       & Ninguna       & Los datos ya vienen normalizados por bloque \\
+    Aumento             & Activado      & Ruido $0{,}5$, desplazamiento $0{,}2$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Tres decisiones de esta receta proceden de errores detectados y merecen justificación explícita:
+
+\begin{description}
+  \item[Recorte de gradiente.] Con un umbral de 5 y normas de gradiente del orden de 200, el registro mostraba que \textbf{el cien por cien de los pasos se recortaba}, descartando un factor de unas cuarenta veces la magnitud del gradiente en cada actualización. El recorte había dejado de ser una salvaguarda frente a valores atípicos para convertirse en una reescala sistemática de la tasa de aprendizaje efectiva.
+  \item[Optimizador.] Con Adam clásico, el decaimiento de pesos se suma al gradiente y queda reescalado por el denominador adaptativo, de modo que apenas regulariza. Cualquier experimento sobre regularización exige AdamW.
+  \item[Búsqueda de algoritmos de convolución.] Con lotes ordenados por longitud, cada lote tiene una forma distinta y la búsqueda automática del mejor algoritmo convolucional se repite para cada forma nueva, lo que en la primera época supone más de un centenar de búsquedas exhaustivas. Se desactiva.
+\end{description}
+
+\section{Selección de modelo y parada temprana}
+\label{sec:seleccion-modelo}
+
+Esta sección documenta el error metodológico de mayor impacto detectado durante el trabajo, y su corrección.
+
+ESPnet emplea \textbf{dos criterios distintos e independientes}: uno para decidir qué punto de control se conserva como mejor modelo, y otro para decidir cuándo detener el entrenamiento por falta de mejora. El segundo tiene como valor por omisión la pérdida de validación, con independencia de lo que se haya configurado para el primero.
+
+Las consecuencias fueron dos, ambas conforme a lo previsto teóricamente en la \cref{sec:ctc}:
+
+\begin{enumerate}[leftmargin=*]
+  \item Con un peso de CTC reducido, la pérdida total está dominada por el término de atención, que toca fondo en torno a la cuarta época gracias al conocimiento previo del inglés del modelo preentrenado, mientras la tasa de error de la tarea sigue descendiendo. Seleccionar por pérdida conservaba modelos claramente peores.
+  \item En régimen de sobreajuste, la pérdida de validación asciende mientras la tasa de error continúa mejorando. Con el criterio por omisión, un experimento se detuvo en la época 38 de 60 teniendo su mejor tasa de error en la 37 y una pendiente aún descendente: se interrumpió un entrenamiento que seguía mejorando.
+\end{enumerate}
+
+La corrección consiste en fijar explícitamente ambos criterios sobre la tasa de error de la rama CTC, y en retrasar el inicio del cómputo de paciencia hasta la época 15, de modo que la fase inicial de calentamiento, en la que las variaciones son erráticas, no dispare la parada.
+
+Este episodio motiva un principio adoptado en el resto del trabajo: \textbf{ningún valor por omisión de la herramienta se da por bueno sin comprobarlo}, y en particular ninguno que gobierne la selección de modelo.
+
+\section{Protocolo de evaluación}
+\label{sec:protocolo-evaluacion}
+
+\subsection{Dos regímenes de decodificación}
+
+Se emplean dos procedimientos de evaluación con propósitos distintos:
+
+\begin{description}
+  \item[CTC voraz.] Un paso hacia delante y el máximo por instante, con el colapso estándar. No pasa por el decodificador, de modo que \textbf{mide exclusivamente lo que el codificador extrae de la señal neuronal} y no puede beneficiarse del conocimiento previo del inglés del modelo preentrenado. Es barato, por lo que se ejecuta sobre la partición de validación completa.
+  \item[Búsqueda en haz.] Decodificación autorregresiva con el decodificador completo, con tamaño de haz 5. Es mucho más costosa por ensayo, por lo que se limita a 200 ensayos.
+\end{description}
+
+Ambos procedimientos evalúan \textbf{sobre los mismos ensayos}, seleccionados de forma equiespaciada a lo largo de la partición. Inicialmente la búsqueda en haz tomaba los primeros ensayos y la decodificación voraz una muestra repartida; con 45 sesiones, los primeros ensayos corresponden todos a los primeros días de registro, de modo que ambas cifras se estaban midiendo sobre subconjuntos distintos y no eran comparables entre sí.
+
+\subsection{Dos definiciones de tasa de error por carácter}
+
+La decodificación voraz reporta dos cifras que no son intercambiables:
+
+\begin{itemize}
+  \item Una tasa \textbf{micro}, calculada como el cociente entre la suma de errores y la suma de longitudes de referencia sobre todos los ensayos, exactamente como la calcula ESPnet internamente. Es la única comparable con la columna del registro de entrenamiento y, por tanto, la que permite comparar experimentos entre sí.
+  \item Una tasa \textbf{por ensayo}, promediada sobre ensayos tras normalizar el texto. Se aproxima más a la noción intuitiva de tasa de error, pero los ensayos cortos que fallan la penalizan de forma desproporcionada.
+\end{itemize}
+
+Las tablas de resultados indican explícitamente cuál de las dos se reporta en cada caso.
+
+\subsection{Precisión de la medida}
+\label{sec:precision-medida}
+
+Toda diferencia entre configuraciones debe contrastarse contra el ruido de muestreo. El procedimiento de evaluación calcula el error estándar de la media y su intervalo de confianza al \SI{95}{\percent} sobre la muestra de ensayos evaluados.
+
+Los órdenes de magnitud son los siguientes: con 200 ensayos, el error estándar de la tasa media es de aproximadamente $0{,}02$, lo que da un intervalo de confianza de entre $\pm 0{,}03$ y $\pm 0{,}05$; con la partición de validación completa, unos 1.400 ensayos con las 45 sesiones, el intervalo baja a alrededor de $\pm 0{,}015$.
+
+La implicación es directa y condiciona la lectura de los resultados: \textbf{dos configuraciones cuyas tasas difieran menos que la suma de sus intervalos de confianza no son distinguibles con esa muestra}. Diferencias del orden de un punto porcentual, que en iteraciones tempranas del trabajo se interpretaron como mejoras, están por debajo del umbral de resolución de la medida. Por este motivo la evaluación voraz se realiza sobre la validación completa siempre que es posible.
+
+\subsection{Comprobaciones de sanidad}
+
+Un modelo que ignora por completo la entrada produce siempre la misma hipótesis, típicamente una frase genérica procedente del conocimiento previo del decodificador. La evaluación detecta y advierte de este caso comparando las hipótesis entre ensayos, lo que evita interpretar como resultado lo que es un fallo de conexión entre la señal y el modelo.
+
+\section{Principios metodológicos}
+\label{sec:principios}
+
+\subsection{Una variable por experimento}
+
+Cada experimento modifica un único parámetro respecto a la receta base. Este principio se adoptó tras un error documentado: un experimento sobre aumento de datos modificó simultáneamente la activación del aumento y el valor del descarte aleatorio, de modo que el resultado no permitía atribuir el efecto a ninguno de los dos y hubo que descartarlo.
+
+\subsection{Presupuesto de cómputo igualado}
+
+Las comparaciones entre configuraciones asignan a todas las variantes el mismo número de épocas y desactivan la parada temprana. Esto hace la comparación justa, pero implica que \textbf{las cifras de las ablaciones no corresponden al rendimiento máximo alcanzable} por cada configuración, sino a su rendimiento bajo presupuesto común. Sólo el experimento final se entrena hasta convergencia.
+
+Este criterio obliga además a una cautela al interpretar resultados negativos: una configuración que aún no ha alcanzado su meseta al final del presupuesto no puede declararse peor sin extenderla. Cuando la pendiente de la curva en la última época indica que el descenso continúa, el experimento se repite con un presupuesto mayor antes de extraer conclusiones.
+
+\subsection{Trazabilidad}
+
+Cada experimento se identifica mediante una huella derivada de su configuración \textbf{completa}, no de la etiqueta. Esto permite tres cosas: saltar experimentos ya ejecutados, reintentar automáticamente los que terminaron en error por agotamiento de memoria o interrupción, y garantizar que dos filas de la tabla con la misma etiqueta corresponden efectivamente a la misma configuración. La versión inicial derivaba la huella sólo de un subconjunto de parámetros, lo que en un barrido puede hacer que un experimento nuevo se identifique erróneamente como ya realizado.
+
+De cada ejecución se conservan la fila de resultados, el registro completo de entrenamiento y la curva de métricas por época.
+
+\section{Diseño experimental}
+\label{sec:diseno-experimental}
+
+Los experimentos se organizan en bloques, cada uno de los cuales responde a una pregunta concreta. La \cref{tab:bloques} los resume.
+
+\begin{table}[H]
+  \centering
+  \caption{Bloques experimentales y pregunta a la que responde cada uno.}
+  \label{tab:bloques}
+  \small
+  \begin{tabular}{llp{6.5cm}}
+    \toprule
+    \textbf{Bloque} & \textbf{Objetivo} & \textbf{Pregunta} \\
+    \midrule
+    A & OE3 (PI1) & ¿Aporta algo el preentrenamiento frente a la inicialización aleatoria? \\
+    D & OE6 (PI1) & ¿Cómo varía el rendimiento con la cantidad de codificador preentrenado que se conserva? \\
+    H & OE9       & ¿Es reproducible el hallazgo, y se le ha dado al modelo preentrenado su mejor oportunidad? \\
+    F & OE6       & Si los pesos no importan, ¿importa el tamaño de la arquitectura? \\
+    B & OE4 (PI2) & ¿Qué granularidad lingüística de salida es la adecuada? \\
+    E & OE7       & ¿Cuánto se degrada el sistema en días no vistos? \\
+    C & OE5       & ¿Qué capacidad necesita el módulo adaptador? \\
+    G & OE9       & Configuración final entrenada hasta convergencia. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% TODO (Kiril): revisa que la correspondencia bloque -> OE case con la
+% numeracion final de objetivos del capitulo 1. Si mueves algun OE, esta
+% tabla hay que actualizarla.
+
+\subsection{Bloque A: el control científico}
+
+Compara tres condiciones con receta idéntica, siendo la inicialización del codificador la única variable: pesos preentrenados con ajuste completo, pesos preentrenados con codificador congelado, e inicialización aleatoria con ajuste completo. Es el bloque del que depende la primera pregunta de investigación y, en consecuencia, el primero que se ejecuta.
+
+\subsection{Bloque D: la curva de conservación}
+
+Extiende el bloque anterior con puntos intermedios: descongelado de las dos y de las cuatro capas superiores del codificador, y adaptación de rango bajo sobre codificador congelado. Convierte tres puntos aislados en una curva que relaciona la cantidad de codificador preentrenado conservado con el rendimiento. Incluye además la extensión del experimento con codificador congelado a un presupuesto mayor, por aplicación del criterio de cautela descrito anteriormente.
+
+\subsection{Bloque H: blindaje del hallazgo}
+
+Anticipa las dos objeciones evidentes a un resultado que contradice la literatura previa. La primera es la reproducibilidad: el experimento se repite con dos semillas adicionales, ya que un hallazgo de este calibre no puede sostenerse sobre una única ejecución. La segunda es la equidad del ajuste: la tasa de aprendizaje reducida para el codificador se eligió para no destruir los pesos preentrenados, de modo que se ejecuta una variante con una tasa más alta antes de concluir que el preentrenamiento no aporta.
+
+\subsection{Bloque F: el tamaño de la arquitectura}
+
+Reduce el número de bloques del codificador, algo posible únicamente con inicialización aleatoria. Responde a la pregunta que sigue de forma natural al bloque A y aporta el eje de coste-eficiencia del trabajo.
+
+\subsection{Bloque B: granularidad de salida}
+
+Compara carácter, fonema, subpalabra propia, palabra de vocabulario cerrado y subpalabra preentrenada. Conforme a lo establecido en la \cref{sec:metricas-teoria}, la comparación se cierra sobre el error por palabra del texto decodificado, único eje común entre unidades distintas.
+
+\subsection{Bloque E: generalización a días no vistos}
+
+Aparta por completo las cinco últimas sesiones, que no participan en el entrenamiento y constituyen el conjunto de evaluación. Se comparan tres tratamientos del día no visto: dejar su matriz de sesión en la identidad, sustituirla por la media de las matrices entrenadas, y prescindir por completo de la capa de sesión.
+
+\subsection{Bloque C: capacidad del adaptador}
+
+Compara las variantes lineal y convolucional unidimensional frente a la profunda. Es el bloque de menor prioridad y el primer candidato a recortarse si el presupuesto se agota.
+
+\subsection{Bloque G: configuración final}
+
+Entrena la mejor configuración resultante con un presupuesto ampliado y parada temprana activa, para determinar hasta dónde llega realmente el sistema.
+
+\section{Protocolo de decodificación con modelo de lenguaje}
+\label{sec:protocolo-lm}
+
+\subsection{Construcción del modelo de lenguaje}
+
+El modelo de $n$-gramas se estima \textbf{exclusivamente sobre las transcripciones de la partición de entrenamiento}. Emplear las de validación constituiría una fuga de información que inflaría artificialmente el resultado.
+
+La estimación se realiza con suavizado de Kneser-Ney mediante las herramientas de KenLM \cite{heafield2011kenlm}. Esta elección corrige un problema metodológico de la primera implementación: al no disponer inicialmente del estimador, el fichero de modelo se generaba con suavizado aditivo en Python puro, que \textbf{penaliza aproximadamente el doble a un trigrama disperso que a un bigrama}. El resultado previo de que el trigrama rendía peor que el bigrama mezclaba, por tanto, el efecto del orden del modelo con el del suavizado, y no era interpretable. Con Kneser-Ney la comparación queda limpia, confirme o no la conclusión anterior.
+
+% TODO (Kiril): en la memoria, deja constancia de CUAL de los dos suavizados
+% usaste en las cifras finales. La celda cae al add-k automaticamente si
+% lmplz no compilo, y lo avisa por pantalla.
+
+\subsection{Ajuste de los hiperparámetros de fusión}
+
+Los coeficientes de la \cref{eq:shallow-fusion} —el peso del modelo de lenguaje y la bonificación por inserción de palabra— se ajustan mediante barrido en rejilla sobre la partición de validación, y la rejilla completa se conserva para poder documentar la sensibilidad del sistema a ambos.
+
+\subsection{Cifras reportadas}
+
+Se reportan por separado, y esto es deliberado:
+
+\begin{itemize}
+  \item La tasa de error por carácter con decodificación voraz, que \textbf{mide el codificador}.
+  \item La tasa de error por palabra con búsqueda en haz y modelo de lenguaje, que mide \textbf{el sistema completo}.
+  \item El límite \textit{oracle} de la lista $n$-mejor acústica, definido en la \cref{sec:oracle}, que permite discriminar si el modelo de lenguaje reordena o guía la búsqueda.
+\end{itemize}
+
+Mezclar las dos primeras en una única cifra ocultaría cuánto del rendimiento procede de la lectura de la señal y cuánto de la reconstrucción lingüística posterior, que es precisamente una de las preguntas que el trabajo pretende responder.

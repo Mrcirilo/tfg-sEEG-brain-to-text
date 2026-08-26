@@ -101,7 +101,7 @@ Durante el preentrenamiento, OWSM se optimiza con una pérdida híbrida que comb
 
 La motivación original de este esquema es que CTC impone una correspondencia monótona entre entrada y salida, lo que estabiliza el aprendizaje del alineamiento del decodificador atencional, que por sí solo es demasiado flexible y converge con dificultad.
 
-Para este trabajo, la consecuencia práctica es determinante: al existir una rama CTC entrenada sobre la salida del codificador, \textbf{el modelo puede operarse en régimen puramente CTC} fijando $\lambda = 1$ y prescindiendo por completo del decodificador autorregresivo. Esto elimina la dependencia del vocabulario de subpalabras preentrenado y del comportamiento generativo del decodificador, dos elementos que en un régimen de datos escasos resultan más un lastre que una ventaja.
+Para este trabajo, la consecuencia práctica es determinante: al contemplar la arquitectura una rama CTC sobre la salida del codificador, \textbf{el modelo puede operarse en régimen puramente CTC} fijando $\lambda = 1$ y prescindiendo por completo del decodificador autorregresivo. Lo que se reutiliza es la vía arquitectónica, no los pesos de la cabeza CTC preentrenada, que se sustituyen en cualquier caso al cambiar el vocabulario de salida. Esto elimina la dependencia del vocabulario de subpalabras preentrenado y del comportamiento generativo del decodificador, dos elementos que en un régimen de datos escasos resultan más un lastre que una ventaja.
 
 \section{Clasificación temporal conexionista (CTC)}
 \label{sec:ctc}

@@ -30,23 +30,33 @@ La \cref{tab:datasets-comparativa} resume los cuatro conjuntos considerados.
 
 \begin{table}[htbp]
   \centering
-  \caption{Comparativa de los conjuntos de datos evaluados para este trabajo.}
+  \caption{Comparativa de los conjuntos de datos evaluados: señal y tarea.}
   \label{tab:datasets-comparativa}
-  \scriptsize
-  \begin{tabular}{p{2.3cm} p{2.2cm} p{2.2cm} p{2.2cm} p{2.4cm}}
+  \small
+  \begin{tabular}{p{2.6cm} p{4.4cm} p{2.0cm} p{3.2cm}}
     \toprule
-    \textbf{Característica} & \textbf{UGR-MINDVOICE} & \textbf{sEEG2Speech} & \textbf{SingleWord Dutch} & \textbf{Brain-to-Text '25} \\
+    \textbf{Conjunto} & \textbf{Tipo de señal} & \textbf{Sujetos} & \textbf{Nivel de tarea} \\
     \midrule
-    Tipo de señal      & EEG (64 can.)      & sEEG              & sEEG (1.103 can.) & Microelectrodos intracorticales (256) \\
-    Participantes      & 15                 & 3                 & 10                & 1 \\
-    Idioma             & Español            & Neerlandés        & Neerlandés        & Inglés \\
-    Nivel de tarea     & Palabras y sílabas & Frases (5--7 pal.)& Palabras aisladas & Frases (habla continua) \\
-    Tipo de habla      & \textit{Overt} y \textit{covert} & Solo \textit{overt} & Solo \textit{overt} & Intento vocalizado y silente \\
-    Volumen            & 60 pal. + 30 pseudo + 95 sílabas & 100 frases & 100 palabras & 10.948 frases \\
-    Duración           & 2,5--3 h/sesión    & 10--20 min/sujeto & $\sim$5 min/sujeto & 45 sesiones / 20 meses \\
-    Frec.\ muestreo    & \SI{1000}{\hertz}  & 1024--\SI{2048}{\hertz} & \SI{1024}{\hertz} & Ventanas de \SI{20}{\milli\second} \\
-    Salida objetivo    & Clasificación / texto & Audio & Espectrograma / audio & Texto \\
-    Formato            & MNE/EDF            & Propio (OSF)      & BIDS / NWB        & HDF5 con particiones \\
+    UGR-MINDVOICE   & EEG (64 canales)                     & 15 & Palabras y sílabas \\
+    sEEG2Speech     & sEEG                                 & 3  & Frases (5--7 palabras) \\
+    SingleWord (NL) & sEEG (1.103 canales)                 & 10 & Palabras aisladas \\
+    Brain-to-Text '25 & Microelectrodos intracorticales (256) & 1 & Frases continuas \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{1em}
+
+  \caption{Comparativa de los conjuntos de datos evaluados: volumen y formato.}
+  \label{tab:datasets-comparativa2}
+  \small
+  \begin{tabular}{p{2.6cm} p{3.6cm} p{2.6cm} p{3.4cm}}
+    \toprule
+    \textbf{Conjunto} & \textbf{Volumen} & \textbf{Salida objetivo} & \textbf{Formato} \\
+    \midrule
+    UGR-MINDVOICE   & 60 palabras, 30 pseudo\-palabras, 95 sílabas & Clasificación o texto & MNE/EDF \\
+    sEEG2Speech     & 100 frases, 10--20 min por sujeto & Audio & Propio (OSF) \\
+    SingleWord (NL) & 100 palabras, $\sim$5 min por sujeto & Espectrograma o audio & BIDS / NWB \\
+    Brain-to-Text '25 & 10.948 frases, 45 sesiones en 20 meses & Texto & HDF5 con particiones \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -55,7 +65,7 @@ La \cref{tab:datasets-comparativa} resume los cuatro conjuntos considerados.
 
 Corpus multimodal de EEG de superficie con 15 participantes nativos de español, que incluye tanto habla pronunciada (\textit{overt}) como imaginada (\textit{covert}), con estímulos de 95 sílabas consonante-vocal que cubren el inventario fonético del español, 60 palabras de seis categorías semánticas y 30 pseudopalabras. Es el único corpus en español para esta tarea y su diseño experimental es cuidadoso, con datos y código públicos.
 
-Fue descartado por dos razones. La primera es el nivel de la tarea: los estímulos son palabras y sílabas aisladas, incompatibles con el criterio C1. La segunda es la modalidad: el EEG de superficie tiene una resolución espacial y una relación señal-ruido muy inferiores a las de los registros invasivos, lo que compromete el criterio C4 y, con él, la posibilidad de interpretar un resultado negativo, ya que un fallo del sistema no permitiría distinguir entre ausencia de transferencia y ausencia de señal decodificable.
+Fue descartado por dos razones. La primera es el nivel de la tarea: los estímulos son palabras y sílabas aisladas, incompatibles con el criterio C1. La segunda es la modalidad: el EEG de superficie tiene una resolución espacial y una relación señal-ruido muy inferiores a las de los registros invasivos, lo que compromete el criterio C4 y, con él, la \textbf{interpretabilidad de un resultado negativo}. Si el sistema fracasase, no sería posible distinguir entre ausencia de transferencia desde el modelo de habla y ausencia de señal decodificable en la entrada, que son conclusiones muy distintas. El descarte responde, por tanto, al diseño experimental de este trabajo concreto y no constituye un juicio sobre la calidad del corpus, cuyo diseño es cuidadoso y cuya orientación a un idioma distinto del inglés cubre un hueco real.
 
 \subsection{sEEG2Speech}
 

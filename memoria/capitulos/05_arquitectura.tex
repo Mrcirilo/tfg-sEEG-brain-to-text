@@ -80,6 +80,8 @@ Cuando el peso de la rama CTC se fija a la unidad, ESPnet desactiva automáticam
 
 Como se estableció en el \cref{cap:datos}, las 45 sesiones abarcan 20 meses y la señal asociada a un mismo fonema varía entre días por deriva y micromovimiento de los electrodos. Un adaptador único compartido tendría que aprender simultáneamente múltiples correspondencias contradictorias entre señal y unidad lingüística, además de inferir implícitamente a qué día pertenece cada ensayo.
 
+La solución adoptada sigue la práctica estándar del campo, introducida en \cite{willett2021} y presente en la mayoría de los sistemas posteriores (\cref{sec:sota-anatomia}): aprender una transformación de entrada propia de cada día. La aportación de este trabajo no está en la idea, sino en su instanciación concreta y en su evaluación experimental, incluida la cuantificación de su coste y de su comportamiento ante días no vistos.
+
 La capa de sesión aplica una transformación afín distinta por cada día de registro, seguida de una no linealidad acotada:
 
 \begin{equation}
@@ -87,7 +89,7 @@ La capa de sesión aplica una transformación afín distinta por cada día de re
   \label{eq:capa-sesion}
 \end{equation}
 
-donde $s$ es el índice de la sesión a la que pertenece el ensayo. Cada matriz $\mathbf{W}_s$ se inicializa a la identidad y cada vector $\mathbf{b}_s$ a cero, de modo que al comenzar el entrenamiento la capa se limita a aplicar la función \textit{softsign} y el sistema parte de un comportamiento neutro.
+donde $s$ es el índice de la sesión a la que pertenece el ensayo y $\mathrm{softsign}(u) = u/(1+|u|)$ es una no linealidad acotada en $(-1,1)$, de saturación más suave que la tangente hiperbólica, que impide que una matriz de sesión mal condicionada propague valores extremos al adaptador. Cada matriz $\mathbf{W}_s$ se inicializa a la identidad y cada vector $\mathbf{b}_s$ a cero, de modo que al comenzar el entrenamiento la capa se limita a aplicar la función \textit{softsign} y el sistema parte de un comportamiento neutro.
 
 El coste en parámetros es de $n_{\mathrm{ses}} \times (512^2 + 512)$, es decir, unos 2,6 millones con 10 sesiones y unos 12 millones con las 45. Es una cantidad considerable, comparable a una fracción apreciable del propio codificador, y su beneficio debe por tanto justificarse experimentalmente y no asumirse.
 
@@ -155,14 +157,14 @@ La proyección lineal final del modelo original mapea la salida del codificador 
   \caption{Unidades de salida CTC implementadas.}
   \label{tab:objetivos-ctc}
   \small
-  \begin{tabular}{llll}
+  \begin{tabular}{l r p{5.3cm} l}
     \toprule
     \textbf{Objetivo} & \textbf{Clases} & \textbf{Origen} & \textbf{Métrica} \\
     \midrule
     Subpalabra de OWSM   & 50.002 & Vocabulario preentrenado           & CER/WER \\
     Carácter             & 29     & 26 letras, apóstrofo, espacio, blanco & CER/WER \\
     Fonema               & Variable & Etiquetas del propio HDF5        & PER \\
-    Subpalabra propia    & Ajustable (256) & \textit{SentencePiece} sobre las transcripciones de entrenamiento & CER/WER \\
+    Subpalabra propia    & 256 & \textit{SentencePiece} sobre las transcripciones de entrenamiento & CER/WER \\
     Palabra              & Variable & Vocabulario cerrado de entrenamiento & WER \\
     \bottomrule
   \end{tabular}
@@ -192,7 +194,9 @@ Conforme al argumento formal de la \cref{sec:lora-teoria}, el sistema \textbf{de
 
 \subsection{Tasa de aprendizaje diferencial}
 
-Aplicar una misma tasa de aprendizaje a componentes preentrenados y a componentes inicializados desde cero es cuestionable: los primeros parten de un óptimo y los segundos del ruido. El sistema permite escalar la tasa del codificador preentrenado por un factor, manteniendo la tasa base para el adaptador, la cabeza CTC y los adaptadores de rango bajo. La separación se realiza por nombre de parámetro en el momento de construir el optimizador.
+El sistema permite escalar la tasa de aprendizaje del codificador por un factor, manteniendo la tasa base para el adaptador, la cabeza CTC y los adaptadores de rango bajo. La separación se realiza por nombre de parámetro al construir el optimizador.
+
+La motivación inicial fue la habitual: aplicar una misma tasa a componentes preentrenados y a componentes inicializados desde cero es cuestionable, porque los primeros parten de un óptimo y los segundos del ruido. Sin embargo, el mecanismo resultó ser necesario también \textbf{con el codificador inicializado aleatoriamente}, donde ese argumento no aplica: con tasa unificada el entrenamiento diverge. La tasa diferenciada cumple aquí, por tanto, una segunda función independiente de la procedencia de los pesos, la de estabilizar el acoplamiento entre un adaptador que aprende deprisa y un codificador profundo que aún no ha organizado sus representaciones. Ambas funciones se distinguen explícitamente al interpretar los resultados.
 
 \subsection{Codificador recortado}
 

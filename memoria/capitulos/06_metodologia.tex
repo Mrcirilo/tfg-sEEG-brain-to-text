@@ -97,10 +97,12 @@ Se emplean dos procedimientos de evaluación con propósitos distintos:
 
 \begin{description}
   \item[CTC voraz.] Un paso hacia delante y el máximo por instante, con el colapso estándar. No pasa por el decodificador, de modo que \textbf{mide exclusivamente lo que el codificador extrae de la señal neuronal} y no puede beneficiarse del conocimiento previo del inglés del modelo preentrenado. Es barato, por lo que se ejecuta sobre la partición de validación completa.
-  \item[Búsqueda en haz.] Decodificación autorregresiva con el decodificador completo, con tamaño de haz 5. Es mucho más costosa por ensayo, por lo que se limita a 200 ensayos.
+  \item[Búsqueda en haz sobre la salida CTC.] Decodificación por haz sobre las distribuciones de la rama CTC, integrando el modelo de lenguaje de $n$-gramas según el procedimiento de la \cref{sec:protocolo-lm}. Mide \textbf{el sistema completo}, codificador más reconstrucción lingüística. Es mucho más costosa por ensayo, por lo que se limita a 200 ensayos.
 \end{description}
 
-Ambos procedimientos evalúan \textbf{sobre los mismos ensayos}, seleccionados de forma equiespaciada a lo largo de la partición. Inicialmente la búsqueda en haz tomaba los primeros ensayos y la decodificación voraz una muestra repartida; con 45 sesiones, los primeros ensayos corresponden todos a los primeros días de registro, de modo que ambas cifras se estaban midiendo sobre subconjuntos distintos y no eran comparables entre sí.
+Conviene precisar que, en la configuración de referencia, el peso de la rama CTC es la unidad y por tanto \textbf{el decodificador autorregresivo está desactivado} (\cref{sec:adaptacion-modalidad}). No existe, en consecuencia, ninguna decodificación generativa: toda la evaluación se realiza sobre la salida de la rama CTC. Los experimentos iniciales del trabajo, anteriores a la fijación de la receta, sí operaron con peso de CTC inferior a la unidad y decodificador activo; sus cifras no son comparables con las reportadas aquí y se señalan como tales cuando aparecen.
+
+Ambos procedimientos seleccionan sus ensayos \textbf{de forma equiespaciada} a lo largo de la partición, de modo que el subconjunto evaluado por la búsqueda en haz es una muestra representativa del que evalúa la decodificación voraz y no un tramo sesgado de él. Inicialmente la búsqueda en haz tomaba simplemente los primeros ensayos mientras la decodificación voraz ya usaba una muestra repartida; con 45 sesiones ordenadas cronológicamente, los primeros ensayos corresponden todos a los primeros días de registro, de modo que ambas cifras se estaban midiendo sobre poblaciones distintas y no eran comparables entre sí.
 
 \subsection{Dos definiciones de tasa de error por carácter}
 
@@ -167,6 +169,7 @@ Los experimentos se organizan en bloques, cada uno de los cuales responde a una 
     E & OE7       & ¿Cuánto se degrada el sistema en días no vistos? \\
     C & OE5       & ¿Qué capacidad necesita el módulo adaptador? \\
     G & OE9       & Configuración final entrenada hasta convergencia. \\
+    LM & OE8 (PI3) & ¿Reordena el modelo de lenguaje las hipótesis o guía la búsqueda? \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -202,6 +205,8 @@ Aparta por completo las cinco últimas sesiones, que no participan en el entrena
 \subsection{Bloque C: capacidad del adaptador}
 
 Compara las variantes lineal y convolucional unidimensional frente a la profunda. Es el bloque de menor prioridad y el primer candidato a recortarse si el presupuesto se agota.
+
+Este bloque exige una precaución que lo distingue del resto. Las variantes lineal y convolucional unidimensional aplican un factor de submuestreo fijo de cuatro, mientras que la receta de referencia emplea la variante profunda con factor dos. Comparadas directamente, la arquitectura del adaptador quedaría \textbf{confundida con la resolución temporal}, que es exactamente el defecto experimental que este trabajo se propone evitar. La comparación debe ejecutarse, por tanto, igualando el factor de submuestreo en todas las variantes, o bien reportando explícitamente ambos ejes y absteniéndose de atribuir la diferencia a la arquitectura.
 
 \subsection{Bloque G: configuración final}
 

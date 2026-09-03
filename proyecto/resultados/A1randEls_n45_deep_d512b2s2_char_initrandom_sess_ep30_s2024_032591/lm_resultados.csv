@@ -1,0 +1,5 @@
+exp_tag,metodo,alpha,beta,cer,wer,n_trials
+A1randEls_n45_deep_d512b2s2_char_initrandom_sess_ep30_s2024_032591,greedy,,,0.2887007052545438,0.5713065403324045,1426
+A1randEls_n45_deep_d512b2s2_char_initrandom_sess_ep30_s2024_032591,2-grama,1.0,3.0,0.2528726452914441,0.4074892976149061,1426
+A1randEls_n45_deep_d512b2s2_char_initrandom_sess_ep30_s2024_032591,3-grama,1.0,3.0,0.2514418465793162,0.40508378860000016,1426
+A1randEls_n45_deep_d512b2s2_char_initrandom_sess_ep30_s2024_032591,oraculo,,,0.2622702673576777,0.47438338664516333,1426

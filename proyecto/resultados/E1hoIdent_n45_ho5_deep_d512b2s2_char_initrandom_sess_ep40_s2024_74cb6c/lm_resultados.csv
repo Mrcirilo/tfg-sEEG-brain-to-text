@@ -1,0 +1,5 @@
+exp_tag,metodo,alpha,beta,cer,wer,n_trials
+E1hoIdent_n45_ho5_deep_d512b2s2_char_initrandom_sess_ep40_s2024_74cb6c,greedy,,,0.6831326431366685,0.9837532467532467,150
+E1hoIdent_n45_ho5_deep_d512b2s2_char_initrandom_sess_ep40_s2024_74cb6c,2-grama,1.0,1.5,0.6948727175159306,0.9127580567580568,150
+E1hoIdent_n45_ho5_deep_d512b2s2_char_initrandom_sess_ep40_s2024_74cb6c,3-grama,0.6,0.0,0.6862735162247721,0.9136361231361231,150
+E1hoIdent_n45_ho5_deep_d512b2s2_char_initrandom_sess_ep40_s2024_74cb6c,oraculo,,,0.6643033655865046,0.9497611832611832,150

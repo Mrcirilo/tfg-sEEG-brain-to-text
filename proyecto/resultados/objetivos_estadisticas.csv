@@ -1,0 +1,6 @@
+objetivo,clases,tokens_train,ejemplos_por_clase
+char,29,241654,8332.9
+fon,42,4036000,96095.2
+bpe256,257,100354,390.5
+word,3731,50646,13.6
+bpe-OWSM,50002,42604,0.9

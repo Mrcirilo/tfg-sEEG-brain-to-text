@@ -1,0 +1,5 @@
+exp_tag,metodo,alpha,beta,cer,wer,n_trials
+D0congExt_n45_deep_d512b2s2_char_congelado_sess_ep70_s2024_f3baaa,greedy,,,0.359271956868695,0.6649838994664092,1426
+D0congExt_n45_deep_d512b2s2_char_congelado_sess_ep70_s2024_f3baaa,2-grama,1.0,0.0,0.3339348067576425,0.5115002326185396,1426
+D0congExt_n45_deep_d512b2s2_char_congelado_sess_ep70_s2024_f3baaa,3-grama,1.0,3.0,0.32829633694182714,0.5067621437496035,1426
+D0congExt_n45_deep_d512b2s2_char_congelado_sess_ep70_s2024_f3baaa,oraculo,,,0.33628994278817,0.5889731329226825,1426

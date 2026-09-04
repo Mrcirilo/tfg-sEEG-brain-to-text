@@ -170,7 +170,7 @@ La proyección lineal final del modelo original mapea la salida del codificador 
   \end{tabular}
 \end{table}
 
-Dos observaciones sobre este componente. La primera es que \textbf{esta capa es la que hace inviable el vocabulario de subpalabras preentrenado}: se entrena desde cero, y repartir poco más de ocho mil frases entre 50.002 clases deja a la inmensa mayoría sin ejemplos, mientras que con 29 clases de carácter cada una recibe miles.
+Dos observaciones sobre este componente. La primera es que esta capa se entrena desde cero en todos los casos, de modo que un vocabulario de 50.002 clases reparte poco más de ocho mil frases entre ellas y deja a la inmensa mayoría sin ejemplos, mientras que con 29 clases de carácter cada una recibe miles. Esta asimetría motivó la expectativa inicial de que los vocabularios grandes resultasen inviables; el \cref{cap:resultados} muestra que la expectativa era incorrecta y por qué.
 
 La segunda es que el objetivo de fonema no produce texto ortográfico, por lo que compararlo con la transcripción de referencia carecería de sentido. En esa configuración el sistema reporta tasa de error de fonema y deja las métricas de texto sin valor, ya que obtenerlas exigiría un decodificador con léxico. Esto es precisamente lo que motiva que la comparación entre granularidades deba hacerse sobre el texto final decodificado, según se argumentó en la \cref{sec:metricas-teoria}.
 

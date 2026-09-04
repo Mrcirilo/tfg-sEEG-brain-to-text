@@ -1,0 +1,6 @@
+id_principal,etiqueta,objetivo_ctc,init_encoder,epocas_hechas,cer_ctc_micro,cer_ctc_greedy,wer_ctc_greedy,min_valid_cer_ctc,compute_units
+J01_sanity_decoder_owsm,J01_sanity_decoder_owsm,bpe,owsm,15.0,,,,,0.34
+J04_decoder_frontend_lineal,J04_decoder_frontend_lineal,bpe,owsm,30.0,,,,,2.02
+J10_decoder_con_capa_sesion,J10_decoder_con_capa_sesion,bpe,owsm,30.0,,0.9958623082783156,0.9977777777777778,,1.69
+J05_decoder_frontend_conv1d,J05_decoder_frontend_conv1d,bpe,owsm,30.0,,,,,2.06
+J09_decoder_sin_capa_sesion,J09_decoder_sin_capa_sesion,bpe,owsm,30.0,,0.9868135110626022,0.9877777777777778,,1.69

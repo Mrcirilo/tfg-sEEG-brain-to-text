@@ -1,0 +1,10 @@
+\begin{tabular}{lllrrrrrr}
+\toprule
+etiqueta & objetivo_ctc & init_encoder & epocas_hechas & cer_ctc_micro & cer_ctc_greedy & wer_ctc_greedy & min_valid_cer_ctc & compute_units \\
+\midrule
+Sesiones vistas (referencia) & char & random & 30.000 & 0.295 & 0.289 & 0.571 & 0.324 & 6.600 \\
+No vista: identidad & char & random & 40.000 & 0.677 & 0.683 & 0.984 & 0.747 & 7.470 \\
+No vista: matriz media & char & random & 40.000 & 0.663 & 0.664 & 0.970 & 0.752 & 7.710 \\
+No vista: sin capa de sesion & char & random & 40.000 & 0.529 & 0.527 & 0.848 & 0.593 & 7.430 \\
+\bottomrule
+\end{tabular}

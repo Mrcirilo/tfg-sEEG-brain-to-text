@@ -1,0 +1,13 @@
+id_principal,nombre,exp_tag,objetivo_ctc,init_encoder,frontend,epocas_hechas,cer_ctc_micro,wer_ctc_greedy,minutos,compute_units
+G04_palabra_ep40,B3word,B3word_n45_deep_d512b2s2_word_initrandom_sess_ep40_s2024_745c76,word,random,deep,40.0,0.271995454114973,0.282427561301004,331.6,9.45
+G04_palabra_ep20,B3word,B3word_n45_deep_d512b2s2_word_initrandom_sess_ep20_s2024_63ef6e,word,random,deep,20.0,0.2877166398333175,0.3085488123789419,166.8,4.75
+G05_bpe_owsm_50k_ep20,B4bpe50k,B4bpe50k_n45_deep_d512b2s2_bpe_initrandom_sess_ep20_s2024_4bb4bf,bpe,random,deep,20.0,0.2538909882789982,0.3234389497878484,226.7,6.46
+G03_bpe_256,B2bpe256,B2bpe256_n45_deep_d512b2s2_bpe256_initrandom_sess_ep40_s2024_26571e,bpe256,random,deep,40.0,0.2574136937167744,0.4240232805264567,316.1,9.01
+C02_random_semilla_7,H1semilla,H1semilla_n45_deep_d512b2s2_char_initrandom_sess_ep40_s7_6b253b,char,random,deep,40.0,0.2727001003437306,0.5354338583022272,309.5,8.82
+C03_random_semilla_1234,H2semilla,H2semilla_n45_deep_d512b2s2_char_initrandom_sess_ep40_s1234_191968,char,random,deep,40.0,0.2863212280364653,0.5446071865323577,308.1,8.78
+F02_encoder_3_bloques,F1L3,F1L3_n45_deep_d512b2s2_char_initrandom_L3_sess_ep40_s2024_0fbdf3,char,random,deep,40.0,0.2998569568094963,0.5685098214035595,272.4,7.76
+A01_random_ajustado,A1randEls,A1randEls_n45_deep_d512b2s2_char_initrandom_sess_ep30_s2024_032591,char,random,deep,30.0,0.2949892183863874,0.5713065403324045,231.6,6.6
+A04_owsm_mejor_observado,v5,v5_n45_deepd512b2s2_ic0.3_augn0.5o0.2_sm2_wd0.01_sess_char_unf1_lora0_lr0.001_els0.05_ctc1_bs16_ep60,char,owsm,deep,60.0,0.3185390661118816,0.584330266955267,531.6,15.15
+F01_encoder_2_bloques,F2L2,F2L2_n45_deep_d512b2s2_char_initrandom_L2_sess_ep40_s2024_d6b3e1,char,random,deep,40.0,0.3161895002028224,0.6022413287150107,259.4,7.39
+A02_owsm_ajustado,v3,v3_n45_deepd512b2s2_ic0.3_augn0.5o0.2_wd0.01_sess_char_unf1_lora0_lr0.001_els0.05_ctc1_bs16_ep60,char,owsm,deep,38.0,0.332871012482663,0.6315651154401154,310.7,8.86
+E02_frontend_conv1d,C2conv1d,C2conv1d_n45_conv1d_char_initrandom_sess_ep40_s2024_b58c5d,char,random,conv1d,40.0,0.3583338670765815,0.6427951246014937,244.0,6.96

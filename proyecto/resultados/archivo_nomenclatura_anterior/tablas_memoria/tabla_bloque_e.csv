@@ -1,0 +1,5 @@
+etiqueta,objetivo_ctc,init_encoder,epocas_hechas,cer_ctc_micro,cer_ctc_greedy,wer_ctc_greedy,min_valid_cer_ctc,compute_units
+Sesiones vistas (referencia),char,random,30.0,0.2949892183863874,0.2887007052545438,0.5713065403324045,0.324,6.6
+No vista: identidad,char,random,40.0,0.6769262128006522,0.6831326431366685,0.9837532467532468,0.747,7.47
+No vista: matriz media,char,random,40.0,0.6628618018752548,0.6641412605000737,0.9697556517556518,0.752,7.71
+No vista: sin capa de sesion,char,random,40.0,0.5287403179779862,0.5267673971294725,0.8475276575276575,0.593,7.43

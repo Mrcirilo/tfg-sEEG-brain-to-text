@@ -13,8 +13,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[spanish,es-tabla]{babel}
-% lmodern no disponible en este sandbox de prueba
-% microtype desactivado en este sandbox de prueba (conflicto sin lmodern)
+\usepackage{lmodern}
+\usepackage{microtype}
 
 %------------------------------------------------------------------ Márgenes y espaciado
 \usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm]{geometry}
@@ -79,16 +79,24 @@
   pdfauthor={Kiril Ivaylov Tzenkov},
 }
 \usepackage[noabbrev,spanish]{cleveref}
+% Los capitulos escriben "la tabla X" / "la seccion Y". Sin esto, cleveref
+% en espanol genera "la cuadro X" / "la apartado Y" (genero incorrecto),
+% y ademas "cuadro" no casa con los captions, que dicen "Tabla".
+\crefname{table}{tabla}{tablas}
+\Crefname{table}{Tabla}{Tablas}
+\crefname{section}{sección}{secciones}
+\Crefname{section}{Sección}{Secciones}
+\crefname{subsection}{sección}{secciones}
+\Crefname{subsection}{Sección}{Secciones}
+\crefname{equation}{ecuación}{ecuaciones}
+\Crefname{equation}{Ecuación}{Ecuaciones}
 
 \usepackage{enumitem}
 \usepackage{csquotes}   % antes del \usepackage{biblatex}
 
 %------------------------------------------------------------------ Bibliografía (biblatex + biber)
-% biblatex no disponible en este sandbox de prueba -> sustituido por un
-% stub minimo solo para poder testear la ESTRUCTURA del documento
-\newcommand{\citeX}[1]{[#1]}
-\let\cite\citeX
-\newcommand{\printbibliography}[1][]{\chapter*{Bibliograf\'ia (stub de prueba)}}
+\usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
+\addbibresource{referencias.bib}
 % NOTA: fusiona aquí bibliografia_cap1.bib + bibliografia_cap2.bib
 % (cat bibliografia_cap1.bib bibliografia_cap2.bib > referencias.bib)
 
@@ -159,35 +167,48 @@
 \addcontentsline{toc}{chapter}{Resumen}
 \markboth{Resumen}{Resumen}
 
-Las interfaces cerebro-computador (BCI) para el habla buscan restaurar la comunicación en
-personas con pérdida de la capacidad de hablar. Este trabajo estudia la viabilidad de
-adaptar OWSM, un modelo de reconocimiento de voz preentrenado de propósito general,
-a la decodificación de actividad neuronal intracortical del reto \textit{Brain-to-Text '25}.
-Mediante la eliminación del \textit{frontend} acústico, la incorporación de un módulo
-adaptador del espacio de características neuronales y una serie de ablaciones controladas
-sobre la estrategia de adaptación, se evalúa en qué medida un modelo de habla puede
-transferirse a un dominio para el que no fue concebido.
-% TODO: completar con los resultados principales y la conclusión cuantitativa.
+Las interfaces cerebro-computador para el habla buscan restaurar la comunicación en personas
+que han perdido la capacidad de hablar. Este trabajo estudia la viabilidad de adaptar OWSM,
+un modelo de reconocimiento de voz preentrenado de propósito general, a la decodificación de
+actividad neuronal intracortical del reto \textit{Brain-to-Text '25}. Se sustituye el
+\textit{frontend} acústico por un módulo adaptador entrenado desde cero, se incorpora una capa
+específica de sesión y se entrena el conjunto con un objetivo CTC puro, evaluando mediante
+ablaciones controladas qué componentes del preentrenamiento transfieren a una modalidad no
+acústica. El resultado principal es negativo y reproducible: un codificador inicializado
+aleatoriamente supera al inicializado con los pesos de OWSM (tasa de error por carácter de
+0,312 frente a 0,381) con la mitad de coste, y un codificador aleatorio congelado iguala a uno
+preentrenado congelado. Dos hallazgos colaterales resultan de mayor alcance práctico: la
+granularidad de la unidad de salida produce un efecto cuatro veces superior al del
+preentrenamiento, favoreciendo unidades lingüísticamente gruesas frente a las articulatorias,
+y la degradación ante días de registro no vistos alcanza los 27 puntos porcentuales, con la
+capa de sesión agravándola. El sistema alcanza una tasa de error por carácter de 0,267 en
+condiciones comparables a la literatura reciente sobre el mismo conjunto de datos.
 
 \vspace{0.5cm}
-\noindent\textbf{Palabras clave:} interfaz cerebro-computador, actividad neuronal intracortical, decodificación neuronal, OWSM, transferencia de aprendizaje.
+\noindent\textbf{Palabras clave:} interfaz cerebro-computador, actividad neuronal intracortical, decodificación neuronal, OWSM, aprendizaje por transferencia, CTC.
 
 %------------------------------------------------------------------ ABSTRACT
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 \markboth{Abstract}{Abstract}
 
-Speech brain–computer interfaces (BCIs) aim to restore communication for people who have
-lost the ability to speak. This work investigates the feasibility of adapting OWSM, a
-general-purpose pretrained speech recognition model, to decode intracortical neural
-activity from the \textit{Brain-to-Text '25} challenge. By removing the acoustic frontend,
-introducing an adapter module for the neural feature space, and running a series of
-controlled ablations over the adaptation strategy, we assess to what extent a speech
-model can be transferred to a domain it was not designed for.
-% TODO: complete with main results and quantitative conclusion.
+Speech brain--computer interfaces aim to restore communication for people who have lost the
+ability to speak. This work investigates the feasibility of adapting OWSM, a general-purpose
+pretrained speech recognition model, to decode intracortical neural activity from the
+\textit{Brain-to-Text '25} challenge. The acoustic frontend is replaced by an adapter module
+trained from scratch, a session-specific layer is introduced, and the whole system is trained
+with a pure CTC objective, using controlled ablations to assess which components of
+pretraining transfer to a non-acoustic modality. The main result is negative and reproducible:
+a randomly initialised encoder outperforms one initialised with OWSM weights (character error
+rate of 0.312 versus 0.381) at half the cost, and a frozen random encoder matches a frozen
+pretrained one. Two secondary findings carry greater practical weight: output unit granularity
+produces an effect four times larger than pretraining, favouring linguistically coarse units
+over articulatory ones, and degradation on unseen recording sessions reaches 27 percentage
+points, with the session layer making it worse. The system reaches a character error rate of
+0.267 under conditions comparable to recent literature on the same dataset.
 
 \vspace{0.5cm}
-\noindent\textbf{Keywords:} brain–computer interface, intracortical neural activity, neural decoding, OWSM, transfer learning.
+\noindent\textbf{Keywords:} brain--computer interface, intracortical neural activity, neural decoding, OWSM, transfer learning, CTC.
 
 %------------------------------------------------------------------ ÍNDICES
 \tableofcontents
@@ -212,60 +233,39 @@ model can be transferred to a domain it was not designed for.
 \include{capitulos/02_estado_del_arte}
 
 %==============================================================================
+%  CAPÍTULO 3 — CONJUNTO DE DATOS
+%==============================================================================
 \include{capitulos/03_datos}
 
+%==============================================================================
+%  CAPÍTULO 4 — MARCO TEÓRICO
+%==============================================================================
+\include{capitulos/04_marco_teorico}
 
 %==============================================================================
-% TODO: este capítulo aún no está escrito. Cuando lo tengas, sepáralo también
-% en capitulos/03_dataset.tex y sustituye todo este bloque por
-%   \include{capitulos/03_dataset}
-% IMPORTANTE: en el capítulo 1 ya referencio este capítulo como \cref{cap:datos},
-% no \cref{cap:dataset}. Decide una única etiqueta y ajusta el otro sitio.
-
-\include{capitulos/04_marco_teorico}
-% Distribución temporal, variabilidad inter-sesión, correlación feature-canal.
-% Esta sección da solidez a todo lo que viene después. No la subestimes.
-
+%  CAPÍTULO 5 — ARQUITECTURA DEL SISTEMA
 %==============================================================================
 \include{capitulos/05_arquitectura}
-%==============================================================================
-% TODO: idem, separar en capitulos/04_arquitectura.tex cuando esté escrito.
-% En el capítulo 1 este contenido está repartido entre \cref{cap:metodologia}
-% y \cref{cap:experimentos} — decide si arquitectura va dentro de metodología
-% o es un capítulo propio, y unifica las etiquetas.
-
-% Congelado / descongelado parcial / LoRA sobre congelado. Recuerda la
-% conclusión que ya tienes: LoRA con encoder descongelado no aporta nada.
-
-% Por qué OWSM y no Whisper (reproducibilidad), por qué no entrenar desde
-% cero (comparación con Khanday et al., cap. 2).
 
 %==============================================================================
-
+%  CAPÍTULO 6 — METODOLOGÍA EXPERIMENTAL
+%==============================================================================
 \include{capitulos/06_metodologia}
-% Aquí van tus bloques A-G tal cual los tienes definidos: control científico,
-% unidad de salida, frontend, LoRA/congelación, generalización a sesiones,
-% modelo de lenguaje, campeón final.
 
+%==============================================================================
+%  CAPÍTULO 7 — RESULTADOS Y DISCUSIÓN
 %==============================================================================
 \include{capitulos/07_resultados}
 
 %==============================================================================
-\chapter{Limitaciones y trabajo futuro}
-\label{cap:limitaciones}
+%  CAPÍTULO 8 — LIMITACIONES Y TRABAJO FUTURO
 %==============================================================================
-
-\section{Limitaciones computacionales}
-\section{Limitaciones del enfoque}
-\section{Líneas de trabajo futuro}
-% POWSM (phoneme-pretrained), por ejemplo.
+\include{capitulos/08_limitaciones}
 
 %==============================================================================
-\chapter{Conclusiones}
-\label{cap:conclusiones}
+%  CAPÍTULO 9 — CONCLUSIONES
 %==============================================================================
-% Cierre honesto: qué se ha demostrado, qué se ha aprendido, sin disculparse
-% por las limitaciones de un estudio de viabilidad.
+\include{capitulos/09_conclusiones}
 
 %------------------------------------------------------------------ BIBLIOGRAFÍA
 \cleardoublepage

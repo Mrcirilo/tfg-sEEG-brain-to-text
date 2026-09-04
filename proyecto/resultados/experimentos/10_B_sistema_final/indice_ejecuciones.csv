@@ -1,0 +1,3 @@
+orden_principal,experimento_principal,nombre_experimento,id_principal,nombre_original,exp_tag_original,rol,estado,usos,carpeta_original,observaciones
+6,G,Unidad de salida CTC,G04_palabra_ep20,B3word,B3word_n45_deep_d512b2s2_word_initrandom_sess_ep20_s2024_63ef6e,objetivo CTC; candidato al sistema final,completado,G;B,B3word_n45_deep_d512b2s2_word_initrandom_sess_ep20_s2024_63ef6e,
+6,G,Unidad de salida CTC,G04_palabra_ep40,B3word,B3word_n45_deep_d512b2s2_word_initrandom_sess_ep40_s2024_745c76,objetivo CTC; candidato al sistema final,completado,G;B,B3word_n45_deep_d512b2s2_word_initrandom_sess_ep40_s2024_745c76,

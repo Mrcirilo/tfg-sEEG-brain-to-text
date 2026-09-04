@@ -1,0 +1,370 @@
+% =====================================================================
+%  referencias.bib — Bibliografía completa del TFG
+%  Kiril Ivaylov Tzenkov · Grado en Ciencia de Datos · ETSINF-UPV
+%
+%  Usar con:  \usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
+%             \addbibresource{referencias.bib}
+%  Compilar:  latexmk -pdf main.tex
+%
+%  NOTA sobre los enlaces: con el estilo IEEE de biblatex, el campo `doi`
+%  se imprime como enlace pulsable y el campo `url` sólo aparece cuando no
+%  hay DOI. Por eso las entradas con DOI no llevan `url`: sería redundante
+%  y el estilo lo ocultaría igualmente.
+%
+%  Entradas marcadas con "% VERIFICAR": son preprints. Comprueba antes de
+%  entregar si ya tienen publicación en congreso o revista, y en tal caso
+%  sustituye la entrada por la versión publicada.
+% =====================================================================
+
+
+% ---------------------------------------------------------------------
+%  NEUROPRÓTESIS DEL HABLA E INTERFACES CEREBRO-COMPUTADOR
+% ---------------------------------------------------------------------
+
+@article{card2024,
+  author  = {Card, Nicholas S. and Wairagkar, Maitreyee and Iacobacci, Carrina and Hou, Xianda and Singer-Clark, Tyler and Willett, Francis R. and Kunz, Erin M. and Fan, Chaofei and Vahdati Nia, Maryam and Deo, Darrel R. and Srinivasan, Aparna and Choi, Eun Young and Glasser, Matthew F. and Hochberg, Leigh R. and Henderson, Jaimie M. and Shahlaie, Kiarash and Brandman, David M. and Stavisky, Sergey D.},
+  title   = {An Accurate and Rapidly Calibrating Speech Neuroprosthesis},
+  journal = {New England Journal of Medicine},
+  volume  = {391},
+  number  = {7},
+  pages   = {609--618},
+  year    = {2024},
+  doi     = {10.1056/NEJMoa2314132},
+}
+
+@article{willett2023,
+  author  = {Willett, Francis R. and Kunz, Erin M. and Fan, Chaofei and Avansino, Donald T. and Wilson, Guy H. and Choi, Eun Young and Kamdar, Foram and Glasser, Matthew F. and Hochberg, Leigh R. and Druckmann, Shaul and Shenoy, Krishna V. and Henderson, Jaimie M.},
+  title   = {A High-Performance Speech Neuroprosthesis},
+  journal = {Nature},
+  volume  = {620},
+  number  = {7976},
+  pages   = {1031--1036},
+  year    = {2023},
+  doi     = {10.1038/s41586-023-06377-x},
+}
+
+@article{willett2021,
+  author  = {Willett, Francis R. and Avansino, Donald T. and Hochberg, Leigh R. and Henderson, Jaimie M. and Shenoy, Krishna V.},
+  title   = {High-Performance Brain-to-Text Communication via Handwriting},
+  journal = {Nature},
+  volume  = {593},
+  number  = {7858},
+  pages   = {249--254},
+  year    = {2021},
+  doi     = {10.1038/s41586-021-03506-2},
+}
+
+@article{metzger2023,
+  author  = {Metzger, Sean L. and Littlejohn, Kaylo T. and Silva, Alexander B. and Moses, David A. and Seaton, Margaret P. and Wang, Ran and Dougherty, Maximilian E. and Liu, Jessie R. and Wu, Peter and Berger, Michael A. and Zhuravleva, Inga and Tu-Chan, Adelyn and Ganguly, Karunesh and Anumanchipalli, Gopala K. and Chang, Edward F.},
+  title   = {A High-Performance Neuroprosthesis for Speech Decoding and Avatar Control},
+  journal = {Nature},
+  volume  = {620},
+  number  = {7976},
+  pages   = {1037--1046},
+  year    = {2023},
+  doi     = {10.1038/s41586-023-06443-4},
+}
+
+@article{moses2021,
+  author  = {Moses, David A. and Metzger, Sean L. and Liu, Jessie R. and Anumanchipalli, Gopala K. and Makin, Joseph G. and Sun, Pengfei F. and Chartier, Josh and Dougherty, Maximilian E. and Liu, Patricia M. and Abrams, Gary M. and Tu-Chan, Adelyn and Ganguly, Karunesh and Chang, Edward F.},
+  title   = {Neuroprosthesis for Decoding Speech in a Paralyzed Person with Anarthria},
+  journal = {New England Journal of Medicine},
+  volume  = {385},
+  number  = {3},
+  pages   = {217--227},
+  year    = {2021},
+  doi     = {10.1056/NEJMoa2027540},
+}
+
+@article{longinetti2019,
+  author  = {Longinetti, Elisa and Fang, Fang},
+  title   = {Epidemiology of Amyotrophic Lateral Sclerosis: An Update of Recent Literature},
+  journal = {Current Opinion in Neurology},
+  volume  = {32},
+  number  = {5},
+  pages   = {771--776},
+  year    = {2019},
+  doi     = {10.1097/WCO.0000000000000730},
+}
+
+
+% ---------------------------------------------------------------------
+%  CONJUNTO DE DATOS Y BENCHMARKS
+% ---------------------------------------------------------------------
+
+@misc{b2t25,
+  author       = {Card, Nicholas S. and Willett, Francis R. and Stavisky, Sergey D. and Brandman, David M.},
+  title        = {Brain-to-Text Benchmark '25},
+  year         = {2025},
+  howpublished = {Competición y conjunto de datos públicos},
+  url          = {https://www.kaggle.com/competitions/brain-to-text-25},
+  urldate      = {2026-09-04},
+  note         = {Datos depositados en Dryad, \url{https://doi.org/10.5061/dryad.dncjsxm85}},
+}
+% VERIFICAR: comprueba la fecha de consulta y que el enlace de Dryad sigue vivo.
+
+@misc{b2t24lessons,
+  author       = {Willett, Francis R. and Kunz, Erin M. and Fan, Chaofei and Card, Nicholas S. and Casey, Benjamin and Stavisky, Sergey D. and Hochberg, Leigh R. and Henderson, Jaimie M.},
+  title        = {Brain-to-Text Benchmark '24: Lessons Learned},
+  year         = {2024},
+  eprint       = {2412.17227},
+  eprinttype   = {arxiv},
+  eprintclass  = {cs.CL},
+  doi          = {10.48550/arXiv.2412.17227},
+}
+% VERIFICAR autores y si ya está publicado.
+
+@misc{khanday2026,
+  author       = {Khanday, Owais Mujtaba and Gonzalez-Lopez, Jose A. and Ouellet, Marc and Gald{\'o}n, Alberto and Olivares Granados, Gonzalo},
+  title        = {End-to-End Intracortical Speech Decoding from Neural Activity},
+  year         = {2026},
+  eprint       = {2605.24313},
+  eprinttype   = {arxiv},
+  eprintclass  = {eess.AS},
+  doi          = {10.48550/arXiv.2605.24313},
+}
+% VERIFICAR: es la referencia comparable más importante del capítulo 7.
+% Confirma el CER de validación (23,80 %) leyendo el propio artículo.
+
+@misc{crossspecies2025,
+  title        = {A Cross-Species Neural Foundation Model for End-to-End Speech Decoding},
+  year         = {2025},
+  eprint       = {2511.21740},
+  eprinttype   = {arxiv},
+  eprintclass  = {cs.LG},
+  doi          = {10.48550/arXiv.2511.21740},
+  note         = {Autores pendientes de completar},
+}
+% VERIFICAR: completa la lista de autores.
+
+@misc{lightbeam,
+  title        = {{LightBeam}: An Accurate and Memory-Efficient {CTC} Decoder for Speech Neuroprostheses},
+  year         = {2026},
+  eprint       = {2603.14002},
+  eprinttype   = {arxiv},
+  eprintclass  = {eess.AS},
+  doi          = {10.48550/arXiv.2603.14002},
+  note         = {Autores pendientes de completar},
+}
+% VERIFICAR: completa la lista de autores.
+
+@online{cheng2026,
+  author  = {Cheng, Jackson},
+  title   = {Solución de séptimo puesto: {Mamba}, {GRU} y {KenLM} en el Brain-to-Text '25},
+  year    = {2026},
+  urldate = {2026-09-04},
+  note    = {Solución publicada de la competición Brain-to-Text '25},
+}
+% VERIFICAR: si encuentras el mismo dato sobre los requisitos de memoria de
+% los modelos n-grama oficiales en el repositorio de la competición o en su
+% foro, cita esa fuente en lugar de esta. Un post de blog es defendible sólo
+% para un dato factual muy concreto.
+
+
+% ---------------------------------------------------------------------
+%  MODELOS DE HABLA PREENTRENADOS
+% ---------------------------------------------------------------------
+
+@inproceedings{radford2023whisper,
+  author    = {Radford, Alec and Kim, Jong Wook and Xu, Tao and Brockman, Greg and McLeavey, Christine and Sutskever, Ilya},
+  title     = {Robust Speech Recognition via Large-Scale Weak Supervision},
+  booktitle = {Proceedings of the 40th International Conference on Machine Learning (ICML)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {202},
+  pages     = {28492--28518},
+  year      = {2023},
+  publisher = {PMLR},
+  url       = {https://proceedings.mlr.press/v202/radford23a.html},
+  urldate   = {2026-09-04},
+}
+
+@inproceedings{peng2023owsm,
+  author    = {Peng, Yifan and Tian, Jinchuan and Yan, Brian and Berrebbi, Dan and Chang, Xuankai and Li, Xinjian and Shi, Jiatong and Arora, Siddhant and Chen, William and Sharma, Roshan and Zhang, Wangyou and Sudo, Yui and Shakeel, Muhammad and Jung, Jee-weon and Maiti, Soumi and Watanabe, Shinji},
+  title     = {Reproducing {Whisper}-Style Training Using an Open-Source Toolkit and Publicly Available Data},
+  booktitle = {IEEE Automatic Speech Recognition and Understanding Workshop (ASRU)},
+  year      = {2023},
+  doi       = {10.1109/ASRU57964.2023.10389676},
+}
+
+@inproceedings{peng2024owsmv31,
+  author    = {Peng, Yifan and Tian, Jinchuan and Chen, William and Arora, Siddhant and Yan, Brian and Sudo, Yui and Shakeel, Muhammad and Choi, Kwanghee and Shi, Jiatong and Chang, Xuankai and Jung, Jee-weon and Watanabe, Shinji},
+  title     = {{OWSM} v3.1: Better and Faster Open {Whisper}-Style Speech Models Based on {E-Branchformer}},
+  booktitle = {Proc. Interspeech 2024},
+  pages     = {352--356},
+  year      = {2024},
+  doi       = {10.21437/Interspeech.2024-1194},
+}
+% VERIFICAR el rango de páginas en las actas de Interspeech 2024.
+
+@inproceedings{kim2023ebranchformer,
+  author    = {Kim, Kwangyoun and Wu, Felix and Peng, Yifan and Pan, Jing and Sridhar, Prashant and Han, Kyu J. and Watanabe, Shinji},
+  title     = {{E-Branchformer}: Branchformer with Enhanced Merging for Speech Recognition},
+  booktitle = {IEEE Spoken Language Technology Workshop (SLT)},
+  pages     = {84--91},
+  year      = {2023},
+  doi       = {10.1109/SLT54892.2023.10022656},
+}
+
+@inproceedings{watanabe2018espnet,
+  author    = {Watanabe, Shinji and Hori, Takaaki and Karita, Shigeki and Hayashi, Tomoki and Nishitoba, Jiro and Unno, Yuya and Enrique Yalta Soplin, Nelson and Heymann, Jahn and Wiesner, Matthew and Chen, Nanxin and Renduchintala, Adithya and Ochiai, Tsubasa},
+  title     = {{ESPnet}: End-to-End Speech Processing Toolkit},
+  booktitle = {Proc. Interspeech 2018},
+  pages     = {2207--2211},
+  year      = {2018},
+  doi       = {10.21437/Interspeech.2018-1456},
+}
+
+@inproceedings{someki2024espnetez,
+  author    = {Someki, Masao and Choi, Kwanghee and Arora, Siddhant and Chen, William and Cornell, Samuele and Han, Jionghao and Peng, Yifan and Watanabe, Shinji and Raj, Desh},
+  title     = {{ESPnet-EZ}: Python-Only {ESPnet} for Easy Fine-Tuning and Integration},
+  booktitle = {IEEE Spoken Language Technology Workshop (SLT)},
+  year      = {2024},
+  doi       = {10.1109/SLT61566.2024.10832299},
+}
+% VERIFICAR el DOI: SLT 2024 se celebró en diciembre de 2024 y las actas
+% pueden haberse indexado con otro identificador.
+
+
+% ---------------------------------------------------------------------
+%  MÉTODOS: CTC, ADAPTACIÓN Y MODELADO DE LENGUAJE
+% ---------------------------------------------------------------------
+
+@inproceedings{graves2006ctc,
+  author    = {Graves, Alex and Fern{\'a}ndez, Santiago and Gomez, Faustino and Schmidhuber, J{\"u}rgen},
+  title     = {Connectionist Temporal Classification: Labelling Unsegmented Sequence Data with Recurrent Neural Networks},
+  booktitle = {Proceedings of the 23rd International Conference on Machine Learning (ICML)},
+  pages     = {369--376},
+  year      = {2006},
+  doi       = {10.1145/1143844.1143891},
+}
+
+@inproceedings{kim2017jointctc,
+  author    = {Kim, Suyoun and Hori, Takaaki and Watanabe, Shinji},
+  title     = {Joint {CTC}-Attention Based End-to-End Speech Recognition Using Multi-Task Learning},
+  booktitle = {IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  pages     = {4835--4839},
+  year      = {2017},
+  doi       = {10.1109/ICASSP.2017.7953075},
+}
+
+@inproceedings{hu2022lora,
+  author    = {Hu, Edward J. and Shen, Yelong and Wallis, Phillip and Allen-Zhu, Zeyuan and Li, Yuanzhi and Wang, Shean and Wang, Lu and Chen, Weizhu},
+  title     = {{LoRA}: Low-Rank Adaptation of Large Language Models},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2022},
+  url       = {https://openreview.net/forum?id=nZeVKeeFYf9},
+  urldate   = {2026-09-04},
+}
+
+@inproceedings{heafield2011kenlm,
+  author    = {Heafield, Kenneth},
+  title     = {{KenLM}: Faster and Smaller Language Model Queries},
+  booktitle = {Proceedings of the Sixth Workshop on Statistical Machine Translation},
+  pages     = {187--197},
+  year      = {2011},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/W11-2123/},
+  urldate   = {2026-09-04},
+}
+
+
+% ---------------------------------------------------------------------
+%  GRANULARIDAD DE LA UNIDAD DE SALIDA EN CTC
+%  (respaldan el hallazgo del bloque B, capítulo 7)
+% ---------------------------------------------------------------------
+
+@inproceedings{higuchi2021hierarchical,
+  author    = {Higuchi, Yosuke and Karube, Keita and Ogawa, Tetsuji and Kobayashi, Tetsunori},
+  title     = {Hierarchical Conditional End-to-End {ASR} with {CTC} and Multi-Granular Subword Units},
+  booktitle = {IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  pages     = {7797--7801},
+  year      = {2022},
+  doi       = {10.1109/ICASSP43922.2022.9746580},
+}
+% VERIFICAR páginas. El preprint es arXiv:2110.04109 (2021) y la versión
+% de actas es de ICASSP 2022.
+
+@inproceedings{das2018advancing,
+  author    = {Das, Amit and Li, Jinyu and Zhao, Rui and Gong, Yifan},
+  title     = {Advancing Connectionist Temporal Classification with Attention Modeling},
+  booktitle = {IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  pages     = {4769--4773},
+  year      = {2018},
+  doi       = {10.1109/ICASSP.2018.8461558},
+}
+
+@inproceedings{zeyer2018subword,
+  author    = {Zeyer, Albert and Irie, Kazuki and Schl{\"u}ter, Ralf and Ney, Hermann},
+  title     = {Improved Training of End-to-End Attention Models for Speech Recognition},
+  booktitle = {Proc. Interspeech 2018},
+  pages     = {7--11},
+  year      = {2018},
+  doi       = {10.21437/Interspeech.2018-1616},
+}
+% VERIFICAR: en el capítulo 7 esta cita respalda la reducción relativa del
+% ~13 % al pasar de carácter a subpalabra en CTC. Comprueba que la cifra
+% procede de esta referencia y no de "Subword and Crossword Units for CTC
+% Acoustic Models" (Zenkel et al., Interspeech 2017); si es de esa otra,
+% sustituye la entrada.
+
+@misc{chen2023fasthubert,
+  author       = {Yang, Guanrou and Ma, Ziyang and Zheng, Zhisheng and Song, Yakun and Niu, Zhikang and Chen, Xie},
+  title        = {{Fast-HuBERT}: An Efficient Training Framework for Self-Supervised Speech Representation Learning},
+  year         = {2023},
+  eprint       = {2309.13860},
+  eprinttype   = {arxiv},
+  eprintclass  = {eess.AS},
+  doi          = {10.48550/arXiv.2309.13860},
+}
+% VERIFICAR autores.
+
+
+% ---------------------------------------------------------------------
+%  TRANSFERENCIA DE MODELOS DE HABLA A SEÑAL NEURONAL
+% ---------------------------------------------------------------------
+
+@misc{fiedler2025wav2vec2brain,
+  author       = {Fiedler, Tobias and others},
+  title        = {Teaching {Wav2Vec2} the Language of the Brain},
+  year         = {2025},
+  eprint       = {2501.09459},
+  eprinttype   = {arxiv},
+  eprintclass  = {cs.CL},
+  doi          = {10.48550/arXiv.2501.09459},
+  note         = {Código en \url{https://github.com/tfiedlerdev/Wav2Vec2ForBrain}},
+}
+% VERIFICAR: es la referencia con la que contrasta el hallazgo central del
+% trabajo. Completa la lista de autores y confirma las cifras (CER 18,54 %,
+% ventaja de 20,46 puntos sobre entrenamiento desde cero).
+
+@misc{brainwhisperer,
+  title        = {{BrainWhisperer}: Leveraging Large-Scale {ASR} Models for Neural Speech Decoding},
+  year         = {2026},
+  eprint       = {2603.13321},
+  eprinttype   = {arxiv},
+  eprintclass  = {eess.AS},
+  doi          = {10.48550/arXiv.2603.13321},
+  note         = {Autores pendientes de completar},
+}
+% VERIFICAR autores y el puesto exacto en la competición.
+
+@misc{braintalker,
+  author       = {Kim, Miseul and Piao, Zhenyu and Lee, Jihyun and Kang, Hong-Goo},
+  title        = {{BrainTalker}: Low-Resource Brain-to-Speech Synthesis with Transfer Learning Using {Wav2Vec 2.0}},
+  year         = {2023},
+  eprint       = {2312.13600},
+  eprinttype   = {arxiv},
+  eprintclass  = {eess.AS},
+  doi          = {10.48550/arXiv.2312.13600},
+}
+
+@misc{ecogssl2024,
+  title        = {Improving Speech Decoding from {ECoG} with Self-Supervised Pretraining},
+  year         = {2024},
+  eprint       = {2405.18639},
+  eprinttype   = {arxiv},
+  eprintclass  = {eess.AS},
+  doi          = {10.48550/arXiv.2405.18639},
+  note         = {Autores pendientes de completar},
+}
+% VERIFICAR autores.

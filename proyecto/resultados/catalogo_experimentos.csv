@@ -1,0 +1,12 @@
+orden_presentacion,experimento,nombre,pregunta,carpeta
+0,P,Desarrollo preliminar,Pruebas de puesta a punto que no forman parte de la secuencia experimental final.,00_P_desarrollo_preliminar
+1,A,Transferencia del encoder,¿Aportan los pesos preentrenados de OWSM frente a la inicialización aleatoria?,01_A_transferencia_encoder
+2,C,Estabilidad del entrenamiento,¿Se mantiene el hallazgo entre semillas y ajustes de optimización?,02_C_estabilidad_entrenamiento
+3,D,Estrategia de adaptación,"¿Conviene congelar, usar LoRA o ajustar parcialmente el encoder?",03_D_estrategia_adaptacion
+4,E,Frontend de EEG,¿Qué capacidad necesita la transformación de entrada?,04_E_frontend_eeg
+5,F,Profundidad del encoder,¿Cuántos bloques E-Branchformer son necesarios?,05_F_profundidad_encoder
+6,G,Unidad de salida CTC,¿Qué granularidad de salida minimiza el WER textual?,06_G_unidad_salida_ctc
+7,H,Generalización entre sesiones,¿Qué ocurre al evaluar sesiones ausentes del entrenamiento?,07_H_generalizacion_sesiones
+8,I,Modelo de lenguaje externo,¿Cuánto mejora KenLM la búsqueda CTC?,08_I_modelo_lenguaje
+9,J,Decoder OWSM preliminar,¿Qué ocurrió en los primeros ensayos con el decoder de atención?,09_J_decoder_owsm_preliminar
+10,B,Sistema final,¿Cuál es la mejor configuración completa y cuál es su WER final?,10_B_sistema_final

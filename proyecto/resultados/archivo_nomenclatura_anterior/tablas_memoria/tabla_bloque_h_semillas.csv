@@ -1,0 +1,4 @@
+etiqueta,objetivo_ctc,init_encoder,epocas_hechas,cer_ctc_micro,cer_ctc_greedy,wer_ctc_greedy,min_valid_cer_ctc,compute_units
+Semilla 2024 (30 ep.),char,random,30.0,0.2949892183863874,0.2887007052545438,0.5713065403324045,0.324,6.6
+Semilla 7 (40 ep.),char,random,40.0,0.2727001003437306,0.2672359265942138,0.5354338583022272,0.297,8.82
+Semilla 1234 (40 ep.),char,random,40.0,0.2863212280364653,0.2804080582684011,0.5446071865323577,0.314,8.78

@@ -1,0 +1,6 @@
+etiqueta,objetivo_ctc,init_encoder,epocas_hechas,cer_ctc_micro,cer_ctc_greedy,wer_ctc_greedy,min_valid_cer_ctc,compute_units
+sanity,bpe,owsm,15.0,,,,,0.34
+linear,bpe,owsm,30.0,,,,,2.02
+conSesion,bpe,owsm,30.0,,0.9958623082783156,0.9977777777777778,,1.69
+conv1d,bpe,owsm,30.0,,,,,2.06
+sinSesion,bpe,owsm,30.0,,0.9868135110626022,0.9877777777777778,,1.69

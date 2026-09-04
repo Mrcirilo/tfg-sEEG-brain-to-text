@@ -206,7 +206,7 @@ Aparta por completo las cinco últimas sesiones, que no participan en el entrena
 
 Compara las variantes lineal y convolucional unidimensional frente a la profunda. Es el bloque de menor prioridad y el primer candidato a recortarse si el presupuesto se agota.
 
-Este bloque exige una precaución que lo distingue del resto. Las variantes lineal y convolucional unidimensional aplican un factor de submuestreo fijo de cuatro, mientras que la receta de referencia emplea la variante profunda con factor dos. Comparadas directamente, la arquitectura del adaptador quedaría \textbf{confundida con la resolución temporal}, que es exactamente el defecto experimental que este trabajo se propone evitar. La comparación debe ejecutarse, por tanto, igualando el factor de submuestreo en todas las variantes, o bien reportando explícitamente ambos ejes y absteniéndose de atribuir la diferencia a la arquitectura.
+Este bloque exige una precaución que lo distingue del resto. Si las variantes se comparasen con factores de submuestreo distintos, la arquitectura del adaptador quedaría \textbf{confundida con la resolución temporal}, que es exactamente el defecto experimental que este trabajo se propone evitar. Las tres variantes se ejecutan, en consecuencia, con el mismo factor de submuestreo, y así se verifica en los registros de cada ejecución.
 
 \subsection{Bloque G: configuración final}
 

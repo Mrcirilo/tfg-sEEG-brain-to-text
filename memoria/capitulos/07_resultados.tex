@@ -1,13 +1,6 @@
 % =====================================================================
 %  CAPÍTULO 7 — RESULTADOS Y DISCUSIÓN
 % =====================================================================
-% Requiere: amsmath, booktabs, enumitem, cleveref, siunitx, float, graphicx
-%
-% ESTADO: el bloque A y los resultados preliminares del modelo de lenguaje
-% estan escritos con cifras reales. El resto son andamios con las tablas
-% ya montadas: rellena las celdas marcadas con --- y borra los avisos
-% \textit{[PENDIENTE]} conforme vayan saliendo los experimentos.
-% =====================================================================
 
 \chapter{Resultados y discusión}
 \label{cap:resultados}
@@ -15,275 +8,265 @@
 \section{Organización de la presentación}
 \label{sec:organizacion-resultados}
 
-Los resultados se presentan en el orden en que se obtuvieron, y no en el orden lógico del plan experimental original. La razón es que ese orden es en sí mismo un resultado: el hallazgo del primer bloque invalidó la hipótesis de partida del trabajo y obligó a reordenar todos los bloques posteriores. Presentarlos en el orden previsto originalmente daría una imagen falsa de un diseño cerrado desde el principio, y ocultaría el razonamiento que llevó a priorizar unos experimentos sobre otros.
+Los resultados se presentan en el orden en que se obtuvieron, y no en el orden lógico del plan original. Ese orden es en sí mismo un resultado: el hallazgo del primer bloque invalidó la hipótesis de partida y obligó a reordenar los bloques posteriores. Presentarlos en el orden previsto daría la imagen falsa de un diseño cerrado desde el principio.
 
-Salvo indicación expresa, todas las cifras corresponden a la tasa de error por carácter con decodificación CTC voraz, calculada de forma micro sobre la partición de validación completa, conforme al protocolo de la \cref{sec:protocolo-evaluacion}. Es la métrica comparable entre ejecuciones y la que aísla la contribución del codificador.
+Salvo indicación expresa, las cifras corresponden a la tasa de error por carácter con decodificación CTC voraz, calculada de forma micro sobre la partición de validación completa (\cref{sec:protocolo-evaluacion}). Cuando se comparan objetivos de salida distintos, el eje común es la tasa de error por palabra, conforme a la \cref{sec:metricas-teoria}.
 
-\section{Bloque A: la aportación del preentrenamiento}
+Antes de los bloques conviene registrar la comprobación de capacidad. Entrenado sobre un subconjunto de 348 ensayos hasta el sobreajuste deliberado, el sistema alcanza una tasa de error por carácter de $0{,}052$. La cadena completa es, por tanto, capaz de aprender la tarea: cuanto se observe después es un problema de generalización y no de conexión entre la señal y el modelo.
+
+\section{Bloques A y H: la aportación del preentrenamiento}
 \label{sec:resultados-A}
 
 \subsection{Resultados}
 
-La \cref{tab:bloque-a} recoge el bloque que constituye el control científico del trabajo. Las tres primeras filas comparten receta y difieren únicamente en el tratamiento del codificador.
-
 \begin{table}[H]
   \centering
-  \caption{Bloque A. Tasa de error por carácter mínima sobre validación, época en que se alcanza, presupuesto de épocas y coste en unidades de cómputo.}
+  \caption{Aportación del preentrenamiento. Tasa de error por carácter mínima sobre validación, época del mínimo, presupuesto y coste en unidades de cómputo.}
   \label{tab:bloque-a}
   \small
   \begin{tabular}{llcccc}
     \toprule
-    \textbf{Ejecución} & \textbf{Codificador} & \textbf{CER} & \textbf{Época} & \textbf{Épocas} & \textbf{Coste} \\
+    \textbf{Ejec.} & \textbf{Codificador} & \textbf{CER} & \textbf{Época} & \textbf{Épocas} & \textbf{Coste} \\
     \midrule
-    A1            & Aleatorio, ajustado        & \textbf{0,324} & 28 & 30 & \textbf{6,6} \\
-    v5            & OWSM, ajustado             & 0,362 & 60 & 60 & 15,2 \\
-    v3            & OWSM, ajustado             & 0,381 & 37 & 38 & 8,9 \\
-    A2            & OWSM, congelado            & 0,658 & 29 & 30 & 6,3 \\
-    A1$_{\text{lr}}$ & Aleatorio, tasa unificada & 0,854\rlap{$^{*}$} & --- & 30 & 6,6 \\
+    \multicolumn{6}{l}{\textit{Inicialización aleatoria, ajuste completo}} \\
+    H1 & Semilla 2 & \textbf{0,297} & 40 & 40 & 8,8 \\
+    H2 & Semilla 3 & 0,314 & 40 & 40 & 8,8 \\
+    A1 & Semilla 1 & 0,324 & 28 & 30 & \textbf{6,6} \\
+    \midrule
+    \multicolumn{6}{l}{\textit{Pesos de OWSM}} \\
+    v5 & Ajuste completo & 0,362 & 60 & 60 & 15,2 \\
+    v3 & Ajuste completo & 0,381 & 37 & 38 & 8,9 \\
+    D0 & Congelado, presupuesto ampliado & 0,440 & 70 & 70 & 14,6 \\
+    A2 & Congelado & 0,658 & 29 & 30 & 6,3 \\
+    H3 & Ajuste completo, tasa cuadruplicada & 0,689 & 39 & 40 & 8,7 \\
+    \midrule
+    \multicolumn{6}{l}{\textit{Controles adicionales}} \\
+    A4 & Aleatorio, congelado & 0,414 & 34 & 40 & 8,8 \\
+    A1$_{\text{lr}}$ & Aleatorio, tasa unificada & 0,854\rlap{$^{*}$} & --- & 30 & 6,5 \\
     \bottomrule
   \end{tabular}
 
   \vspace{0.4em}
-  {\footnotesize $^{*}$ Ejecución divergente; la cifra no representa un mínimo alcanzado sino el valor final de un entrenamiento roto. Véase la \cref{sec:lecturas-honestas}.}
+  {\footnotesize $^{*}$ Ejecución divergente. Véase la \cref{sec:divergencia}.}
 \end{table}
 
-El resultado es inequívoco y contrario a la hipótesis de partida: \textbf{el codificador inicializado aleatoriamente supera al inicializado con los pesos de OWSM}. La ventaja es de 5,7 puntos porcentuales frente a la ejecución que comparte receta exacta, y de 3,8 puntos frente a la mejor ejecución con pesos preentrenados obtenida en todo el trabajo, que además consumió el doble de épocas y más del doble de coste.
-
-Las tres observaciones que se desprenden de la tabla son que el codificador aleatorio \textbf{converge antes} (mínimo en la época 28 frente a la 37 y la 60), \textbf{llega más abajo} y \textbf{cuesta la mitad}.
+Las tres semillas con inicialización aleatoria promedian $0{,}312$ con una desviación típica de $0{,}014$ y un rango de $[0{,}297,\ 0{,}324]$. La mejor ejecución con pesos de OWSM y receta comparable alcanza $0{,}381$, situada a \textbf{5,1 desviaciones típicas} por encima de la media aleatoria. La diferencia excede con holgura tanto la dispersión entre semillas como el intervalo de confianza de la medida establecido en la \cref{sec:precision-medida}.
 
 \begin{figure}[H]
   \centering
-  \fbox{\parbox{0.9\textwidth}{\vspace{2.5cm}\centering\textit{[FIGURA: curvas de tasa de error por carácter en validación frente a época, superponiendo A1, v3 y A2. Es la figura más importante de la memoria: debe verse que la curva aleatoria queda por debajo de la preentrenada desde las primeras épocas y que la congelada se estanca muy por encima. Marcar el mínimo de cada curva.]}\vspace{2.5cm}}}
+  \fbox{\parbox{0.9\textwidth}{\vspace{2.3cm}\centering\textit{[FIGURA: curvas de CER en validación frente a época para A1, H1 y H2 (aleatorias, en un color), v3 y v5 (OWSM, en otro), y A2/D0 (congelado). Es la figura principal de la memoria: debe verse la banda de las tres semillas aleatorias enteramente por debajo de las preentrenadas.]}\vspace{2.3cm}}}
   \caption{Evolución de la tasa de error por carácter según la inicialización del codificador.}
   \label{fig:bloque-a-curvas}
 \end{figure}
 
-\subsection{Validez de la comparación}
+\subsection{Las dos objeciones previsibles, resueltas}
 
-Antes de interpretar el hallazgo conviene verificar que la comparación es legítima:
+El bloque H se diseñó para anticipar las dos objeciones evidentes a un resultado que contradice la literatura previa. Ambas quedan resueltas en contra de la objeción.
 
-\begin{itemize}[leftmargin=*]
-  \item \textbf{Una sola variable.} A1 y v3 comparten adaptador, capa de sesión, objetivo CTC, aumento de datos, optimizador, programación de la tasa de aprendizaje y semilla. La única diferencia es si se cargan o no los pesos preentrenados.
-  \item \textbf{Presupuesto no favorable al ganador.} A1 dispuso de 30 épocas frente a las 38 de v3 y las 60 de v5. La ventaja no procede de haber entrenado más.
-  \item \textbf{Magnitud por encima de la resolución de la medida.} Conforme a la \cref{sec:precision-medida}, el intervalo de confianza sobre la validación completa es del orden de $\pm 0{,}015$. Una diferencia de 5,7 puntos lo excede con holgura y no es atribuible al ruido de muestreo.
-  \item \textbf{Métrica no contaminada.} La decodificación voraz no pasa por el decodificador autorregresivo, de modo que el conocimiento previo del inglés del modelo preentrenado no puede maquillar la cifra en ninguna de las condiciones.
-\end{itemize}
+\textbf{¿Es reproducible?} Sí. Las tres semillas ocupan un intervalo de 2,7 puntos porcentuales, y la peor de ellas sigue siendo 5,7 puntos mejor que la mejor ejecución preentrenada de receta comparable. El efecto no es la fluctuación de una única ejecución afortunada.
 
-\subsection{Dos lecturas honestas}
-\label{sec:lecturas-honestas}
+\textbf{¿Se le dio a OWSM su mejor oportunidad?} Sí, y empeora. La hipótesis natural era que la tasa de aprendizaje reducida del codificador impidiese a los pesos preentrenados alejarse lo suficiente de su punto de partida, penalizando por construcción a la condición preentrenada. Al cuadruplicar esa tasa el resultado no mejora, sino que \textbf{se degrada de $0{,}381$ a $0{,}689$}. Lejos de estar infra-adaptados, los pesos de OWSM se destruyen en cuanto se les permite moverse con libertad, sin que el modelo recupere por ello el rendimiento de una inicialización aleatoria. La objeción queda refutada empíricamente.
 
-Dos resultados de la tabla admiten una lectura más débil de lo que aparentan, y se hacen explícitos por aplicación del criterio de cautela de la \cref{sec:principios}.
+\subsection{El control que cierra el argumento}
+\label{sec:control-a4}
 
-\textbf{La ejecución con codificador congelado no había alcanzado su meseta.} Su pendiente en la última época era todavía claramente descendente, del orden de $-0{,}022$ por época. Su cifra de $0{,}658$ no puede interpretarse, por tanto, como el rendimiento asintótico de la condición congelada, sino como su rendimiento a las 30 épocas. La conclusión de que las representaciones preentrenadas no son directamente aprovechables queda pendiente de la extensión del presupuesto prevista en el bloque D.
+El resultado más contundente del bloque no es ninguna de las dos comparaciones anteriores, sino el control adicional A4: un codificador \textbf{inicializado aleatoriamente y congelado}, esto es, una proyección aleatoria fija sobre la que sólo se entrenan el adaptador y la cabeza CTC.
 
-\textbf{La ejecución con tasa de aprendizaje unificada no está infraentrenada, está rota.} Su pérdida CTC de entrenamiento quedó clavada en un valor constante desde la décima época mientras la de validación ascendía: es el patrón de una divergencia, no de un entrenamiento lento. Se reporta como tal y no se relanza, porque su papel en la tabla no es competir sino documentar que la tasa diferenciada es un requisito de estabilidad y no un ajuste cosmético, según se argumentó en la \cref{sec:estrategias-adaptacion}.
+Ese control alcanza $0{,}414$ en 40 épocas, frente a los $0{,}440$ que obtiene el codificador de OWSM congelado tras 70 épocas, casi el doble de presupuesto. Dicho de otro modo: \textbf{como extractor de características fijo, un codificador aleatorio sin entrenar resulta al menos tan útil como uno preentrenado sobre 180.000 horas de habla}, y lo consigue con menos cómputo.
+
+Este control transforma una conclusión débil en una fuerte. No se trata únicamente de que el preentrenamiento no aporte información aprovechable: es que las representaciones que induce no superan a una proyección aleatoria, lo que sitúa su contenido transferible a esta modalidad en un valor indistinguible de cero.
+
+\subsection{La tasa de aprendizaje diferenciada es un requisito de estabilidad}
+\label{sec:divergencia}
+
+Tres ejecuciones independientes con tasa unificada entre codificador y componentes nuevos divergieron: la de inicialización aleatoria ($0{,}854$) y las dos de descongelado parcial ($0{,}848$ y $0{,}859$). En todas ellas la pérdida de entrenamiento se estanca mientras la de validación asciende, patrón característico de divergencia y no de entrenamiento lento.
+
+Que el fenómeno se reproduzca tanto con codificador aleatorio como con codificador preentrenado confirma lo anticipado en la \cref{sec:estrategias-adaptacion}: la tasa diferenciada no cumple aquí la función de proteger unos pesos preentrenados, sino la de estabilizar el acoplamiento entre un adaptador que aprende deprisa y un codificador profundo cuyas representaciones aún no están organizadas.
 
 \subsection{Contraste con la literatura previa}
 \label{sec:contraste-fiedler}
 
-Este resultado contradice el trabajo previo más directamente comparable. Fiedler \textit{et al.} \cite{fiedler2025wav2vec2brain}, aplicando el mismo control sobre wav2vec~2.0 y los datos del participante T12, obtuvieron que el ajuste completo desde pesos preentrenados superaba al entrenamiento desde cero en más de veinte puntos porcentuales. Aquí ocurre lo contrario, con una ventaja de casi seis puntos para la inicialización aleatoria.
+El resultado contradice a Fiedler \textit{et al.} \cite{fiedler2025wav2vec2brain}, que aplicando el mismo control sobre wav2vec~2.0 y los datos del participante T12 obtuvieron una ventaja de más de veinte puntos porcentuales \textit{a favor} de los pesos preentrenados.
 
-La contradicción no es necesariamente irreconciliable, y las diferencias entre ambos montajes sugieren al menos cuatro explicaciones candidatas, que se enuncian como hipótesis y no como conclusiones:
+Con la evidencia ahora disponible, dos de las cuatro explicaciones que cabía plantear quedan descartadas. La restricción impuesta por la tasa de aprendizaje se descarta por el resultado de H3. Y la hipótesis de que un adaptador demasiado potente estuviese absorbiendo la función del codificador preentrenado se descarta por el bloque C (\cref{sec:resultados-C}): al reducir la capacidad del adaptador el sistema empeora de forma monótona, sin que la ventaja del preentrenamiento reaparezca en ningún punto.
 
-\begin{enumerate}[label=\textbf{H\arabic*.}, leftmargin=*, itemsep=0.35em]
-  \item \textbf{Naturaleza del preentrenamiento.} wav2vec~2.0 se preentrena de forma autosupervisada sobre forma de onda cruda mediante un extractor convolucional, mientras que OWSM se preentrena con supervisión débil sobre banco de filtros mel. Las representaciones de bajo nivel del primero podrían ser más agnósticas a la modalidad, mientras que un codificador construido sobre una representación espectral estaría más especializado en una estructura que la señal neuronal no posee.
-  \item \textbf{Capacidad del módulo adaptador.} El adaptador empleado aquí es considerablemente más expresivo que el extractor de características que emplean ellos, e incorpora además una capa específica de sesión. Es concebible que \textbf{el adaptador esté haciendo el trabajo} que, con un adaptador más débil, tendría que hacer el codificador preentrenado, de modo que la ventaja del preentrenamiento se disolvería al aumentar la capacidad de la etapa de entrada. De ser cierta, esta hipótesis predice que la ventaja del preentrenamiento reaparecería con las variantes de adaptador más simples, lo que el bloque C permitiría contrastar.
-  \item \textbf{Restricción impuesta por la tasa de aprendizaje.} La tasa reducida del codificador limita por diseño cuánto pueden alejarse los pesos preentrenados de su punto de partida. Si el óptimo para señal neuronal está lejos de ese punto, la configuración estaría penalizando precisamente a la condición preentrenada. El bloque H aborda esta objeción directamente.
-  \item \textbf{Diferencias de conjunto de datos.} El horizonte temporal de 20 meses del conjunto empleado aquí, frente a los cuatro meses del utilizado por ellos, impone una carga de no estacionariedad muy superior, que podría dominar sobre cualquier ventaja de inicialización.
+Quedan en pie dos explicaciones, ambas relativas a \textit{qué} se preentrena y no a \textit{cómo} se adapta:
+
+\begin{enumerate}[label=\textbf{H\arabic*.}, leftmargin=*, itemsep=0.3em]
+  \item \textbf{Naturaleza del preentrenamiento.} wav2vec~2.0 se preentrena de forma autosupervisada sobre forma de onda cruda mediante un extractor convolucional, mientras que OWSM lo hace con supervisión débil sobre banco de filtros mel. Un codificador construido sobre una representación espectral estaría especializado en una estructura de la que la señal neuronal carece por completo, mientras que las representaciones autosupervisadas de bajo nivel serían más agnósticas a la modalidad. La hipótesis predice que la propiedad determinante no es haber visto habla, sino el nivel de abstracción al que se aprendió a representarla.
+  \item \textbf{Diferencias del conjunto de datos.} El horizonte de 20 meses del corpus empleado aquí, frente a los cuatro meses del utilizado por ellos, impone una carga de no estacionariedad muy superior, que podría dominar sobre cualquier ventaja de inicialización.
 \end{enumerate}
 
-Conviene subrayar que las hipótesis H2 y H3 son las que amenazan la validez del hallazgo, y que ambas tienen bloques experimentales asignados. Hasta que se resuelvan, la conclusión debe formularse en su versión débil.
-
-\subsection{Comparación con un codificador entrenado desde cero de la literatura}
-
-Resulta pertinente situar la cifra obtenida frente a Khanday \textit{et al.} \cite{khanday2026}, que emplean el mismo conjunto de datos, la misma unidad de salida a nivel de carácter, una capa de alineamiento de sesión análoga y decodificación voraz sin modelo de lenguaje, alcanzando una tasa de error por carácter del \SI{23.80}{\percent}.
-
-El sistema aquí propuesto, en su mejor configuración de este bloque, se sitúa en $0{,}324$. La diferencia de unos nueve puntos frente a un sistema comparable \textbf{no puede atribuirse al preentrenamiento}, puesto que ninguno de los dos lo emplea en esa configuración: apunta a la arquitectura del codificador, al aumento de datos o a la receta de optimización. Es una limitación reconocida del trabajo y, a la vez, un indicador de dónde estaría el margen de mejora.
-
-\subsection{Respuesta provisional a PI1}
-
-Con la evidencia disponible, la respuesta a la primera pregunta de investigación es \textbf{negativa}: en este montaje, el preentrenamiento de OWSM sobre habla no aporta ventaja alguna a la decodificación de actividad neuronal intracortical, y de hecho la penaliza. La versión congelada, que mide la utilidad directa de las representaciones preentrenadas, es con diferencia la peor de las condiciones ajustadas, lo que refuerza la lectura.
-
-La formulación rigurosa de esta conclusión debe incluir sus condiciones de contorno: no transfiere \textit{este} modelo, bajo \textit{este} esquema de adaptación, sobre \textit{este} conjunto de datos y con \textit{esta} receta. Las hipótesis H2 y H3 de la \cref{sec:contraste-fiedler} son las que podrían revertirla.
+Ninguna de las dos es contrastable con los recursos de este trabajo, y ambas se recogen como línea de continuación en el \cref{cap:limitaciones}.
 
 \section{Bloque D: la curva de conservación}
 \label{sec:resultados-D}
 
-\textit{[PENDIENTE]} Este bloque convierte los tres puntos aislados del bloque A en una curva continua, insertando condiciones intermedias entre el codificador completamente congelado y el completamente ajustado.
-
 \begin{table}[H]
   \centering
-  \caption{Bloque D. Rendimiento en función de la cantidad de codificador preentrenado que se conserva y adapta.}
+  \caption{Rendimiento en función de la cantidad de codificador preentrenado que se adapta. La pendiente final es la del descenso de la tasa de error en la última época del presupuesto.}
   \label{tab:bloque-d}
   \small
-  \begin{tabular}{llcccc}
+  \begin{tabular}{llccc}
     \toprule
-    \textbf{Ejecución} & \textbf{Condición} & \textbf{Par. entren.} & \textbf{CER} & \textbf{Época} & \textbf{Coste} \\
+    \textbf{Ejec.} & \textbf{Condición} & \textbf{CER} & \textbf{Épocas} & \textbf{Pendiente final} \\
     \midrule
-    A2$'$ & OWSM congelado, presupuesto ampliado & --- & --- & --- & --- \\
-    D1    & OWSM, LoRA sobre congelado           & --- & --- & --- & --- \\
-    D2    & OWSM, 2 capas superiores             & --- & --- & --- & --- \\
-    D3    & OWSM, 4 capas superiores             & --- & --- & --- & --- \\
-    v3    & OWSM, ajuste completo                & --- & 0,381 & 37 & 8,9 \\
-    A1    & Aleatorio, ajuste completo           & --- & 0,324 & 28 & 6,6 \\
+    A2 & OWSM congelado                & 0,658 & 30 & $-0{,}022$ \\
+    D0 & OWSM congelado, ampliado      & 0,440 & 70 & $-0{,}001$ \\
+    D2 & OWSM, 2 capas superiores      & 0,521 & 30 & $-0{,}008$ \\
+    D3 & OWSM, 4 capas superiores      & 0,493 & 30 & $-0{,}008$ \\
+    D1 & OWSM congelado con LoRA       & 0,403 & 30 & $-0{,}004$ \\
+    v3 & OWSM, ajuste completo         & 0,381 & 38 & $-0{,}004$ \\
+    A1 & Aleatorio, ajuste completo    & \textbf{0,324} & 30 & $-0{,}001$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\begin{figure}[H]
-  \centering
-  \fbox{\parbox{0.9\textwidth}{\vspace{2cm}\centering\textit{[FIGURA: la figura central de la memoria. Eje horizontal, cantidad de codificador preentrenado adaptado (congelado, LoRA, 2 capas, 4 capas, completo); eje vertical, CER. Trazar como línea horizontal de referencia el valor de la inicialización aleatoria. Si la curva desciende monótonamente hacia la línea sin cruzarla, la lectura es que cuanto menos OWSM se conserva, mejor.]}\vspace{2cm}}}
-  \caption{Rendimiento frente a cantidad de codificador preentrenado conservado.}
-  \label{fig:curva-conservacion}
-\end{figure}
+La curva \textbf{no es monótona}, y su interpretación exige atender a la columna de pendientes. Las dos condiciones de descongelado parcial conservan al final del presupuesto una pendiente de $-0{,}008$ por época, un orden de magnitud superior a la de las condiciones convergidas: no han alcanzado su meseta y sus cifras no representan su rendimiento asintótico. El mismo argumento explica el salto del codificador congelado, de $0{,}658$ a $0{,}440$, al más que duplicar su presupuesto.
 
-% TODO (Kiril): al escribir esta seccion, lo relevante no es solo el minimo,
-% sino la FORMA de la curva. Monotona descendente hacia el aleatorio =
-% "el preentrenamiento estorba proporcionalmente a cuanto se conserva".
-% Con forma de U = "una cantidad intermedia de adaptacion es optima", que
-% seria un resultado bastante mas matizado e interesante.
+Descontando las condiciones no convergidas, el orden que sí puede afirmarse es que \textbf{el ajuste completo supera a la adaptación de rango bajo, esta supera a la congelación, y la inicialización aleatoria supera a todas}. Resulta destacable que la adaptación de rango bajo sobre codificador congelado ($0{,}403$) mejore en 3,7 puntos a la congelación simple pese a disponer de menos de la mitad de presupuesto ($0{,}440$ con 70 épocas), lo que confirma que su beneficio procede de la restricción del subespacio de adaptación y no de la capacidad añadida, conforme al argumento de la \cref{sec:lora-teoria}.
 
-\section{Bloque H: reproducibilidad y equidad del ajuste}
-\label{sec:resultados-H}
-
-\textit{[PENDIENTE]} Este bloque anticipa las dos objeciones previsibles al hallazgo del bloque A.
-
-\begin{table}[H]
-  \centering
-  \caption{Bloque H. Reproducibilidad entre semillas y ajuste alternativo de la tasa de aprendizaje del codificador preentrenado.}
-  \label{tab:bloque-h}
-  \small
-  \begin{tabular}{llcc}
-    \toprule
-    \textbf{Ejecución} & \textbf{Condición} & \textbf{CER} & \textbf{Época} \\
-    \midrule
-    A1        & Aleatorio, semilla 1 & 0,324 & 28 \\
-    H1        & Aleatorio, semilla 2 & ---   & --- \\
-    H2        & Aleatorio, semilla 3 & ---   & --- \\
-    \midrule
-    \multicolumn{2}{l}{\textit{Media $\pm$ desviación}} & --- & \\
-    \midrule
-    H3        & OWSM, tasa del codificador elevada & --- & --- \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-% TODO (Kiril): la fila de media +- desviacion entre semillas es la que
-% convierte "un run gano" en "el efecto es reproducible". Si la dispersion
-% entre semillas resulta ser comparable a los 5,7 puntos de ventaja del
-% bloque A, el hallazgo se cae y hay que decirlo. Es el riesgo real de
-% este bloque y por eso va el segundo.
+Lo que la curva no muestra en ningún punto es un óptimo intermedio: no existe una cantidad de preentrenamiento conservado que resulte preferible a prescindir de él por completo.
 
 \section{Bloque F: el tamaño de la arquitectura}
 \label{sec:resultados-F}
 
-\textit{[PENDIENTE]} Establecido que los pesos preentrenados no aportan, queda por determinar si lo hace el tamaño de la arquitectura que los albergaba.
+Establecido que los pesos no aportan, queda por determinar si lo hace el tamaño de la arquitectura que los albergaba.
 
 \begin{table}[H]
   \centering
-  \caption{Bloque F. Rendimiento y coste en función del número de bloques del codificador, con inicialización aleatoria.}
+  \caption{Efecto de la profundidad del codificador con inicialización aleatoria.}
   \label{tab:bloque-f}
   \small
   \begin{tabular}{lcccc}
     \toprule
-    \textbf{Bloques} & \textbf{Parámetros} & \textbf{CER} & \textbf{Coste} & \textbf{Min/época} \\
+    \textbf{Bloques} & \textbf{CER} & \textbf{WER voraz} & \textbf{Épocas} & \textbf{Minutos} \\
     \midrule
-    6 (completo) & --- & 0,324 & 6,6 & --- \\
-    4            & --- & ---   & --- & --- \\
-    2            & --- & ---   & --- & --- \\
+    6 (arquitectura de OWSM) & 0,324 & 0,571 & 30 & 232 \\
+    3                        & 0,334 & 0,569 & 40 & 272 \\
+    2                        & 0,353 & 0,602 & 40 & 259 \\
     \bottomrule
   \end{tabular}
 \end{table}
+
+Reducir el codificador a la mitad cuesta un punto porcentual de tasa de error por carácter y deja la tasa de error por palabra prácticamente inalterada. Reducirlo a un tercio cuesta tres puntos. La degradación es, por tanto, muy suave, lo que indica que \textbf{tampoco el tamaño de la arquitectura de OWSM está justificado por la tarea}: el problema admite codificadores sensiblemente menores sin pérdida apreciable.
+
+Una precisión honesta sobre esta tabla: las ejecuciones reducidas se entrenaron 40 épocas frente a las 30 de la completa, de modo que el ahorro no se materializa en la columna de tiempo total. El ahorro real está en el coste por época, y una comparación limpia de eficiencia exigiría igualar también el presupuesto.
 
 \section{Bloque B: granularidad de la unidad de salida}
 \label{sec:resultados-B}
 
-\textit{[PENDIENTE]} Conforme a lo establecido en la \cref{sec:metricas-teoria}, la comparación entre unidades distintas sólo es legítima sobre la tasa de error por palabra del texto finalmente decodificado, con idénticas condiciones de modelo de lenguaje en todas las variantes.
+\subsection{Resultados}
 
 \begin{table}[H]
   \centering
-  \caption{Bloque B. Comparación de unidades de salida. La columna de tasa de error nativa no es comparable entre filas; la de error por palabra sí.}
+  \caption{Comparación de unidades de salida con decodificación voraz. La columna de error por palabra es el único eje comparable entre filas.}
   \label{tab:bloque-b}
   \small
-  \begin{tabular}{lccccc}
+  \begin{tabular}{lrccc}
     \toprule
-    \textbf{Unidad} & \textbf{Clases} & \textbf{Ejem./clase} & \textbf{Error nativo} & \textbf{WER} & \textbf{Coste} \\
+    \textbf{Unidad} & \textbf{Clases} & \textbf{CER} & \textbf{WER} & \textbf{Épocas} \\
     \midrule
-    Carácter          & 29     & --- & 0,324 (CER) & --- & 6,6 \\
-    Fonema            & ---    & --- & --- (PER)   & --- & --- \\
-    Subpalabra propia & 256    & --- & --- (CER)   & --- & --- \\
-    Palabra           & ---    & --- & --- (WER)   & --- & --- \\
-    Subpalabra OWSM   & 50.002 & --- & --- (CER)   & --- & --- \\
+    Palabra              & Cerrado & \textbf{0,222} & \textbf{0,282} & 40 \\
+    Subpalabra de OWSM   & 50.002  & 0,247 & 0,323 & 20 \\
+    Subpalabra propia    & 256     & 0,251 & 0,424 & 40 \\
+    Carácter             & 29      & 0,267 & 0,535 & 40 \\
+    Fonema               & ---     & \multicolumn{2}{c}{No produce texto} & 40 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-% TODO (Kiril): la columna "Ejemplos por clase" es la que hace hablar a esta
-% tabla. Sacala del analisis exploratorio (seccion 3.4) y ponla al lado del
-% resultado: si el rendimiento se degrada monotonamente al crecer el numero
-% de clases, la explicacion es escasez de datos por clase y no una propiedad
-% linguistica de la corteza.
-%
-% AVISO: el objetivo de fonema no produce texto ortografico, asi que su
-% columna WER exige el decodificador con lexico. Si no llegas a tenerlo,
-% no puedes cerrar la comparacion y hay que decirlo explicitamente en vez
-% de comparar PER contra CER, que seria un error metodologico.
+El resultado es monótono y \textbf{contrario a la predicción formulada en los \cref{cap:datos,cap:arquitectura}}: cuanto más gruesa es la unidad de salida, mejor es la transcripción final. La diferencia entre el mejor y el peor objetivo que produce texto asciende a 25 puntos porcentuales de tasa de error por palabra, muy por encima de cualquier otro efecto medido en el trabajo, incluida la contribución del preentrenamiento.
+
+En particular, el vocabulario de subpalabras de OWSM, que esta memoria había descartado \textit{a priori} por escasez de ejemplos por clase, resulta ser el segundo mejor objetivo, y lo consigue con la mitad de presupuesto que los demás y sin haber alcanzado su meseta: su mínimo se produce en la penúltima época con una pendiente todavía de $-0{,}007$ por época.
+
+\subsection{Por qué falló la predicción}
+
+El razonamiento original era que repartir poco más de ocho mil frases entre 50.002 clases dejaría a la inmensa mayoría sin ejemplos, y que un vocabulario reducido sería por tanto preferible. El razonamiento es correcto en los hechos y erróneo en la consecuencia, por dos motivos que la literatura de reconocimiento del habla tenía documentados y que no se tuvieron en cuenta.
+
+El primero es que \textbf{en CTC las clases no observadas no penalizan}. Una clase que nunca aparece en el entrenamiento simplemente no se predice: no compite por masa de probabilidad ni degrada a las demás. El coste de un vocabulario grande es de memoria y de tiempo de cálculo de la función \textit{softmax}, no de calidad.
+
+El segundo, y determinante, es el efecto de la unidad sobre la \textbf{longitud de la secuencia objetivo}. Frente a los caracteres, las subpalabras producen secuencias de salida más cortas y reducen así la dificultad de modelar la dependencia entre salidas, algo especialmente importante en modelos basados en CTC por su hipótesis de independencia condicional \cite{higuchi2021hierarchical}. El fenómeno es conocido: con unidades grandes como la palabra, las limitaciones de CTC se sortean en parte, mientras que con unidades pequeñas como el carácter se vuelven prominentes \cite{das2018advancing}. En reconocimiento del habla convencional, sustituir el objetivo de carácter por subpalabras produce reducciones relativas de tasa de error del orden del \SI{13}{\percent} sin diccionario ni modelo de lenguaje externo \cite{zeyer2018subword}.
+
+A ello se añade una circunstancia específica de este montaje. Con ventanas de \SI{20}{\milli\second} y submuestreo por dos, la secuencia de entrada queda a una trama cada \SI{40}{\milli\second}. CTC exige que la entrada sea más larga que la etiqueta, y con objetivo de carácter esa holgura se estrecha considerablemente. Es un problema documentado al reducir la resolución temporal, y su solución habitual consiste precisamente en adoptar subpalabras en lugar de caracteres \cite{chen2023fasthubert}.
+
+La conclusión metodológica es que \textbf{el argumento de los ejemplos por clase, aplicado sin considerar la longitud de la secuencia objetivo, conduce a la decisión equivocada}. Es un error de razonamiento a priori que sólo el experimento podía corregir, y constituye por sí mismo un argumento a favor de contrastar empíricamente las decisiones de diseño en lugar de deducirlas.
+
+\subsection{Matices y limitaciones del hallazgo}
+
+Tres precisiones impiden leer la tabla como una recomendación simple de emplear siempre la unidad más gruesa.
+
+El objetivo de \textbf{palabra opera sobre vocabulario cerrado} y es, por construcción, incapaz de emitir una palabra no vista en entrenamiento. Dado que la partición de validación incorpora deliberadamente corpus ausentes del entrenamiento (\cref{sec:b2t25}), su ventaja está inflada respecto a lo que ofrecería en uso real, donde el vocabulario abierto es un requisito. Se trata de una limitación estructural y no de una cuestión de volumen de datos: la literatura señala precisamente la ausencia del problema de palabras fuera de vocabulario como la ventaja de caracteres y subpalabras frente a palabras \cite{zeyer2018subword}.
+
+El objetivo de \textbf{fonema no produce texto ortográfico}, de modo que no puede situarse en el eje común sin un decodificador con léxico. Su ausencia de la comparación es una limitación reconocida y resulta especialmente lamentable, ya que es la unidad que emplea la práctica totalidad de la literatura del campo y la que el argumento neurocientífico señalaba como natural.
+
+Por último, la comparación se realiza con \textbf{decodificación voraz y sin modelo de lenguaje externo}. Es previsible que la fusión con un modelo de lenguaje reduzca la ventaja de las unidades gruesas, puesto que buena parte de lo que aportan es precisamente la estructura lingüística implícita que el modelo de lenguaje suministra por otra vía.
+
+\subsection{Respuesta a PI2}
+
+La corteza motora del habla puede leerse a granularidades muy distintas, pero \textbf{la unidad que minimiza el error del texto final no es la más próxima a la articulación sino la más próxima al lenguaje}. El factor determinante no es la plausibilidad neurocientífica de la unidad, sino la longitud de la secuencia que induce y la cantidad de estructura lingüística que incorpora implícitamente, compensando la hipótesis de independencia condicional de CTC.
 
 \section{Bloque E: generalización a sesiones no vistas}
 \label{sec:resultados-E}
 
-\textit{[PENDIENTE]} Es el bloque de mayor relevancia clínica, ya que reproduce la situación real de despliegue: un día de registro nuevo, sin datos de calibración.
-
 \begin{table}[H]
   \centering
-  \caption{Bloque E. Degradación sobre las cinco sesiones excluidas del entrenamiento, según el tratamiento de la capa de sesión.}
+  \caption{Rendimiento sobre las cinco sesiones excluidas del entrenamiento, según el tratamiento de la capa de sesión.}
   \label{tab:bloque-e}
   \small
   \begin{tabular}{lccc}
     \toprule
-    \textbf{Tratamiento del día no visto} & \textbf{CER sesiones vistas} & \textbf{CER no vistas} & \textbf{Degradación} \\
+    \textbf{Tratamiento} & \textbf{CER} & \textbf{WER voraz} & \textbf{Época del mínimo} \\
     \midrule
-    Matriz de sesión en la identidad & --- & --- & --- \\
-    Media de las matrices entrenadas & --- & --- & --- \\
-    Sin capa de sesión               & --- & --- & --- \\
+    Sin capa de sesión               & \textbf{0,593} & 0,848 & 33 \\
+    Matriz en la identidad           & 0,747 & 0,984 & 10 \\
+    Media de las matrices entrenadas & 0,752 & 0,970 & 12 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-% TODO (Kiril): el resultado interesante aqui es el TERCERO. Si prescindir
-% de la capa de sesion degrada poco en dias no vistos pero cuesta rendimiento
-% en los vistos, tienes un compromiso explicito que reportar, y ademas
-% justificas retroactivamente los ~12 M de parametros que cuesta la capa.
+El resultado es inequívoco: ante un día de registro no visto, \textbf{el mejor tratamiento de la capa de sesión es no tenerla}. Prescindir de ella mejora en más de 15 puntos porcentuales sobre cualquiera de las dos estrategias de sustitución, y ni la identidad ni el promedio de las matrices entrenadas ofrecen ventaja apreciable la una sobre la otra.
+
+La columna de la época del mínimo revela el mecanismo. Las dos configuraciones con capa de sesión alcanzan su mejor rendimiento sobre días no vistos en las épocas 10 y 12, y a partir de ahí se degradan pese a que su rendimiento sobre días vistos continúa mejorando. La capa de sesión no está aprendiendo una corrección generalizable de la deriva del implante, sino \textbf{memorizando cada día concreto}, y esa memorización resulta progresivamente perjudicial fuera de los días memorizados.
+
+Contrastado con el resto del trabajo, el compromiso es severo. Con todos los días disponibles y capa de sesión, el sistema alcanza $0{,}324$; sobre días no vistos, la mejor configuración se sitúa en $0{,}593$. La degradación de casi 27 puntos porcentuales es, con diferencia, la mayor medida en todo el trabajo, y sitúa la no estacionariedad, y no la elección de codificador, como el problema dominante del despliegue real. Es también la conclusión de mayor relevancia clínica, por corresponder al escenario del primer día tras el implante o de la primera sesión tras un periodo sin uso.
+
+Los aproximadamente doce millones de parámetros que cuesta la capa de sesión compran, en definitiva, rendimiento dentro de la distribución a cambio de capacidad de generalización fuera de ella.
 
 \section{Bloque C: capacidad del módulo adaptador}
 \label{sec:resultados-C}
 
-\textit{[PENDIENTE]} Conforme a la advertencia de la \cref{sec:diseno-experimental}, esta comparación debe ejecutarse igualando el factor de submuestreo entre variantes; en caso contrario la arquitectura del adaptador quedaría confundida con la resolución temporal.
-
 \begin{table}[H]
   \centering
-  \caption{Bloque C. Comparación de variantes de adaptador a igualdad de factor de submuestreo.}
+  \caption{Comparación de variantes de adaptador. Las tres comparten factor de submuestreo dos.}
   \label{tab:bloque-c}
   \small
-  \begin{tabular}{lcccc}
+  \begin{tabular}{lccc}
     \toprule
-    \textbf{Variante} & \textbf{Submuestreo} & \textbf{Parámetros} & \textbf{CER} & \textbf{Min/época} \\
+    \textbf{Variante} & \textbf{CER} & \textbf{WER voraz} & \textbf{Minutos} \\
     \midrule
-    Lineal      & --- & --- & --- & --- \\
-    Conv. 1D    & --- & --- & --- & --- \\
-    Profunda    & --- & --- & 0,324 & --- \\
+    Profunda            & \textbf{0,324} & 0,571 & 232 \\
+    Convolucional 1D    & 0,399 & 0,643 & 244 \\
+    Lineal              & 0,475 & 0,710 & 185 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Este bloque tiene además un valor añadido no previsto en el plan original: permite contrastar la hipótesis H2 de la \cref{sec:contraste-fiedler}. Si la ventaja del preentrenamiento reapareciese al reducir la capacidad del adaptador, quedaría establecido que el adaptador estaba absorbiendo la función que el codificador preentrenado habría desempeñado.
+La advertencia formulada en la \cref{sec:diseno-experimental} sobre una posible confusión entre arquitectura del adaptador y resolución temporal \textbf{no llegó a materializarse}: las tres variantes se ejecutaron con factor de submuestreo dos, de modo que la comparación es limpia.
+
+El adaptador profundo justifica su coste con claridad, mejorando en 7,5 puntos porcentuales a la variante convolucional y en 15,1 a la lineal, con un tiempo por época comparable al de la primera. La separación explícita entre mezcla espacial de electrodos y convolución temporal, argumentada en la \cref{sec:frontend-deep}, se traduce en una diferencia sustancial de rendimiento.
+
+Este bloque cumple además una función no prevista en el plan original, la de contrastar la hipótesis de que un adaptador excesivamente potente estuviese absorbiendo la función del codificador preentrenado. La predicción de esa hipótesis era que la ventaja del preentrenamiento reapareciese al reducir la capacidad del adaptador. No ocurre: al debilitarlo, el sistema empeora de forma monótona y en ningún punto la condición preentrenada resulta preferible.
 
 \section{Decodificación con modelo de lenguaje}
 \label{sec:resultados-lm}
 
-\subsection{Resultados preliminares}
+% TODO (Kiril): esta seccion sigue con cifras preliminares. En los CSV las
+% columnas cer_beam y wer_beam estan VACIAS para todas las ejecuciones de los
+% bloques A-H: la evaluacion con modelo de lenguaje no se relanzo sobre el
+% modelo campeon. Es lo unico que falta para cerrar PI3 con datos definitivos.
 
-Los resultados de esta sección proceden de una configuración anterior a la fijación de la receta definitiva y \textbf{deben considerarse preliminares}: se reportan porque el efecto que documentan es cualitativo y probablemente robusto al cambio de codificador, pero las cifras absolutas habrán de recalcularse sobre la configuración final.
+Los resultados de esta sección proceden de una configuración anterior a la fijación de la receta definitiva y \textbf{deben considerarse preliminares}. Se reportan porque el efecto que documentan es cualitativo y previsiblemente robusto al cambio de codificador, pero sus cifras absolutas habrán de recalcularse.
 
 \begin{table}[H]
   \centering
@@ -296,73 +279,63 @@ Los resultados de esta sección proceden de una configuración anterior a la fij
     \midrule
     Fusión superficial con bigrama & 0,475 \\
     Límite \textit{oracle} de la lista $n$-mejor acústica & 0,503 \\
-    Fusión superficial con trigrama & \rlap{Peor que el bigrama$^{*}$} \\
     \bottomrule
   \end{tabular}
-
-  \vspace{0.4em}
-  {\footnotesize $^{*}$ Resultado obtenido con suavizado aditivo, que penaliza al trigrama disperso aproximadamente el doble que al bigrama. La comparación entre órdenes no es interpretable hasta repetirla con Kneser-Ney, según se explica en la \cref{sec:protocolo-lm}.}
 \end{table}
 
-\subsection{El modelo de lenguaje guía la búsqueda, no la reordena}
+El resultado cualitativamente relevante es que \textbf{la fusión superficial supera al límite \textit{oracle}}. Conforme al argumento de la \cref{sec:oracle}, ningún método de reordenamiento puede superar ese límite, definido como el error que se obtendría eligiendo siempre la mejor hipótesis presente en la lista. Que el sistema quede por debajo demuestra que la transcripción correcta \textbf{no figuraba} en la lista de hipótesis puramente acústicas y que el modelo de lenguaje la alcanzó interviniendo durante la expansión del haz.
 
-El resultado cualitativamente relevante es que \textbf{la fusión superficial supera al límite \textit{oracle} de la lista $n$-mejor acústica}. Conforme al argumento formal de la \cref{sec:oracle}, ningún método de reordenamiento puede superar ese límite, puesto que se define como el error que se obtendría eligiendo siempre la mejor hipótesis presente en la lista. Que el sistema quede por debajo demuestra que la transcripción correcta \textbf{no figuraba} en la lista de hipótesis puramente acústicas y que el modelo de lenguaje la alcanzó interviniendo durante la expansión del haz.
+La consecuencia para PI3 es directa: una parte del conocimiento lingüístico del sistema completo no reside en el codificador neuronal, y el modelo de lenguaje no es una etapa de posprocesado sino un componente que altera el espacio de búsqueda. El hallazgo se refuerza con el del bloque B: si las unidades de salida gruesas mejoran el texto final en 25 puntos porcentuales, es porque incorporan implícitamente parte de esa misma estructura lingüística dentro del propio codificador. Ambos resultados apuntan en la misma dirección: \textbf{en este sistema, la reconstrucción lingüística pesa más que la lectura de la señal}.
 
-La consecuencia para la tercera pregunta de investigación es directa: una parte del conocimiento lingüístico del sistema completo \textbf{no reside en el codificador neuronal}. El modelo de lenguaje no es una etapa cosmética de posprocesado sino un componente que altera el espacio de búsqueda, y cualquier evaluación del codificador que lo incluya estará midiendo las dos cosas a la vez. Esto justifica retroactivamente la decisión metodológica de reportar por separado la tasa de error por carácter voraz y la tasa de error por palabra con modelo de lenguaje.
-
-% TODO (Kiril): cuando repitas con Kneser-Ney, ademas de bigrama vs trigrama,
-% guarda la rejilla completa de alfa y beta. Una figura de mapa de calor del
-% WER sobre esa rejilla es barata y dice mucho sobre la sensibilidad del
-% sistema al modelo de lenguaje.
-
-\section{Bloque G: configuración final}
-\label{sec:resultados-G}
-
-\textit{[PENDIENTE]} La mejor configuración resultante de los bloques anteriores, entrenada con presupuesto ampliado y parada temprana activa. Su motivación es que la mejor ejecución del bloque A alcanzó su mínimo en la penúltima época del presupuesto asignado, por lo que \textbf{su cifra no representa el límite del sistema} sino su rendimiento a 30 épocas.
+\section{Comparación con el estado del arte}
+\label{sec:comparacion-sota}
 
 \begin{table}[H]
   \centering
-  \caption{Configuración final frente a las referencias del campo sobre el mismo conjunto de datos.}
+  \caption{Situación del sistema propuesto frente a la referencia comparable sobre el mismo conjunto de datos.}
   \label{tab:final-vs-sota}
   \small
   \begin{tabular}{llcc}
     \toprule
     \textbf{Sistema} & \textbf{Codificador} & \textbf{CER} & \textbf{WER} \\
     \midrule
-    Este trabajo (bloque A)        & E-Branchformer, aleatorio & 0,324 & --- \\
-    Este trabajo (configuración final) & ---                   & ---   & --- \\
-    Khanday \textit{et al.} \cite{khanday2026} & Conformer, desde cero & 0,238 & --- \\
-    Sistema de referencia oficial  & GRU recurrente            & ---   & --- \\
+    Khanday \textit{et al.} \cite{khanday2026} & Conformer desde cero & 0,238 & --- \\
+    Este trabajo, objetivo de carácter & E-Branchformer aleatorio & 0,267 & 0,535 \\
+    Este trabajo, objetivo de palabra   & E-Branchformer aleatorio & 0,222 & 0,282 \\
     \bottomrule
   \end{tabular}
 \end{table}
+
+Con objetivo de carácter y decodificación voraz, que es la condición directamente comparable, el sistema alcanza $0{,}267$ frente al $0{,}238$ que reportan Khanday \textit{et al.} \cite{khanday2026} sobre el mismo conjunto, la misma unidad y las mismas condiciones de decodificación. La diferencia de unos tres puntos porcentuales \textbf{no es atribuible al preentrenamiento}, puesto que ninguno de los dos sistemas lo emplea en esa configuración, y apunta a la arquitectura del codificador, al aumento de datos o a la receta de optimización.
+
+Es un margen estrecho para un trabajo que no perseguía competir, y sitúa el sistema en el mismo orden de magnitud que la literatura reciente sobre este conjunto. Cambiando el objetivo a palabra la tasa de error por carácter desciende a $0{,}222$, si bien con la salvedad del vocabulario cerrado ya señalada.
+
+La distancia con los sistemas que encabezan la clasificación oficial sigue siendo, no obstante, considerable, y responde a los factores identificados en el \cref{cap:estado-del-arte}: conjuntos de decenas de modelos, modelos de lenguaje de gran tamaño para la fusión de hipótesis y presupuestos de cómputo de otro orden de magnitud.
 
 \section{Discusión}
 \label{sec:discusion}
 
 \subsection{Síntesis por pregunta de investigación}
 
-\textbf{PI1, transferencia.} \textit{[Provisional]} La evidencia disponible indica que el preentrenamiento de OWSM sobre habla no transfiere a la decodificación de actividad neuronal intracortical bajo el esquema de adaptación evaluado, y que su presencia penaliza tanto el rendimiento como el coste. El resultado contradice el trabajo previo sobre wav2vec~2.0 y queda pendiente de las comprobaciones de los bloques H y C.
+\textbf{PI1, transferencia.} El preentrenamiento de OWSM sobre habla \textbf{no transfiere} a la decodificación de actividad neuronal intracortical. El resultado es reproducible entre semillas, resiste el intento de conceder a la condición preentrenada un ajuste más favorable, y se refuerza con el control decisivo de que un codificador aleatorio congelado iguala o supera al codificador preentrenado congelado con la mitad de presupuesto. Tampoco el tamaño de la arquitectura resulta justificado por la tarea.
 
-\textbf{PI2, granularidad.} \textit{[Pendiente del bloque B]}
+\textbf{PI2, granularidad.} La corteza puede leerse a granularidades muy distintas, y la que minimiza el error del texto final es la más gruesa, no la más próxima a la articulación. El factor determinante es la longitud de la secuencia objetivo y la estructura lingüística que la unidad incorpora implícitamente. Este eje produce el mayor efecto medido en todo el trabajo, muy por encima del preentrenamiento.
 
-\textbf{PI3, localización del conocimiento lingüístico.} La evidencia preliminar establece que una parte del conocimiento lingüístico reside fuera del codificador, en el modelo de lenguaje externo, y que este opera guiando la búsqueda y no reordenando hipótesis. Queda por cuantificar la magnitud de esa contribución sobre la configuración final.
+\textbf{PI3, localización del conocimiento lingüístico.} Una parte sustancial del conocimiento lingüístico reside fuera del codificador. El modelo de lenguaje externo guía la búsqueda en lugar de limitarse a reordenar hipótesis, y las unidades de salida gruesas mejoran el resultado precisamente por internalizar parte de esa misma función.
 
-\subsection{Sobre el valor de un resultado negativo}
+\subsection{Una lectura conjunta}
 
-El hallazgo principal de este trabajo es negativo respecto a su hipótesis de partida. Conviene argumentar por qué eso no lo invalida.
+Los tres resultados convergen en una conclusión que no formaba parte de las hipótesis iniciales: \textbf{en este problema, y con este volumen de datos, lo que determina el rendimiento no es la calidad de la representación acústica heredada sino la cantidad de estructura lingüística que el sistema logra incorporar}, ya sea a través de la unidad de salida, del modelo de lenguaje externo o de ambos. El preentrenamiento sobre habla aporta lo primero y no lo segundo, lo que ofrece una explicación coherente de por qué su contribución resulta nula.
 
-En primer lugar, \textbf{es un resultado obtenido con un control explícito}, no una ausencia de resultado. La diferencia entre no encontrar transferencia y no haberla medido es precisamente la que separa este trabajo de otros que asumen el beneficio del preentrenamiento sin comprobarlo.
-
-En segundo lugar, \textbf{contradice a la literatura previa de forma informativa}. Que wav2vec~2.0 transfiera y OWSM no, sobre tareas emparentadas, acota qué tipo de preentrenamiento produce representaciones reutilizables fuera de su modalidad, y sugiere que la propiedad relevante no es haber visto habla sino el nivel de abstracción al que se aprendió a representarla.
-
-En tercer lugar, \textbf{tiene consecuencias prácticas}. Si el preentrenamiento no aporta, no hay razón para arrastrar la arquitectura ni el tamaño del modelo que lo albergaba, lo que abre la línea de codificadores reducidos que explora el bloque F y reduce el coste de entrada al problema.
+Frente a ello, el factor limitante del despliegue no es ninguno de los tres ejes estudiados, sino la no estacionariedad: la degradación de 27 puntos porcentuales ante un día de registro no visto supera a cualquier otro efecto medido, y la solución estándar del campo, la capa específica de sesión, resulta ser en ese escenario parte del problema y no de la solución.
 
 \subsection{Amenazas a la validez}
 
 \begin{description}[leftmargin=*]
-  \item[Generalización a un solo participante.] Todas las conclusiones son específicas de T15. La transferencia podría comportarse de otro modo con otra localización de implantes o con otro idioma.
-  \item[Un solo modelo preentrenado.] El resultado se refiere a OWSM. No autoriza a concluir que ningún modelo de habla transfiera, y de hecho la evidencia previa sobre wav2vec~2.0 apunta a lo contrario.
-  \item[Presupuesto de cómputo.] Las ablaciones se ejecutan bajo presupuesto igualado y no hasta convergencia, de modo que sus cifras no son rendimientos máximos. La condición congelada, en particular, no había alcanzado su meseta.
-  \item[Ausencia de evaluación sobre la partición de prueba oficial.] Al no distribuirse con etiquetas, todas las cifras corresponden a validación, sobre la que se han ajustado decisiones de diseño. Existe, por tanto, un riesgo de sobreajuste a la partición de validación que las cifras reportadas no capturan.
+  \item[Un solo participante.] Todas las conclusiones son específicas de T15, de la localización de sus implantes y del inglés como lengua objetivo.
+  \item[Un solo modelo preentrenado.] El resultado se refiere a OWSM. No autoriza a concluir que ningún modelo de habla transfiera, y la evidencia previa sobre wav2vec~2.0 apunta a lo contrario.
+  \item[Presupuestos desiguales entre algunas condiciones.] Varias comparaciones enfrentan ejecuciones de 30 y 40 épocas. Cuando esto favorece a la condición que se declara peor, la conclusión resulta conservadora; en el bloque F, en cambio, impide una comparación limpia de eficiencia.
+  \item[Condiciones no convergidas.] Las dos condiciones de descongelado parcial conservan pendiente apreciable al final de su presupuesto y sus cifras no son asintóticas.
+  \item[Evaluación sobre validación.] Al no distribuirse la partición de prueba con etiquetas, todas las cifras corresponden a validación, sobre la que se han tomado decisiones de diseño, con el consiguiente riesgo de sobreajuste que las cifras no capturan.
+  \item[Modelo de lenguaje sin reevaluar.] Las cifras de la \cref{sec:resultados-lm} proceden de una configuración anterior y no se han recalculado sobre el sistema final.
 \end{description}

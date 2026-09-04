@@ -1,0 +1,5 @@
+id_principal,etiqueta,objetivo_ctc,init_encoder,epocas_hechas,cer_ctc_micro,cer_ctc_greedy,wer_ctc_greedy,min_valid_cer_ctc,compute_units
+A01_random_ajustado,"A01 · Aleatorio, 30 ep.",char,random,30.0,0.2949892183863874,0.2887007052545438,0.5713065403324045,0.324,6.6
+A02_owsm_ajustado,"A02 · OWSM ajustado, 38 ep.",char,owsm,38.0,0.332871012482663,0.324702600768268,0.6315651154401154,0.381,8.86
+A04_owsm_mejor_observado,"A04 · OWSM ajustado, 60 ep.",char,owsm,60.0,0.3185390661118816,0.313651896688812,0.584330266955267,0.362,15.15
+A03_owsm_congelado,"A03 · OWSM congelado, 30 ep.",char,owsm,30.0,0.5786630799120391,0.582169053651875,0.8682288285054145,0.658,6.26

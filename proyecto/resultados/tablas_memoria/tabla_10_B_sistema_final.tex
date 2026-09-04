@@ -1,0 +1,18 @@
+\begin{tabular}{llllllrrrrr}
+\toprule
+id_principal & nombre & exp_tag & objetivo_ctc & init_encoder & frontend & epocas_hechas & cer_ctc_micro & wer_ctc_greedy & minutos & compute_units \\
+\midrule
+G04_palabra_ep40 & B3word & B3word_n45_deep_d512b2s2_word_initrandom_sess_ep40_s2024_745c76 & word & random & deep & 40.000 & 0.272 & 0.282 & 331.600 & 9.450 \\
+G04_palabra_ep20 & B3word & B3word_n45_deep_d512b2s2_word_initrandom_sess_ep20_s2024_63ef6e & word & random & deep & 20.000 & 0.288 & 0.309 & 166.800 & 4.750 \\
+G05_bpe_owsm_50k_ep20 & B4bpe50k & B4bpe50k_n45_deep_d512b2s2_bpe_initrandom_sess_ep20_s2024_4bb4bf & bpe & random & deep & 20.000 & 0.254 & 0.323 & 226.700 & 6.460 \\
+G03_bpe_256 & B2bpe256 & B2bpe256_n45_deep_d512b2s2_bpe256_initrandom_sess_ep40_s2024_26571e & bpe256 & random & deep & 40.000 & 0.257 & 0.424 & 316.100 & 9.010 \\
+C02_random_semilla_7 & H1semilla & H1semilla_n45_deep_d512b2s2_char_initrandom_sess_ep40_s7_6b253b & char & random & deep & 40.000 & 0.273 & 0.535 & 309.500 & 8.820 \\
+C03_random_semilla_1234 & H2semilla & H2semilla_n45_deep_d512b2s2_char_initrandom_sess_ep40_s1234_191968 & char & random & deep & 40.000 & 0.286 & 0.545 & 308.100 & 8.780 \\
+F02_encoder_3_bloques & F1L3 & F1L3_n45_deep_d512b2s2_char_initrandom_L3_sess_ep40_s2024_0fbdf3 & char & random & deep & 40.000 & 0.300 & 0.569 & 272.400 & 7.760 \\
+A01_random_ajustado & A1randEls & A1randEls_n45_deep_d512b2s2_char_initrandom_sess_ep30_s2024_032591 & char & random & deep & 30.000 & 0.295 & 0.571 & 231.600 & 6.600 \\
+A04_owsm_mejor_observado & v5 & v5_n45_deepd512b2s2_ic0.3_augn0.5o0.2_sm2_wd0.01_sess_char_unf1_lora0_lr0.001_els0.05_ctc1_bs16_ep60 & char & owsm & deep & 60.000 & 0.319 & 0.584 & 531.600 & 15.150 \\
+F01_encoder_2_bloques & F2L2 & F2L2_n45_deep_d512b2s2_char_initrandom_L2_sess_ep40_s2024_d6b3e1 & char & random & deep & 40.000 & 0.316 & 0.602 & 259.400 & 7.390 \\
+A02_owsm_ajustado & v3 & v3_n45_deepd512b2s2_ic0.3_augn0.5o0.2_wd0.01_sess_char_unf1_lora0_lr0.001_els0.05_ctc1_bs16_ep60 & char & owsm & deep & 38.000 & 0.333 & 0.632 & 310.700 & 8.860 \\
+E02_frontend_conv1d & C2conv1d & C2conv1d_n45_conv1d_char_initrandom_sess_ep40_s2024_b58c5d & char & random & conv1d & 40.000 & 0.358 & 0.643 & 244.000 & 6.960 \\
+\bottomrule
+\end{tabular}

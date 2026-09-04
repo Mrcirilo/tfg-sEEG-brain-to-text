@@ -1,0 +1,4 @@
+id_principal,etiqueta,objetivo_ctc,init_encoder,epocas_hechas,cer_ctc_micro,cer_ctc_greedy,wer_ctc_greedy,min_valid_cer_ctc,compute_units
+F01_encoder_2_bloques,F01 · 2 bloques,char,random,40.0,0.3161895002028224,0.3109592513399279,0.6022413287150107,0.353,7.39
+F02_encoder_3_bloques,F02 · 3 bloques,char,random,40.0,0.2998569568094963,0.2955342075659216,0.5685098214035595,0.334,7.76
+A01_random_ajustado,A01 · 6 bloques (referencia),char,random,30.0,0.2949892183863874,0.2887007052545438,0.5713065403324045,0.324,6.6

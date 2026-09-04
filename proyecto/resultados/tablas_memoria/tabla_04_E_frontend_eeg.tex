@@ -1,0 +1,9 @@
+\begin{tabular}{llllrrrrrr}
+\toprule
+id_principal & etiqueta & objetivo_ctc & init_encoder & epocas_hechas & cer_ctc_micro & cer_ctc_greedy & wer_ctc_greedy & min_valid_cer_ctc & compute_units \\
+\midrule
+E01_frontend_lineal & E01 · Lineal & char & random & 30.000 & 0.426 & 0.420 & 0.710 & 0.475 & 5.260 \\
+E02_frontend_conv1d & E02 · Convolucional 1D & char & random & 40.000 & 0.358 & 0.354 & 0.643 & 0.399 & 6.960 \\
+A01_random_ajustado & A01 · Profundo (referencia) & char & random & 30.000 & 0.295 & 0.289 & 0.571 & 0.324 & 6.600 \\
+\bottomrule
+\end{tabular}

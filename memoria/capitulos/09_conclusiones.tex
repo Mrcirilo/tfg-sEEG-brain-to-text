@@ -1,0 +1,66 @@
+% =====================================================================
+%  CAPÍTULO 9 — CONCLUSIONES
+% =====================================================================
+
+\chapter{Conclusiones}
+\label{cap:conclusiones}
+
+Este trabajo se planteó como un estudio de viabilidad: determinar si un modelo de reconocimiento del habla preentrenado a gran escala puede reutilizarse como codificador de actividad neuronal intracortical para decodificar texto, y bajo qué condiciones. La respuesta a esa pregunta resultó ser negativa, y el trabajo se convirtió en el proceso en algo distinto de lo previsto: en una caracterización de qué factores sí determinan el rendimiento en esta tarea.
+
+\section{Respuesta a las preguntas de investigación}
+
+\subsection{PI1: el preentrenamiento de OWSM no transfiere}
+
+La primera pregunta era si el preentrenamiento de un modelo de habla aporta ventaja medible frente a la misma arquitectura inicializada al azar. \textbf{No la aporta, y la penaliza}. Con receta idéntica y presupuesto no favorable a la condición ganadora, un codificador inicializado aleatoriamente alcanza una tasa de error por carácter de $0{,}312$ de media sobre tres semillas, frente a $0{,}381$ del mismo codificador inicializado con los pesos de OWSM, y lo hace convergiendo antes y con la mitad de coste.
+
+El hallazgo resiste las dos objeciones que cabía anticipar. Es \textbf{reproducible}: las tres semillas ocupan un intervalo de 2,7 puntos y la peor sigue muy por delante de la condición preentrenada. Y no es un artefacto del ajuste: al conceder a los pesos de OWSM una tasa de aprendizaje cuadruplicada, el rendimiento no mejora sino que se degrada hasta $0{,}689$.
+
+El control que cierra el argumento es, sin embargo, otro. Un codificador \textbf{aleatorio y congelado}, es decir, una proyección fija sin entrenar, alcanza $0{,}414$ frente a los $0{,}440$ del codificador de OWSM congelado con casi el doble de presupuesto. Como extractor de características fijo, ciento ochenta mil horas de habla no superan al azar. El contenido transferible del preentrenamiento a esta modalidad es, por tanto, indistinguible de cero.
+
+La curva completa de conservación no muestra en ningún punto un óptimo intermedio: no existe una cantidad de OWSM que convenga conservar. Y el bloque de profundidad añade que tampoco el tamaño de su arquitectura está justificado por la tarea, ya que reducir el codificador a la mitad cuesta un único punto porcentual.
+
+\subsection{PI2: la unidad óptima es la más lingüística, no la más articulatoria}
+
+La segunda pregunta era a qué granularidad conviene leer la corteza motora del habla. El resultado es monótono y contrario a la predicción con que se partía: \textbf{cuanto más gruesa es la unidad de salida, mejor es el texto final}. Sobre el eje común de tasa de error por palabra, el objetivo de palabra alcanza $0{,}282$, el de subpalabra preentrenada $0{,}323$, el de subpalabra propia $0{,}424$ y el de carácter $0{,}535$.
+
+Los 25 puntos porcentuales que separan los extremos constituyen el mayor efecto medido en todo el trabajo, muy por encima de la contribución del preentrenamiento. Y el vocabulario de 50.002 clases, que esta memoria había descartado por razonamiento a priori sobre escasez de ejemplos por clase, resulta ser el segundo mejor objetivo, alcanzándolo con la mitad de presupuesto y sin haber convergido.
+
+La explicación no está en la neurociencia sino en las propiedades del objetivo de entrenamiento: las clases no observadas no penalizan bajo CTC, y las unidades gruesas producen secuencias objetivo más cortas que mitigan la hipótesis de independencia condicional. Es un resultado conocido en reconocimiento del habla que el razonamiento previo de este trabajo pasó por alto.
+
+\subsection{PI3: el conocimiento lingüístico reside fuera del codificador}
+
+La tercera pregunta era dónde reside el conocimiento lingüístico del sistema completo. La evidencia disponible, preliminar en sus cifras pero estructural en su argumento, indica que \textbf{una parte sustancial reside fuera del codificador neuronal}. La fusión superficial con un modelo de lenguaje de $n$-gramas alcanza una tasa de error por palabra de $0{,}475$, inferior al límite \textit{oracle} de $0{,}503$ de la lista de hipótesis puramente acústicas. Puesto que ningún método de reordenamiento puede superar ese límite, queda demostrado que la transcripción correcta no figuraba entre las hipótesis del modelo acústico y que el modelo de lenguaje la alcanzó guiando la búsqueda.
+
+Este resultado converge con el anterior. Si las unidades de salida gruesas mejoran el texto final en 25 puntos, es porque internalizan dentro del codificador parte de la misma estructura lingüística que el modelo de lenguaje aporta desde fuera. Ambos hallazgos señalan que, en este sistema, \textbf{la reconstrucción lingüística pesa más que la lectura de la señal}.
+
+\section{Aportaciones}
+
+Las aportaciones de este trabajo pueden resumirse en cinco puntos:
+
+\begin{enumerate}[leftmargin=*, itemsep=0.35em]
+  \item \textbf{Un resultado negativo medido con control explícito.} La ausencia de transferencia desde OWSM se establece frente a un control de inicialización aleatoria, con réplica entre semillas, con la objeción del ajuste desfavorable refutada y con un control de proyección aleatoria congelada que descarta la explicación alternativa. La diferencia entre no encontrar transferencia y no haberla medido es precisamente lo que separa este trabajo de los que asumen el beneficio del preentrenamiento sin comprobarlo.
+  \item \textbf{Una comparación sistemática de granularidades de salida} sobre un mismo modelo, un mismo presupuesto y un mismo eje de evaluación, que no se había realizado sobre este conjunto de datos y cuyo resultado contradice la práctica dominante del campo.
+  \item \textbf{Evidencia de que la capa de sesión, solución estándar frente a la no estacionariedad, es contraproducente ante días no vistos}, por memorizar días concretos en lugar de aprender una corrección generalizable.
+  \item \textbf{Una cadena de experimentación reproducible} sobre datos públicos, herramientas de código abierto y una única GPU de gama media, con el presupuesto de cómputo documentado experimento a experimento.
+  \item \textbf{Un sistema competitivo con la literatura reciente sobre el mismo conjunto}: $0{,}267$ de tasa de error por carácter frente al $0{,}238$ de la referencia comparable, en condiciones idénticas de unidad y decodificación.
+\end{enumerate}
+
+\section{Lecciones metodológicas}
+
+Al margen de los resultados, el trabajo deja tres lecciones que condicionaron su desarrollo y que se consideran transferibles.
+
+La primera es que \textbf{los valores por omisión de las herramientas gobiernan decisiones que no son suyas}. El criterio de parada temprana de la herramienta empleada monitoriza la pérdida y no la métrica de la tarea, lo que interrumpió un entrenamiento que seguía mejorando y conservó modelos peores durante buena parte del trabajo. Ningún valor por omisión que gobierne la selección de modelo debería darse por bueno sin comprobarlo.
+
+La segunda es que \textbf{el razonamiento a priori sobre decisiones de diseño es poco fiable incluso cuando sus premisas son ciertas}. La predicción de que un vocabulario de 50.002 clases sería inviable partía de un hecho correcto, la escasez de ejemplos por clase, y llegaba a la conclusión opuesta a la verdadera por no considerar un segundo factor. El experimento no fue una confirmación de lo previsto sino su refutación, que es exactamente para lo que sirve.
+
+La tercera es que \textbf{una diferencia sólo es un resultado si excede la resolución de la medida}. Con doscientos ensayos evaluados el intervalo de confianza ronda los tres a cinco puntos porcentuales, de modo que buena parte de las mejoras observadas en las primeras iteraciones del trabajo estaban por debajo del umbral de detección y no significaban nada.
+
+\section{Valoración final}
+
+El trabajo no ha demostrado lo que se propuso demostrar. Se planteó verificar que un modelo de habla preentrenado podía reutilizarse para decodificar actividad cortical, y ha establecido con bastante solidez que este modelo concreto no puede, o más precisamente que su preentrenamiento no aporta nada que no aporte igual una inicialización al azar.
+
+Ese resultado tiene valor por tres razones. Está \textbf{medido y no supuesto}, lo que en un campo donde el preentrenamiento se adopta habitualmente sin control no es trivial. \textbf{Contradice a la literatura previa de forma informativa}, acotando la pregunta abierta de qué tipo de preentrenamiento produce representaciones reutilizables fuera de su modalidad, que es una pregunta más interesante que la que este trabajo se hizo originalmente. Y tiene \textbf{consecuencias prácticas}: si los pesos no aportan y el tamaño tampoco, el problema admite modelos sensiblemente menores y más baratos que los que la intuición del campo sugeriría.
+
+Los dos hallazgos colaterales resultan, además, de mayor alcance práctico que el central. Que la unidad de salida produzca un efecto de 25 puntos porcentuales, cuatro veces mayor que el del preentrenamiento, señala dónde conviene invertir el esfuerzo de diseño. Y que la degradación ante un día de registro no visto alcance los 27 puntos, con la solución estándar del campo agravándola, identifica la no estacionariedad como el obstáculo real que separa estos sistemas de un uso clínico cotidiano.
+
+Puesto que el objetivo declarado era un estudio de viabilidad y no un sistema de competición, un resultado que delimita con precisión qué no funciona, por qué, y qué sí importa en su lugar, cumple ese objetivo tanto como lo habría cumplido el resultado contrario.

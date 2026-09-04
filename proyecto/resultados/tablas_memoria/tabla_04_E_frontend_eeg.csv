@@ -1,0 +1,4 @@
+id_principal,etiqueta,objetivo_ctc,init_encoder,epocas_hechas,cer_ctc_micro,cer_ctc_greedy,wer_ctc_greedy,min_valid_cer_ctc,compute_units
+E01_frontend_lineal,E01 · Lineal,char,random,30.0,0.4260552104015884,0.4201137315333493,0.710378378279129,0.475,5.26
+E02_frontend_conv1d,E02 · Convolucional 1D,char,random,40.0,0.3583338670765815,0.3535390012159711,0.6427951246014937,0.399,6.96
+A01_random_ajustado,A01 · Profundo (referencia),char,random,30.0,0.2949892183863874,0.2887007052545438,0.5713065403324045,0.324,6.6

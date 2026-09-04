@@ -1,0 +1,62 @@
+% =====================================================================
+%  CAPÍTULO 8 — LIMITACIONES Y TRABAJO FUTURO
+% =====================================================================
+
+\chapter{Limitaciones y trabajo futuro}
+\label{cap:limitaciones}
+
+Este capítulo reúne las limitaciones del estudio y las líneas de continuación que se derivan de sus resultados. Se separa de las amenazas a la validez recogidas en la \cref{sec:discusion}, que se refieren a la interpretación de cifras concretas, para tratar aquí las restricciones estructurales del trabajo y lo que cabría hacer a continuación.
+
+\section{Limitaciones del estudio}
+
+\subsection{Alcance de la evidencia}
+
+La limitación de mayor peso es que \textbf{todas las conclusiones proceden de un único participante}. El conjunto de datos empleado registra a una sola persona, con una localización concreta de implantes y con el inglés como lengua objetivo. Que el preentrenamiento de OWSM no transfiera en T15 no implica que no lo haga en otro sujeto, con otra cobertura cortical o en otro idioma, aunque la magnitud y la consistencia del efecto medido hacen poco plausible que se invierta por completo.
+
+Análogamente, el estudio evalúa \textbf{un único modelo preentrenado}. La conclusión sobre transferencia se refiere a OWSM v3.1 y no puede generalizarse al conjunto de los modelos de habla, especialmente teniendo en cuenta que la evidencia previa disponible sobre wav2vec~2.0 apunta en dirección contraria \cite{fiedler2025wav2vec2brain}.
+
+\subsection{Restricciones del entorno de ejecución}
+
+El trabajo se desarrolla sobre una única GPU de gama media en un servicio en la nube, con un presupuesto de cómputo acotado. Esta restricción excluye por construcción las técnicas que sostienen los primeros puestos de la clasificación oficial, esto es, los conjuntos de decenas de modelos y el uso de modelos de lenguaje de gran tamaño para la fusión de hipótesis \cite{crossspecies2025}, y condiciona además el modelo de lenguaje empleado, entrenado sobre el propio corpus por no caber en memoria el oficial de la competición \cite{cheng2026}.
+
+Una consecuencia metodológica de esta restricción es que las ablaciones se ejecutan con presupuesto igualado y no hasta convergencia, de modo que sus cifras no representan el rendimiento máximo de cada configuración. Dos condiciones concretas, las de descongelado parcial del codificador, conservaban pendiente apreciable al agotarse su presupuesto y su comparación queda por tanto abierta.
+
+\subsection{Elementos del plan que no se completaron}
+
+Tres piezas quedaron fuera del alcance efectivo del trabajo y conviene declararlas.
+
+La \textbf{evaluación con modelo de lenguaje no se recalculó sobre la configuración final}. Las cifras que sustentan la tercera pregunta de investigación proceden de una configuración anterior, de modo que su valor es cualitativo y no cuantitativo. El argumento sobre el límite \textit{oracle} se mantiene, por ser estructural, pero la magnitud de la contribución del modelo de lenguaje al sistema definitivo no está medida.
+
+El \textbf{objetivo de fonema quedó fuera de la comparación de granularidades}, al no producir texto ortográfico y no disponerse de un decodificador con léxico que permitiera situarlo en el eje común de tasa de error por palabra. Es una ausencia notable, dado que el fonema es la unidad que emplea la práctica totalidad de la literatura del campo y la que el argumento neurocientífico señalaba como natural.
+
+Por último, la \textbf{evaluación sobre la partición de prueba oficial} no es posible con los datos públicos, que no incluyen sus etiquetas. Todas las cifras reportadas corresponden a la partición de validación, sobre la que además se tomaron decisiones de diseño a lo largo del trabajo.
+
+\section{Líneas de trabajo futuro}
+
+\subsection{Discriminar qué tipo de preentrenamiento transfiere}
+
+La línea más directa que abre este trabajo procede de su contradicción con la literatura previa. Que wav2vec~2.0 transfiera y OWSM no, sobre tareas emparentadas, sugiere que la propiedad determinante no es haber sido entrenado sobre habla sino \textbf{el nivel de abstracción al que se aprendió a representarla}. Un modelo autosupervisado sobre forma de onda cruda aprende estructura temporal de bajo nivel potencialmente agnóstica a la modalidad; uno supervisado sobre banco de filtros mel aprende estructura espectral de la que la señal neuronal carece.
+
+Contrastar esta hipótesis exigiría un estudio comparativo de varios modelos preentrenados bajo un mismo esquema de adaptación y sobre un mismo conjunto de datos, variando de forma controlada el objetivo de preentrenamiento (autosupervisado frente a supervisado) y la representación de entrada (forma de onda frente a espectrograma). Sería, en esencia, la generalización natural del bloque A de este trabajo, y respondería a una pregunta que la comunidad todavía no tiene resuelta.
+
+Una variante de menor coste consistiría en evaluar POWSM, un modelo de la misma familia preentrenado con objetivo fonémico, que permitiría comprobar si la transferencia reaparece cuando la unidad del preentrenamiento coincide con la unidad natural de la corteza motora del habla.
+
+\subsection{Atacar la no estacionariedad como problema central}
+
+El resultado con mayor implicación práctica de este trabajo es que la degradación ante un día de registro no visto, de casi 27 puntos porcentuales, supera con creces a cualquier otro efecto medido, y que la solución estándar del campo resulta contraproducente en ese escenario por memorizar días concretos en lugar de aprender una corrección generalizable.
+
+Esto sitúa la adaptación entre sesiones, y no la elección de codificador, como el problema dominante. Las líneas naturales son la regularización explícita de las matrices de sesión hacia una solución compartida, el aprendizaje de una función que \textbf{prediga} la transformación de un día nuevo a partir de una pequeña muestra sin etiquetar de ese día, y la exploración de proyecciones jerárquicas a nivel de mes y de día como las que emplean los sistemas más recientes \cite{brainwhisperer}. Cuantificar cuántos minutos de calibración se necesitan para recuperar el rendimiento nominal en un día nuevo tendría además valor clínico directo.
+
+\subsection{Cerrar el eje de granularidad}
+
+El bloque de granularidad produjo el mayor efecto del trabajo y quedó incompleto en dos puntos. El primero es la incorporación del objetivo de fonema al eje común, que requiere un decodificador con léxico y permitiría contrastar por fin el argumento neurocientífico con datos propios. El segundo es determinar si la ventaja de las unidades gruesas se mantiene al añadir un modelo de lenguaje externo, o si por el contrario se desvanece porque ambos mecanismos aportan la misma estructura lingüística por vías distintas. Esta segunda pregunta es la más informativa de las dos, porque separa la contribución interna de la externa.
+
+Cabe además explorar granularidades intermedias no evaluadas aquí, en particular los difonos, que capturan explícitamente la coarticulación y con los que el equipo ganador de la edición anterior del \textit{benchmark} obtuvo su mejora principal \cite{b2t24lessons}, así como esquemas jerárquicos que apliquen pérdidas de granularidad creciente a capas sucesivas del codificador \cite{higuchi2021hierarchical}.
+
+\subsection{Explotar la eficiencia del codificador reducido}
+
+Que reducir el codificador a la mitad cueste un punto porcentual abre una línea de eficiencia con implicaciones para el despliegue en tiempo real, donde la latencia es un requisito y no una métrica secundaria. Un estudio sistemático de la frontera entre coste y rendimiento, incluyendo anchura además de profundidad y midiendo latencia de inferencia en lugar de tiempo de entrenamiento, permitiría determinar el modelo mínimo viable para uso conversacional.
+
+\subsection{Reproducir el hallazgo en otros participantes}
+
+Por último, y en cuanto se disponga de conjuntos públicos con varios participantes implantados, la comprobación pendiente más importante es si el resultado central se reproduce fuera de T15. El campo avanza hacia modelos entrenados conjuntamente sobre múltiples sujetos e incluso especies \cite{crossspecies2025}, y ese marco permitiría además contrastar la hipótesis alternativa de que lo que no transfiere no es el preentrenamiento sobre habla en general, sino el preentrenamiento sobre habla \textit{ajena}, frente a un preentrenamiento sobre actividad neuronal de otros sujetos.

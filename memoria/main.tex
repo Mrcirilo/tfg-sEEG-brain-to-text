@@ -1,289 +1,117 @@
 %==============================================================================
-%  PLANTILLA TFG — Trabajo de Fin de Grado
-%  Adaptación de OWSM a señal neuronal intracortical (Brain-to-Text '25)
-%  Autor: Kiril Ivaylov Tzenkov — Grado en Ciencia de Datos (UPV)
+%  MEMORIA DEL TFG — plantilla oficial de la ETSINF (clase tfgetsinf)
+%  Kiril Ivaylov Tzenkov — Grado en Ciencia de Datos (UPV)
 %
-%  Compilar con:  pdflatex TFG  ->  biber TFG  ->  pdflatex TFG  ->  pdflatex TFG
-%  (o simplemente usa latexmk -pdf TFG.tex)
+%  - Clase oficial de la escuela (tfgetsinf.cls, v1.1 de 2019): Palatino a
+%    11 pt, márgenes de 3 cm a los lados y 2,35 cm arriba y abajo, títulos en
+%    sans serif con filetes. Las guías de la ETSINF dicen que todos los TFG
+%    deben seguir esta plantilla. tfgetsinf.cls tiene que estar en esta carpeta.
+%  - Va a doble cara, como trae la clase. Para leerla en pantalla sin páginas
+%    en blanco, añade "oneside" a las opciones de \documentclass.
+%  - Sin portada: la genera Ebrón al solicitar la defensa (si la pones, la
+%    memoria sale con dos).
+%  - Tus datos (título, tutores, curso y palabras clave) están en datos.tex.
+%
+%  Compilar:  latexmk -pdf main.tex      (pdflatex + biber; VS Code ya lo hace)
 %==============================================================================
+\documentclass[spanish,11pt,listoffigures,listoftables]{tfgetsinf}
 
-\documentclass[12pt,a4paper,oneside]{report}
-
-%------------------------------------------------------------------ Idioma y fuentes
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[spanish,es-tabla]{babel}
-\usepackage{lmodern}
-\usepackage{microtype}
 
-%------------------------------------------------------------------ Márgenes y espaciado
-\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm]{geometry}
-\usepackage{setspace}
-\onehalfspacing
-\setlength{\parskip}{0.4em}
+% La portada la pone Ebrón: se anula la que genera la clase
+\makeatletter
+\renewcommand{\m@ketitle}{}
+\makeatother
+\addto\captionsspanish{\renewcommand{\titulacioname}{Grado en Ciencia de Datos}}
 
-%------------------------------------------------------------------ Matemáticas y tablas
-\usepackage{amsmath,amssymb,amsfonts}
-\usepackage{booktabs}
-\usepackage{multirow}
-\usepackage{array}
+%------------------------------------------------------------------ Paquetes
+% La clase ya carga babel (castellano, valenciano e inglés), fontenc,
+% Palatino, geometry, caption, listings, xcolor, graphicx, fancyhdr,
+% titlesec, tocloft y hyperref. No los vuelvas a cargar con otras opciones
+% (para los pies de figura, usa \captionsetup en vez de \usepackage{caption}).
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,multirow,array}
 \usepackage{siunitx}
-\sisetup{output-decimal-marker={,}}   % cifras con coma decimal (memoria en español)
-
-%------------------------------------------------------------------ Figuras
-\usepackage{graphicx}
+\sisetup{output-decimal-marker={,}}   % cifras con coma decimal
 \usepackage{float}
 \usepackage{subcaption}
-\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{enumitem}
+\usepackage{microtype}
 \graphicspath{{figuras/}}
 
-%------------------------------------------------------------------ Código
-\usepackage{listings}
-\usepackage{xcolor}
-
-% Paleta técnico-minimalista
-\definecolor{codebg}{HTML}{F7F7F8}
-\definecolor{codekw}{HTML}{222229}
-\definecolor{codecomment}{HTML}{6A737D}
-\definecolor{codestring}{HTML}{C7254E}
-\definecolor{accent}{HTML}{F5A623}
-
-\lstdefinestyle{tfg}{
-  backgroundcolor=\color{codebg},
-  basicstyle=\ttfamily\small,
-  keywordstyle=\color{codekw}\bfseries,
-  commentstyle=\color{codecomment}\itshape,
-  stringstyle=\color{codestring},
-  numbers=left,
-  numberstyle=\tiny\color{codecomment},
-  numbersep=8pt,
-  frame=single,
-  rulecolor=\color{codecomment!40},
-  breaklines=true,
-  showstringspaces=false,
-  tabsize=4,
-  captionpos=b,
-  xleftmargin=12pt,
-  framexleftmargin=12pt,
-}
-\lstset{style=tfg}
-
-%------------------------------------------------------------------ Enlaces y referencias
-\usepackage{hyperref}
-\hypersetup{
-  colorlinks=true,
-  linkcolor=black,
-  citecolor=black,
-  urlcolor=accent,
-  pdftitle={TFG - Adaptacion de OWSM a senal neuronal intracortical},
-  pdfauthor={Kiril Ivaylov Tzenkov},
-}
-\usepackage[noabbrev,spanish]{cleveref}
-% Los capitulos escriben "la tabla X" / "la seccion Y". Sin esto, cleveref
-% en espanol genera "la cuadro X" / "la apartado Y" (genero incorrecto),
-% y ademas "cuadro" no casa con los captions, que dicen "Tabla".
-\crefname{table}{tabla}{tablas}
-\Crefname{table}{Tabla}{Tablas}
-\crefname{section}{sección}{secciones}
-\Crefname{section}{Sección}{Secciones}
-\crefname{subsection}{sección}{secciones}
-\Crefname{subsection}{Sección}{Secciones}
-\crefname{equation}{ecuación}{ecuaciones}
-\Crefname{equation}{Ecuación}{Ecuaciones}
-
-\usepackage{enumitem}
-\usepackage{csquotes}   % antes del \usepackage{biblatex}
-
-%------------------------------------------------------------------ Bibliografía (biblatex + biber)
+%------------------------------------------------------------------ Bibliografía
+\usepackage{csquotes}                 % antes que biblatex
 \usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
 \addbibresource{referencias.bib}
-% NOTA: fusiona aquí bibliografia_cap1.bib + bibliografia_cap2.bib
-% (cat bibliografia_cap1.bib bibliografia_cap2.bib > referencias.bib)
 
-%------------------------------------------------------------------ Encabezados
-\usepackage{fancyhdr}
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[L]{\nouppercase{\leftmark}}
-\fancyhead[R]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
+%------------------------------------------------------------------ Enlaces y referencias cruzadas
+% Enlaces en negro (la clase los deja rojos y verdes)
+\hypersetup{linkcolor=black,citecolor=black,urlcolor=blue!50!black}
 
-%------------------------------------------------------------------ Datos del trabajo (EDITAR)
-\newcommand{\tfgtitulo}{Adaptación del modelo OWSM para la decodificación de actividad neuronal intracortical en el reto Brain-to-Text '25}
-\newcommand{\tfgautor}{Kiril Ivaylov Tzenkov}
-\newcommand{\tfgtutor}{-}
-\newcommand{\tfgcotutor}{-}
-\newcommand{\tfggrado}{Grado en Ciencia de Datos}
-\newcommand{\tfgcurso}{2025--2026}
-% TODO: el título menciona LoRA en tu versión anterior; en las memorias
-% no lo he metido en el título porque en tus notas de proyecto LoRA quedó
-% descartado con el encoder descongelado. Si al final sí forma parte del
-% sistema final (p. ej. en el bloque D, LoRA+congelado), decide tú si
-% quieres que aparezca en el título o no.
+\usepackage[noabbrev,spanish]{cleveref}
+% Sin esto cleveref escribe "la cuadro X" y "la apartado Y"
+\crefname{table}{tabla}{tablas}           \Crefname{table}{Tabla}{Tablas}
+\crefname{section}{sección}{secciones}    \Crefname{section}{Sección}{Secciones}
+\crefname{subsection}{sección}{secciones} \Crefname{subsection}{Sección}{Secciones}
+\crefname{equation}{ecuación}{ecuaciones} \Crefname{equation}{Ecuación}{Ecuaciones}
+
+%------------------------------------------------------------------ Código
+\definecolor{codebg}{HTML}{F7F7F8}
+\definecolor{codecomment}{HTML}{6A737D}
+\definecolor{codestring}{HTML}{C7254E}
+\lstdefinestyle{tfg}{language=Python,backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,keywordstyle=\bfseries,
+  commentstyle=\color{codecomment}\itshape,stringstyle=\color{codestring},
+  numbers=left,numberstyle=\tiny\color{codecomment},frame=single,
+  rulecolor=\color{codecomment!40},breaklines=true,showstringspaces=false,
+  tabsize=4,captionpos=b}
+\lstset{style=tfg}
+
+%------------------------------------------------------------------ Datos del trabajo
+\input{datos}
+\makeatletter
+\hypersetup{pdftitle={\@title},pdfauthor={\@author}}
+\makeatother
 
 %==============================================================================
 \begin{document}
-%==============================================================================
 
-%------------------------------------------------------------------ PORTADA
-\begin{titlepage}
-  \centering
-  \vspace*{1cm}
+%------------------------------------------------------------------ Resúmenes
+% La plantilla oficial trae también el resum en valenciano; la guía de la
+% ETSINF pide como mínimo inglés y castellano o valenciano. Si lo añades,
+% va antes que los otros dos:
+% \begin{abstract}
+%   Resum en valencià...
+% \end{abstract}
+\begin{abstract}[spanish]
+\input{preliminares/resumen}
+\end{abstract}
+\begin{abstract}[english]
+\input{preliminares/abstract}
+\end{abstract}
+% (Al acabar el abstract en inglés, la clase pone el índice y las listas
+%  de figuras y tablas)
 
-  % \includegraphics[width=0.45\textwidth]{logo_upv.png}\par\vspace{1cm}
-
-  {\scshape\large Universitat Politècnica de València\par}
-  {\scshape Escuela Técnica Superior de Ingeniería Informática\par}
-  \vspace{0.5cm}
-  {\large \tfggrado\par}
-  \vspace{2.5cm}
-
-  \rule{\linewidth}{0.5pt}\par\vspace{0.6cm}
-  {\huge\bfseries \tfgtitulo \par}
-  \vspace{0.6cm}
-  \rule{\linewidth}{0.5pt}\par
-
-  \vspace{1cm}
-  {\large Trabajo de Fin de Grado\par}
-
-  \vfill
-
-  \begin{flushleft}
-  \textbf{Autor:} \tfgautor\par
-  \vspace{0.3cm}
-  \textbf{Tutor:} \tfgtutor\par
-  \textbf{Cotutor:} \tfgcotutor\par
-  \end{flushleft}
-
-  \vspace{0.8cm}
-  {\large Curso \tfgcurso\par}
-\end{titlepage}
-
-%------------------------------------------------------------------ Numeración romana para preliminares
-\pagenumbering{roman}
-
-%------------------------------------------------------------------ RESUMEN
-\chapter*{Resumen}
-\addcontentsline{toc}{chapter}{Resumen}
-\markboth{Resumen}{Resumen}
-
-Las interfaces cerebro-computador para el habla buscan restaurar la comunicación en personas
-que han perdido la capacidad de hablar. Este trabajo estudia la viabilidad de adaptar OWSM,
-un modelo de reconocimiento de voz preentrenado de propósito general, a la decodificación de
-actividad neuronal intracortical del reto \textit{Brain-to-Text '25}. Se sustituye el
-\textit{frontend} acústico por un módulo adaptador entrenado desde cero, se incorpora una capa
-específica de sesión y se entrena el conjunto con un objetivo CTC puro, evaluando mediante
-ablaciones controladas qué componentes del preentrenamiento transfieren a una modalidad no
-acústica. El resultado principal es negativo y reproducible: un codificador inicializado
-aleatoriamente supera al inicializado con los pesos de OWSM (tasa de error por carácter de
-0,312 frente a 0,381) con la mitad de coste, y un codificador aleatorio congelado iguala a uno
-preentrenado congelado. Dos hallazgos colaterales resultan de mayor alcance práctico: la
-granularidad de la unidad de salida produce un efecto cuatro veces superior al del
-preentrenamiento, favoreciendo unidades lingüísticamente gruesas frente a las articulatorias,
-y la degradación ante días de registro no vistos alcanza los 27 puntos porcentuales, con la
-capa de sesión agravándola. El sistema alcanza una tasa de error por carácter de 0,267 en
-condiciones comparables a la literatura reciente sobre el mismo conjunto de datos.
-
-\vspace{0.5cm}
-\noindent\textbf{Palabras clave:} interfaz cerebro-computador, actividad neuronal intracortical, decodificación neuronal, OWSM, aprendizaje por transferencia, CTC.
-
-%------------------------------------------------------------------ ABSTRACT
-\chapter*{Abstract}
-\addcontentsline{toc}{chapter}{Abstract}
-\markboth{Abstract}{Abstract}
-
-Speech brain--computer interfaces aim to restore communication for people who have lost the
-ability to speak. This work investigates the feasibility of adapting OWSM, a general-purpose
-pretrained speech recognition model, to decode intracortical neural activity from the
-\textit{Brain-to-Text '25} challenge. The acoustic frontend is replaced by an adapter module
-trained from scratch, a session-specific layer is introduced, and the whole system is trained
-with a pure CTC objective, using controlled ablations to assess which components of
-pretraining transfer to a non-acoustic modality. The main result is negative and reproducible:
-a randomly initialised encoder outperforms one initialised with OWSM weights (character error
-rate of 0.312 versus 0.381) at half the cost, and a frozen random encoder matches a frozen
-pretrained one. Two secondary findings carry greater practical weight: output unit granularity
-produces an effect four times larger than pretraining, favouring linguistically coarse units
-over articulatory ones, and degradation on unseen recording sessions reaches 27 percentage
-points, with the session layer making it worse. The system reaches a character error rate of
-0.267 under conditions comparable to recent literature on the same dataset.
-
-\vspace{0.5cm}
-\noindent\textbf{Keywords:} brain--computer interface, intracortical neural activity, neural decoding, OWSM, transfer learning, CTC.
-
-%------------------------------------------------------------------ ÍNDICES
-\tableofcontents
-\listoffigures
-\listoftables
-
-%------------------------------------------------------------------ CUERPO: numeración arábiga
-\cleardoublepage
-\pagenumbering{arabic}
-
-%==============================================================================
-%  CAPÍTULO 1 — INTRODUCCIÓN
-%  El propio archivo incluido ya trae su \chapter{...} y su \label{cap:introduccion}.
-%  NO envuelvas esto en un \chapter{} tuyo o duplicarás el capítulo y la etiqueta.
-%==============================================================================
+%------------------------------------------------------------------ Capítulos
+\mainmatter
 \include{capitulos/01_introduccion}
-
-%==============================================================================
-%  CAPÍTULO 2 — ESTADO DEL ARTE
-%  Mismo comentario: el archivo trae su propio \chapter y \label{cap:estado-del-arte}.
-%==============================================================================
 \include{capitulos/02_estado_del_arte}
-
-%==============================================================================
-%  CAPÍTULO 3 — CONJUNTO DE DATOS
-%==============================================================================
 \include{capitulos/03_datos}
-
-%==============================================================================
-%  CAPÍTULO 4 — MARCO TEÓRICO
-%==============================================================================
 \include{capitulos/04_marco_teorico}
-
-%==============================================================================
-%  CAPÍTULO 5 — ARQUITECTURA DEL SISTEMA
-%==============================================================================
 \include{capitulos/05_arquitectura}
-
-%==============================================================================
-%  CAPÍTULO 6 — METODOLOGÍA EXPERIMENTAL
-%==============================================================================
 \include{capitulos/06_metodologia}
-
-%==============================================================================
-%  CAPÍTULO 7 — RESULTADOS Y DISCUSIÓN
-%==============================================================================
 \include{capitulos/07_resultados}
-
-%==============================================================================
-%  CAPÍTULO 8 — LIMITACIONES Y TRABAJO FUTURO
-%==============================================================================
 \include{capitulos/08_limitaciones}
-
-%==============================================================================
-%  CAPÍTULO 9 — CONCLUSIONES
-%==============================================================================
 \include{capitulos/09_conclusiones}
 
-%------------------------------------------------------------------ BIBLIOGRAFÍA
-\cleardoublepage
-\phantomsection
-\addcontentsline{toc}{chapter}{Bibliografía}
-\printbibliography[title={Bibliografía}]
+%------------------------------------------------------------------ Bibliografía
+\printbibliography[heading=bibintoc,title={Bibliografía}]
 
-%------------------------------------------------------------------ ANEXOS
-\appendix
-\chapter{Código del pipeline de entrenamiento}
-\label{anexo:codigo}
+%------------------------------------------------------------------ Anexos
+\APPENDIX
+\chapter{Código del pipeline de entrenamiento}\label{anexo:codigo}
+\chapter{Configuraciones de ESPnet-EZ}\label{anexo:config}
+\chapter{Análisis exploratorio adicional}\label{anexo:eda}
+\include{anexos/ods}   % obligatorio y al final de la memoria
 
-\chapter{Configuraciones de ESPnet-EZ}
-\label{anexo:config}
-
-\chapter{Análisis exploratorio adicional}
-\label{anexo:eda}
-
-%==============================================================================
 \end{document}
-%==============================================================================

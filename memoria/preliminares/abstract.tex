@@ -1,0 +1,15 @@
+% Abstract in English (same content as the Spanish resumen).
+Speech brain--computer interfaces aim to restore communication for people who have lost the
+ability to speak. This work investigates the feasibility of adapting OWSM, a general-purpose
+pretrained speech recognition model, to decode intracortical neural activity from the
+\textit{Brain-to-Text '25} challenge. The acoustic frontend is replaced by an adapter module
+trained from scratch, a session-specific layer is introduced, and the whole system is trained
+with a pure CTC objective, using controlled ablations to assess which components of
+pretraining transfer to a non-acoustic modality. The main result is negative and reproducible:
+a randomly initialised encoder outperforms one initialised with OWSM weights (character error
+rate of 0.312 versus 0.381) at half the cost, and a frozen random encoder matches a frozen
+pretrained one. Two secondary findings carry greater practical weight: output unit granularity
+produces an effect four times larger than pretraining, favouring linguistically coarse units
+over articulatory ones, and degradation on unseen recording sessions reaches 27 percentage
+points, with the session layer making it worse. The system reaches a character error rate of
+0.267 under conditions comparable to recent literature on the same dataset.

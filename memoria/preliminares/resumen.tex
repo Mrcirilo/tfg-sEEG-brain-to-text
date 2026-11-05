@@ -1,19 +1,20 @@
 % Resumen en castellano (200-500 palabras según la guía de la ETSINF).
 % Es el texto de tu main.tex de septiembre: hay que rehacerlo al final con
-% los resultados del bloque 1, el bloque 2 y el modelo final.
-Las interfaces cerebro-computador para el habla buscan restaurar la comunicación en personas
-que han perdido la capacidad de hablar. Este trabajo estudia la viabilidad de adaptar OWSM,
-un modelo de reconocimiento de voz preentrenado de propósito general, a la decodificación de
-actividad neuronal intracortical del reto \textit{Brain-to-Text '25}. Se sustituye el
-\textit{frontend} acústico por un módulo adaptador entrenado desde cero, se incorpora una capa
-específica de sesión y se entrena el conjunto con un objetivo CTC puro, evaluando mediante
-ablaciones controladas qué componentes del preentrenamiento transfieren a una modalidad no
-acústica. El resultado principal es negativo y reproducible: un codificador inicializado
-aleatoriamente supera al inicializado con los pesos de OWSM (tasa de error por carácter de
-0,312 frente a 0,381) con la mitad de coste, y un codificador aleatorio congelado iguala a uno
-preentrenado congelado. Dos hallazgos colaterales resultan de mayor alcance práctico: la
-granularidad de la unidad de salida produce un efecto cuatro veces superior al del
-preentrenamiento, favoreciendo unidades lingüísticamente gruesas frente a las articulatorias,
-y la degradación ante días de registro no vistos alcanza los 27 puntos porcentuales, con la
-capa de sesión agravándola. El sistema alcanza una tasa de error por carácter de 0,267 en
-condiciones comparables a la literatura reciente sobre el mismo conjunto de datos.
+% % los resultados del bloque 1, el bloque 2 y el modelo final.
+Resumen
+% Las interfaces cerebro-computador para el habla buscan restaurar la comunicación en personas
+% que han perdido la capacidad de hablar. Este trabajo estudia la viabilidad de adaptar OWSM,
+% un modelo de reconocimiento de voz preentrenado de propósito general, a la decodificación de
+% actividad neuronal intracortical del reto \textit{Brain-to-Text '25}. Se sustituye el
+% \textit{frontend} acústico por un módulo adaptador entrenado desde cero, se incorpora una capa
+% específica de sesión y se entrena el conjunto con un objetivo CTC puro, evaluando mediante
+% ablaciones controladas qué componentes del preentrenamiento transfieren a una modalidad no
+% acústica. El resultado principal es negativo y reproducible: un codificador inicializado
+% aleatoriamente supera al inicializado con los pesos de OWSM (tasa de error por carácter de
+% 0,312 frente a 0,381) con la mitad de coste, y un codificador aleatorio congelado iguala a uno
+% preentrenado congelado. Dos hallazgos colaterales resultan de mayor alcance práctico: la
+% granularidad de la unidad de salida produce un efecto cuatro veces superior al del
+% preentrenamiento, favoreciendo unidades lingüísticamente gruesas frente a las articulatorias,
+% y la degradación ante días de registro no vistos alcanza los 27 puntos porcentuales, con la
+% capa de sesión agravándola. El sistema alcanza una tasa de error por carácter de 0,267 en
+% condiciones comparables a la literatura reciente sobre el mismo conjunto de datos.

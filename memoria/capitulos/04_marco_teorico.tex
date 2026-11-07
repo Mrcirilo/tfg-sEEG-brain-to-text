@@ -33,7 +33,7 @@ La combinación de (b) y (c) es exactamente el escenario para el que se diseñó
 El bloque fundamental de las arquitecturas empleadas es la autoatención por producto escalar escalado. Dada una secuencia de representaciones $\mathbf{H} \in \mathbb{R}^{T \times d}$, se proyecta en consultas, claves y valores mediante matrices aprendidas $\mathbf{W}^Q, \mathbf{W}^K, \mathbf{W}^V$, y se calcula
 
 \begin{equation}
-  \mathrm{Atención}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \mathrm{softmax}\!\left( \frac{\mathbf{Q}\mathbf{K}^{\top}}{\sqrt{d_k}} \right) \mathbf{V},
+  \text{Atención}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \mathrm{softmax}\!\left( \frac{\mathbf{Q}\mathbf{K}^{\top}}{\sqrt{d_k}} \right) \mathbf{V},
   \label{eq:atencion}
 \end{equation}
 
@@ -166,7 +166,7 @@ Es esencial subrayar la condición de aplicabilidad: \textbf{LoRA presupone que 
 \section{Modelado de lenguaje y decodificación}
 \label{sec:lm-teoria}
 
-\subsection{Modelos de lenguaje de $n$-gramas}
+\subsection{Modelos de lenguaje de \texorpdfstring{$n$}{n}-gramas}
 
 Un modelo de lenguaje asigna una probabilidad a una secuencia de palabras. Bajo la aproximación de Markov de orden $n-1$, la probabilidad de cada palabra depende únicamente de las $n-1$ anteriores:
 

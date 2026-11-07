@@ -1,34 +1,38 @@
 %==============================================================================
-%  MEMORIA DEL TFG — plantilla oficial de la ETSINF (clase tfgetsinf)
-%  Kiril Ivaylov Tzenkov — Grado en Ciencia de Datos (UPV)
+%  MEMORIA DEL TFG
+%  Kiril Ivaylov Tzenkov — Grado en Ciencia de Datos (ETSINF, UPV)
 %
-%  - Clase oficial de la escuela (tfgetsinf.cls, v1.1 de 2019): Palatino a
-%    11 pt, márgenes de 3 cm a los lados y 2,35 cm arriba y abajo, títulos en
-%    sans serif con filetes. Las guías de la ETSINF dicen que todos los TFG
-%    deben seguir esta plantilla. tfgetsinf.cls tiene que estar en esta carpeta.
-%  - Va a doble cara, como trae la clase. Para leerla en pantalla sin páginas
-%    en blanco, añade "oneside" a las opciones de \documentclass.
-%  - Sin portada: la genera Ebrón al solicitar la defensa (si la pones, la
-%    memoria sale con dos).
-%  - Tus datos (título, tutores, curso y palabras clave) están en datos.tex.
+%  Plantilla oficial de la ETSINF (tfgetsinf.cls, en esta misma carpeta):
+%  Palatino a 11 pt, títulos en sans serif con filetes, doble cara.
+%  Es la misma plantilla y tipografía que el TFG de Elena Castán.
 %
-%  Compilar:  latexmk -pdf main.tex      (pdflatex + biber; VS Code ya lo hace)
+%  Estructura de la carpeta:
+%    main.tex            este archivo (preámbulo y orden de los capítulos)
+%    datos.tex           título, autor, tutores, curso y palabras clave
+%    preliminares/       resumen y abstract
+%    capitulos/          un archivo por capítulo
+%    anexos/             anexos (el de los ODS es obligatorio y va el último)
+%    referencias.bib     bibliografía
+%    figuras/            imágenes (\includegraphics{nombre} las busca aquí)
+%
+%  Compilar: guarda en VS Code (LaTeX Workshop) o, desde la terminal,
+%            latexmk -pdf main.tex      (pdflatex + biber)
+%
+%  No lleva portada: la añade la UPV al depositar el TFG (es la de los logos
+%  de la UPV y la ETSINF que se ve en otros TFG).
 %==============================================================================
 \documentclass[spanish,11pt,listoffigures,listoftables]{tfgetsinf}
 
-\usepackage[utf8]{inputenc}
-
-% La portada la pone Ebrón: se anula la que genera la clase
+% Se anula la portada propia de la clase (ver arriba)
 \makeatletter
 \renewcommand{\m@ketitle}{}
 \makeatother
 \addto\captionsspanish{\renewcommand{\titulacioname}{Grado en Ciencia de Datos}}
 
 %------------------------------------------------------------------ Paquetes
-% La clase ya carga babel (castellano, valenciano e inglés), fontenc,
-% Palatino, geometry, caption, listings, xcolor, graphicx, fancyhdr,
-% titlesec, tocloft y hyperref. No los vuelvas a cargar con otras opciones
-% (para los pies de figura, usa \captionsetup en vez de \usepackage{caption}).
+% La clase ya carga babel, fontenc, mathpazo (Palatino), geometry, caption,
+% listings, xcolor, graphicx, fancyhdr, titlesec, tocloft y hyperref.
+% No los cargues otra vez (para los pies de figura usa \captionsetup).
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs,multirow,array}
 \usepackage{siunitx}
@@ -45,8 +49,10 @@
 \addbibresource{referencias.bib}
 
 %------------------------------------------------------------------ Enlaces y referencias cruzadas
-% Enlaces en negro (la clase los deja rojos y verdes)
-\hypersetup{linkcolor=black,citecolor=black,urlcolor=blue!50!black}
+% Como en el TFG de Elena: referencias internas en negro, citas en verde,
+% URL en cian y escritas con la misma letra que el texto.
+\hypersetup{linkcolor=black,citecolor=green,urlcolor=cyan}
+\urlstyle{same}
 
 \usepackage[noabbrev,spanish]{cleveref}
 % Sin esto cleveref escribe "la cuadro X" y "la apartado Y"
@@ -73,13 +79,15 @@
 \hypersetup{pdftitle={\@title},pdfauthor={\@author}}
 \makeatother
 
+% Para compilar solo el capítulo en el que estás (más rápido), descomenta:
+% \includeonly{capitulos/07_resultados}
+
 %==============================================================================
 \begin{document}
 
 %------------------------------------------------------------------ Resúmenes
-% La plantilla oficial trae también el resum en valenciano; la guía de la
-% ETSINF pide como mínimo inglés y castellano o valenciano. Si lo añades,
-% va antes que los otros dos:
+% La ETSINF pide resumen en inglés y en castellano o valenciano. Si quieres
+% añadir también el resum en valenciano (como Elena), va el primero:
 % \begin{abstract}
 %   Resum en valencià...
 % \end{abstract}
@@ -89,8 +97,8 @@
 \begin{abstract}[english]
 \input{preliminares/abstract}
 \end{abstract}
-% (Al acabar el abstract en inglés, la clase pone el índice y las listas
-%  de figuras y tablas)
+% Al cerrar el abstract en inglés, la clase pone el índice general y los
+% índices de figuras y tablas.
 
 %------------------------------------------------------------------ Capítulos
 \mainmatter
@@ -112,6 +120,6 @@
 \chapter{Código del pipeline de entrenamiento}\label{anexo:codigo}
 \chapter{Configuraciones de ESPnet-EZ}\label{anexo:config}
 \chapter{Análisis exploratorio adicional}\label{anexo:eda}
-\include{anexos/ods}   % obligatorio y al final de la memoria
+\include{anexos/ods}   % obligatorio y siempre el último
 
 \end{document}

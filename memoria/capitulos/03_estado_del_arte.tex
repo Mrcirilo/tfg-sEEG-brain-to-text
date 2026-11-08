@@ -1,0 +1,154 @@
+% =====================================================================
+%  CAPÍTULO 3 — ESTADO DEL ARTE
+% =====================================================================
+% Requiere en el preámbulo: booktabs, array, cleveref, siunitx
+% Aquí va qué se ha hecho y por qué. Cómo funciona cada técnica está en
+% el marco teórico (capítulo 5).
+% =====================================================================
+
+\chapter{Estado del arte}
+\label{cap:estado-del-arte}
+
+Este capítulo repasa lo que se ha hecho hasta ahora en la decodificación del habla a partir de la actividad cerebral y en la reutilización de modelos de habla. Primero se comparan las técnicas de registro y se recogen las cifras de las neuroprótesis del habla más recientes (\cref{sec:sota-bci,sec:sota-neuroprotesis}). Después se explica cómo están construidos los decodificadores actuales y por qué (\cref{sec:sota-anatomia}), y qué resultados se obtienen en el \textit{benchmark} Brain-to-Text~'25 (\cref{sec:sota-benchmarks}). Por último se resumen los modelos de habla preentrenados y los trabajos que los han llevado a la señal neuronal, y se sitúa este trabajo respecto a ellos (\cref{sec:sota-habla,sec:sota-transferencia}). Cómo funciona cada técnica se explica en el \cref{cap:marco-teorico}.
+
+\section{Modalidades de registro en interfaces cerebro-computador}
+\label{sec:sota-bci}
+
+La técnica de registro condiciona qué información se puede extraer y, por tanto, qué tipo de decodificador tiene sentido construir. Las que se usan en BCI del habla van de menos a más invasivas y, en general, cuanto más invasiva es la técnica, mejor es la señal:
+
+\begin{description}
+  \item[Electroencefalografía (EEG).] No invasiva, barata y fácil de conseguir. Registra a través del cráneo la actividad sumada de grandes grupos de neuronas, así que su resolución espacial es baja y la señal tiene mucho ruido. Funciona bien para elegir entre pocas opciones, pero la decodificación de texto a partir de EEG está en discusión: se ha visto que algunos modelos publicados rinden casi igual con ruido que con EEG, y que su evaluación usaba sin darse cuenta el texto de referencia \cite{jo2024eegtotext}.
+  \item[Estereoelectroencefalografía (sEEG).] Electrodos de profundidad que se implantan con fines diagnósticos, casi siempre en pacientes con epilepsia, a través de pequeños orificios y sin abrir el cráneo \cite{verwoert2022}. Tienen buena resolución temporal y llegan a estructuras profundas, pero su colocación la deciden criterios clínicos y no las necesidades del decodificador, y los registros duran lo que dura el ingreso del paciente.
+  \item[Electrocorticografía (ECoG).] Rejillas de electrodos colocadas sobre la superficie de la corteza, sin penetrar en el tejido, que obligan a abrir el cráneo \cite{kohler2022}. Cubren una zona amplia, son estables durante mucho tiempo y sobre ellas se construyeron los primeros sistemas de habla en tiempo real \cite{moses2021,metzger2023}.
+  \item[Matrices intracorticales de microelectrodos.] Matrices de electrodos que penetran en la corteza, normalmente de tipo Utah, y registran la actividad de pequeños grupos de neuronas junto a cada electrodo. Es la técnica con más riesgo quirúrgico y, a la vez, la única con la que se han conseguido prestaciones propias de una conversación \cite{willett2023,card2024}. Es la de los datos de este trabajo, cuyas características se describen en el \cref{cap:datos}.
+\end{description}
+
+La \cref{tab:sota-modalidades} resume las cuatro.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Comparación de las modalidades de registro usadas en BCI del habla.}
+  \label{tab:sota-modalidades}
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{>{\raggedright\arraybackslash}p{0.14\linewidth}
+                  >{\raggedright\arraybackslash}p{0.18\linewidth}
+                  >{\raggedright\arraybackslash}p{0.17\linewidth}
+                  >{\raggedright\arraybackslash}p{0.2\linewidth}
+                  >{\raggedright\arraybackslash}p{0.2\linewidth}}
+    \toprule
+    \textbf{Modalidad} & \textbf{Cirugía} & \textbf{Resolución espacial} & \textbf{Cobertura} & \textbf{Duración de los registros} \\
+    \midrule
+    EEG           & No & Baja & Toda la cabeza, solo superficie & Sesiones de laboratorio \\
+    sEEG          & Mínima, sin abrir el cráneo \cite{verwoert2022} & Alta, en puntos dispersos & Dispersa, incluye estructuras profundas & Lo que dura el ingreso clínico \\
+    ECoG          & Apertura del cráneo \cite{kohler2022} & Media & Una zona amplia de la superficie & Larga: unas 81 semanas en \cite{moses2021} \\
+    Intracortical & Apertura del cráneo e implante penetrante & Muy alta: grupos pequeños de neuronas & Pequeña: $3{,}2 \times 3{,}2$~mm por matriz \cite{card2024} & Larga: 20 meses en Brain-to-Text~'25 \cite{b2t25} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Evolución de las neuroprótesis del habla}
+\label{sec:sota-neuroprotesis}
+
+La historia de estas interfaces se resumió en la \cref{sec:brain-to-text}. Aquí se recogen las cifras de los sistemas que marcan el estado actual (\cref{tab:sota-sistemas}).
+
+Uno de los primeros sistemas que produjo lenguaje de forma continua decodificaba la escritura a mano imaginada. Llegó a unos 90 caracteres por minuto, con más de un \SI{99}{\percent} de acierto usando un autocorrector \cite{willett2021}. Ese trabajo dejó dos ideas que siguen en uso: entrenar con CTC sobre secuencias sin alinear y añadir una capa de entrada propia de cada día de registro.
+
+Con el habla intentada, Moses \textit{et al.} decodificaron frases en tiempo real con ECoG en una persona con anartria, con un vocabulario de 50 palabras, a 15 palabras por minuto y con un \SI{25.6}{\percent} de WER \cite{moses2021}. En 2023, dos trabajos pasaron a vocabularios mucho más grandes: Metzger \textit{et al.}, con ECoG de alta densidad y también síntesis de voz y un avatar, llegaron a 78 palabras por minuto con un \SI{25}{\percent} de WER sobre 1.024 palabras \cite{metzger2023}, y Willett \textit{et al.}, con matrices intracorticales, a 62 palabras por minuto con un \SI{23.8}{\percent} sobre 125.000 palabras \cite{willett2023}.
+
+El sistema de Card \textit{et al.}, del que proceden los datos de este trabajo, es el referente actual. Con 30 minutos de datos de calibración alcanzó un \SI{99.6}{\percent} de acierto con 50 palabras el primer día, y un \SI{90.2}{\percent} con 125.000 palabras el segundo día tras 1,4 horas más de datos. Mantuvo un \SI{97.5}{\percent} de acierto durante 8,4 meses, y el participante lo usó para conversar más de 248 horas a unas 32 palabras por minuto \cite{card2024}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Sistemas de decodificación de habla y escritura más relevantes. WER: tasa de error por palabra.}
+  \label{tab:sota-sistemas}
+  \small
+  \begin{tabular}{llllll}
+    \toprule
+    \textbf{Trabajo} & \textbf{Registro} & \textbf{Participante} & \textbf{Vocabulario} & \textbf{WER} & \textbf{Velocidad} \\
+    \midrule
+    Moses \textit{et al.} \cite{moses2021}     & ECoG          & Anartria     & 50 palabras      & 25,6\,\%          & 15 ppm \\
+    Willett \textit{et al.} \cite{willett2021} & Intracortical & Tetraplejia  & Escritura        & $<$\,1\,\%$^{*}$  & 90 cpm \\
+    Metzger \textit{et al.} \cite{metzger2023} & ECoG          & Anartria     & 1.024 palabras   & 25\,\%            & 78 ppm \\
+    Willett \textit{et al.} \cite{willett2023} & Intracortical & ELA (T12)    & 125.000 palabras & 23,8\,\%          & 62 ppm \\
+    Card \textit{et al.} \cite{card2024}       & Intracortical & ELA (T15)    & 125.000 palabras & $\sim$2,5\,\%     & 32 ppm \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.4em}
+  {\footnotesize ppm: palabras por minuto; cpm: caracteres por minuto. $^{*}$Error por carácter, en diferido y con autocorrector. Moses y Metzger dan medianas.}
+\end{table}
+
+\section{Anatomía de un decodificador \textit{brain-to-text}}
+\label{sec:sota-anatomia}
+
+Los sistemas anteriores siguen casi todos el mismo esquema, heredado del reconocimiento de voz clásico: un codificador neuronal convierte la señal en probabilidades de fonemas y un modelo de lenguaje forma las palabras \cite{crossspecies2025}. Esta sección explica por qué se ha llegado a ese esquema y hacia dónde está cambiando.
+
+\subsection{La entrada y el cambio entre días}
+
+La entrada son las características de cada ventana de \SI{20}{\milli\second} (\cref{cap:datos}). Lo que más condiciona el diseño es que la señal cambia de un día a otro: los electrodos se mueven un poco, dejan de captar unas neuronas y captan otras, y el estado del participante varía \cite{sussillo2016}. Un decodificador entrenado con los datos de un día pierde precisión al siguiente.
+
+La respuesta del campo ha ido cambiando. Willett \textit{et al.} añadieron delante de un modelo compartido una capa de entrada propia de cada día \cite{willett2021}, una solución (\cref{sec:capa-sesion}) que se ha mantenido en los sistemas posteriores \cite{willett2023,card2024}. Como cada día nuevo necesita datos etiquetados para su capa, el siguiente paso fue reducir esa calibración: Card \textit{et al.} calibran el sistema con 30 minutos de datos \cite{card2024}, y Fan \textit{et al.} lo recalibran con las propias frases que decodifica, sin pedir datos nuevos al usuario \cite{fan2023corp}. Los sistemas más recientes comparten parámetros entre días cercanos, con una transformación por mes y una pequeña corrección por día \cite{brainwhisperer}.
+
+\subsection{El codificador}
+
+El codificador de referencia sigue siendo una red recurrente con unidades GRU, la de los sistemas de Willett \textit{et al.} y Card \textit{et al.} y la del \textit{benchmark} \cite{willett2023,card2024,b2t25}. Se mantiene porque ha costado mucho mejorarla: en el Brain-to-Text~'24, los intentos con modelos de espacio de estados (Mamba) y con Transformers no superaron a la red recurrente \cite{b2t24lessons}. Los avances recientes llegan cuando se añade otra fuente de información: preentrenar el codificador con datos neuronales de muchas tareas, personas e incluso especies \cite{crossspecies2025}, partir de un modelo de voz preentrenado \cite{brainwhisperer} o usar arquitecturas de reconocimiento de voz como Conformer \cite{khanday2026}. Es habitual agrupar las ventanas para que el codificador dé una salida cada \SI{80}{\milli\second}, como hace el sistema de referencia \cite{b2t25,brainwhisperer}.
+
+\subsection{La salida y el modelo de lenguaje}
+
+Casi todos los sistemas se entrenan con CTC (\cref{sec:ctc}), porque en un participante que no puede hablar no hay audio con el que alinear la señal. La unidad de salida más usada es el fonema. La corteza motora controla la articulación y no la ortografía, y con unos 40 fonemas el problema es más sencillo que con miles de palabras \cite{willett2023}.
+
+Los fonemas, sin embargo, no son texto. Para formar palabras hace falta un diccionario de pronunciación y un modelo de lenguaje, y ahí está buena parte del rendimiento final. Los sistemas de referencia generan hipótesis con un modelo de $n$-gramas y las reordenan con un modelo de lenguaje grande, y en el Brain-to-Text~'24 las tres primeras entradas combinaron además las salidas de varios decodificadores con un modelo de lenguaje ajustado \cite{b2t24lessons}.
+
+Este esquema es caro. El modelo de 5-gramas necesita unos \SI{300}{\giga\byte} de memoria y cada decodificación tarda unos \SI{750}{\milli\second}, frente a menos de \SI{2}{\giga\byte} y unos \SI{50}{\milli\second} de un sistema de extremo a extremo \cite{brainwhisperer}. Además, el codificador y el modelo de lenguaje se entrenan por separado y no se pueden optimizar juntos \cite{crossspecies2025}. Por eso han aparecido sistemas de extremo a extremo, que pasan de la señal al texto con un solo modelo y sin modelo de lenguaje externo: con caracteres y CTC \cite{khanday2026}, con el decodificador de un modelo de voz \cite{brainwhisperer} o con un modelo de lenguaje de audio \cite{crossspecies2025}. Todavía quedan por detrás de los sistemas con modelo de lenguaje (\cref{sec:sota-benchmarks}), pero son más baratos y sencillos de usar, y la distancia se ha reducido rápido.
+
+\section{El \textit{benchmark} Brain-to-Text~'25}
+\label{sec:sota-benchmarks}
+
+Los \textit{benchmarks} públicos, con particiones fijas y una métrica común, han acelerado mucho el campo. El Brain-to-Text~'25, el que se usa en este trabajo, se describe en el \cref{cap:datos}. Su sistema de referencia, la red recurrente con fonemas y un modelo de 5-gramas, consigue un \SI{6.7}{\percent} de WER \cite{brainwhisperer}. Las primeras posiciones se consiguen con modelos de lenguaje y, a menudo, combinando varios modelos, como ya pasó en la edición anterior \cite{b2t24lessons}. BrainWhisperer, por ejemplo, quedó cuarto de 466 equipos con una versión ampliada de su sistema con modelo de 5-gramas \cite{brainwhisperer}.
+
+Estas cifras no sirven de referencia para un sistema de extremo a extremo con un solo modelo, porque buena parte de la mejora viene del modelo de lenguaje y del cómputo. La comparación justa es con otros sistemas de extremo a extremo. La \cref{tab:sota-b2t25} recoge las cifras que da BrainWhisperer en la partición de la competición: con el modelo de 5-gramas, los sistemas están entre el 4 y el \SI{7}{\percent} de WER; sin él, entre el 9 y el \SI{16}{\percent}.
+
+\begin{table}[htbp]
+  \centering
+  \caption[WER en Brain-to-Text~'25 con y sin modelo de lenguaje]{WER (\%) en la partición de la competición de Brain-to-Text~'25, con modelo de 5-gramas y de extremo a extremo, según \cite{brainwhisperer}. «Varios participantes»: entrenado también con datos de otras personas. Cada artículo puede dar cifras algo distintas según la partición.}
+  \label{tab:sota-b2t25}
+  \small
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Sistema} & \textbf{Con 5-gramas} & \textbf{De extremo a extremo} \\
+    \midrule
+    Red recurrente de referencia           & 6,7 & 16,0 \\
+    BIT                                    & 5,2 & 12,2 \\
+    BIT (varios participantes)             & 4,1 & 11,1 \\
+    BrainWhisperer                         & 5,9 & 10,2 \\
+    BrainWhisperer (varios participantes)  & 5,2 & 8,7 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Modelos de habla preentrenados}
+\label{sec:sota-habla}
+
+En paralelo, el reconocimiento de voz ha pasado a un esquema de preentrenamiento a gran escala y adaptación posterior, con dos familias. La del aprendizaje autosupervisado, con wav2vec~2.0, HuBERT y WavLM \cite{baevski2020wav2vec,hsu2021hubert,chen2022wavlm}, aprende de audio sin transcribir y necesita después un ajuste supervisado. La de la supervisión débil a gran escala, cuyo ejemplo es Whisper \cite{radford2023whisper}, se entrena directamente con cientos de miles de horas de audio transcrito y funciona como reconocedor sin más ajuste.
+
+Whisper es un modelo codificador-decodificador, así que, además de leer el audio, trae un decodificador que ha aprendido cómo son las frases. En \textit{brain-to-text} eso interesa, porque el conocimiento del lenguaje es justo lo que le falta a un codificador entrenado con pocos datos. Su inconveniente para la investigación es que no se conocen sus datos ni todo su entrenamiento. OWSM cubre ese hueco con datos públicos y todo el proceso abierto \cite{peng2023owsm,peng2024owsmv31}; sus versiones y su arquitectura se explican en la \cref{sec:owsm-teoria}.
+
+\section{Transferencia a señal neuronal y posicionamiento}
+\label{sec:sota-transferencia}
+\label{sec:sota-posicionamiento}
+
+La idea de reutilizar modelos de habla con actividad cerebral se ha probado de tres formas. La primera usa el modelo de voz como espacio de llegada. BrainTalker proyecta la señal de ECoG al espacio de wav2vec~2.0 para sintetizar voz con muy pocos datos \cite{braintalker}, y Yuan y Makin entrenan wav2vec con ECoG sin etiquetar y mejoran así un decodificador supervisado, incluso pasando de un paciente a otro \cite{ecogssl2024}. En estos casos se transfiere la arquitectura o el objetivo de entrenamiento, pero no los pesos aprendidos con audio.
+
+La segunda transfiere los pesos. Fiedler \textit{et al.} sustituyen el extractor de audio de wav2vec 2.0 por otro pensado para señal neuronal y comparan, con los datos del participante T12, el ajuste completo de los pesos preentrenados, el entrenamiento desde cero y el modelo preentrenado congelado. El ajuste completo da el mejor resultado, con un \SI{18.54}{\percent} de error por carácter y un \SI{30.97}{\percent} de WER sin modelo de lenguaje, unos 20 puntos de error por carácter mejor que desde cero \cite{fiedler2025wav2vec2brain}. BrainWhisperer lleva la idea a Whisper y a los 256 canales de Brain-to-Text~'25. Usa proyecciones por mes y por día, atención por ventanas, una pérdida CTC de fonemas en una capa intermedia y el decodificador de Whisper ajustado con LoRA, y llega a un \SI{10.2}{\percent} de WER de extremo a extremo, o a un \SI{8.7}{\percent} entrenando también con otros participantes \cite{brainwhisperer}.
+
+La tercera evita el cambio de modalidad: en lugar de partir de un modelo de voz, preentrena un modelo con muchos datos neuronales. BIT preentrena un codificador con datos de varias tareas y especies, lo une a un modelo de lenguaje de audio y baja el WER del anterior sistema de extremo a extremo del \SI{24.69}{\percent} al \SI{10.22}{\percent} \cite{crossspecies2025}. A cambio, necesita reunir grandes cantidades de datos neuronales.
+
+De esta revisión salen tres huecos, que son los que aborda este trabajo (\cref{sec:objetivos}). Primero, la transferencia desde modelos de habla funciona en algunos casos, pero no se sabe bien qué parte la explica. Fiedler \textit{et al.} usan un modelo que solo tiene codificador y otro participante, y BrainWhisperer cambia muchas cosas a la vez para conseguir la mejor cifra. Falta separar, con un mismo presupuesto, qué aporta cada parte de un modelo codificador-decodificador (el \textit{frontend}, el codificador y el decodificador), y hacerlo con un modelo abierto como OWSM.
+
+Segundo, en el \textit{benchmark} las frases de validación y de prueba son de días que también tienen frases de entrenamiento (\cref{sec:b2t25}), así que las cifras publicadas no dicen cómo se comporta un modelo en un día nuevo. Los trabajos que estudian el paso del tiempo lo hacen con sistemas recurrentes y modelo de lenguaje \cite{fan2023corp}, y Khanday \textit{et al.} señalan que el cambio entre sesiones es lo que más hace variar su error \cite{khanday2026}. Falta ver cómo se comporta en días futuros un sistema de extremo a extremo basado en un modelo de voz, y cuántos datos necesita.
+
+Por último, las primeras posiciones necesitan muchos recursos. Este trabajo se limita a una GPU, un solo modelo y ningún modelo de lenguaje externo, así que su referencia son los sistemas de extremo a extremo de la \cref{tab:sota-b2t25} y no la clasificación. Aun así, parte con desventajas conocidas frente a ellos: no usa datos de otros participantes ni supervisión con fonemas, y su presupuesto de cómputo es pequeño. Son técnicas que se pueden añadir después sobre el mismo sistema, así que la distancia con esos trabajos mide sobre todo lo que queda por ganar.
+
+El trabajo más cercano es el de Khanday \textit{et al.}, que usa los mismos datos y un Conformer entrenado desde cero, con caracteres, CTC y sin modelo de lenguaje, y obtiene un \SI{23.80}{\percent} de error por carácter en validación \cite{khanday2026}. Este trabajo sigue la misma idea de extremo a extremo, pero parte de un modelo de voz preentrenado y aprovecha su decodificador.

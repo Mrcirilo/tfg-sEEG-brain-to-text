@@ -1,0 +1,176 @@
+% =====================================================================
+%  CAPÍTULO 4 — CONJUNTO DE DATOS
+% =====================================================================
+% Requiere en el preámbulo: booktabs, array, cleveref, siunitx y xcolor
+% (xcolor ya lo carga la clase). Lo que está en rojo son cifras que
+% faltan por calcular; los TODO explican qué hay que poner.
+% =====================================================================
+
+\chapter{Conjunto de datos}
+\label{cap:datos}
+
+En este capítulo se explica con qué datos se trabaja. Primero se cuenta por qué se eligió el conjunto Brain-to-Text~'25 y no otro. Después se describe cómo se registraron sus datos y cómo están organizados y, por último, qué tipo de frases contiene.
+
+\section{Selección del conjunto de datos}
+\label{sec:seleccion-datos}
+
+OWSM es un modelo de reconocimiento de voz: recibe una secuencia de varios segundos y la convierte en texto. Para adaptarlo, lo ideal es un conjunto con frases completas en lugar de palabras sueltas, y con su transcripción. También hacen falta bastantes ejemplos, porque el modelo tiene unos 100 millones de parámetros. Por último, ayuda mucho que existan particiones fijas y resultados publicados con los que comparar, y que los datos sean fáciles de conseguir y de cargar, porque el tiempo de un TFG es limitado.
+
+Otros aspectos son más discutibles. El primero es el tipo de señal. El EEG de superficie no necesita cirugía, así que es fácil encontrar conjuntos con muchos participantes, incluso en español. Es el caso de UGR-MINDVOICE \cite{valescortina2026}, grabado en la Universidad de Granada con 15 hablantes nativos que pronuncian sílabas y palabras en voz alta y también de forma imaginada. Para un trabajo hecho en España habría sido una opción muy atractiva. El problema es que el cráneo atenúa mucho la señal del EEG, que llega con bastante ruido, y que los estímulos son sílabas y palabras aisladas. Además, si el modelo fallara con EEG, no se podría saber si el problema está en OWSM o en una señal que no lleva suficiente información sobre el habla. Con electrodos implantados la señal es mucho más limpia, pero hay pocos participantes. Suelen ser pacientes con epilepsia a los que se colocan electrodos durante su ingreso para localizar el origen de las crisis, de modo que el tiempo de grabación es corto.
+% TODO (Kiril): en el artículo de UGR-MINDVOICE comprueba el número de
+% canales del EEG (la versión anterior decía 64) y el de estímulos (95
+% sílabas, 60 palabras y 30 pseudopalabras). No lo he podido verificar.
+
+De este tipo son sEEG2Speech \cite{kohler2022} y SingleWordProductionDutch \cite{verwoert2022}, los dos en neerlandés y grabados con electrodos de estereoelectroencefalografía (sEEG). El primero es el único de los tres alternativos con frases: tres pacientes leen 100 frases de cinco a siete palabras. El segundo tiene más participantes, diez, y más de mil electrodos en total, lo que lo hace interesante para comparar entre personas, pero solo contiene palabras sueltas. En los dos casos hay entre 5 y 20 minutos de grabación por paciente, muy poco para un modelo de este tamaño. Además, están pensados para reconstruir el audio de la voz a partir de la señal, mientras que aquí lo que se busca es texto. Son buenos conjuntos para estudiar la síntesis de voz, pero se quedan cortos para este trabajo.
+
+Brain-to-Text~'25 \cite{card2024,b2t25} tiene la limitación contraria: un solo participante, que además habla inglés. A cambio, la señal se registra con 256 microelectrodos implantados en la corteza, que dan la señal de más calidad de las cuatro opciones, y hay cerca de 11.000 frases transcritas, grabadas en 45 sesiones a lo largo de 20 meses. Tiene particiones oficiales y una competición pública con resultados publicados, y los datos vienen ya preparados y con código para cargarlos. Es el único que cumple lo que se buscaba y por eso es el que se usa en este trabajo. Que abarque tantos meses es otra ventaja, porque permite estudiar cómo se comporta el modelo con el paso del tiempo, que es uno de los objetivos del trabajo (OE4 en la \cref{sec:objetivos}). Tener un solo participante limita las conclusiones a esa persona, pero encaja con el planteamiento intrapersonal del trabajo (\cref{sec:alcance}).
+
+La \cref{tab:datasets} resume las cuatro opciones.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Comparación de los conjuntos de datos considerados.}
+  \label{tab:datasets}
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{>{\raggedright\arraybackslash}p{0.14\linewidth}
+                  >{\raggedright\arraybackslash}p{0.19\linewidth}
+                  >{\raggedright\arraybackslash}p{0.19\linewidth}
+                  >{\raggedright\arraybackslash}p{0.19\linewidth}
+                  >{\raggedright\arraybackslash}p{0.19\linewidth}}
+    \toprule
+      & \textbf{UGR-MINDVOICE} \cite{valescortina2026}
+      & \textbf{sEEG2Speech} \cite{kohler2022}
+      & \textbf{SingleWord\-Production\-Dutch} \cite{verwoert2022}
+      & \textbf{Brain-to-Text~'25} \cite{card2024,b2t25} \\
+    \midrule
+    Señal
+      & EEG de superficie
+      & sEEG (111--127 contactos por paciente)
+      & sEEG (54--127 electrodos por paciente, 1.103 en total)
+      & Microelectrodos intracorticales (4 matrices, 256 electrodos) \\
+    Participantes
+      & 15 hablantes nativos
+      & 3 pacientes con epilepsia
+      & 10 pacientes con epilepsia
+      & 1 paciente con ELA \\
+    Idioma
+      & Español
+      & Neerlandés
+      & Neerlandés
+      & Inglés \\
+    Material
+      & Sílabas y palabras aisladas, en voz alta e imaginadas
+      & 100 frases de 5 a 7 palabras; 10--20 min por paciente
+      & 100 palabras aisladas; 5 min por paciente
+      & 10.948 frases de habla intentada en 45 sesiones (20 meses) \\
+    Orientación
+      & Neurociencia e interfaces de habla silenciosa
+      & Síntesis de voz
+      & Producción del habla y síntesis de voz
+      & Decodificación a texto \\
+    Competición pública
+      & No
+      & No
+      & No
+      & Sí \\
+    Acceso
+      & OSF
+      & OSF
+      & OSF (iBIDS/NWB)
+      & Dryad (HDF5 por sesión) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{El conjunto Brain-to-Text~'25}
+\label{sec:b2t25}
+
+\subsection{Origen y participante}
+
+Los datos proceden del ensayo clínico BrainGate2 descrito por Card \textit{et al.} \cite{card2024} y se publicaron más tarde como \textit{benchmark} abierto y como competición \cite{b2t25}. El participante, identificado como T15, es un hombre de 45 años con ELA, tetraparesia y una disartria grave. Los electrodos se le implantaron cinco años después del inicio de la enfermedad, y la recogida de datos empezó en agosto de 2023, 25 días después de la operación \cite{card2024}.
+
+La tarea es de copia. En la pantalla aparece una frase y, tras una señal de inicio, T15 intenta pronunciarla a su ritmo mientras se registra su actividad neuronal. No hay audio con el que alinear la señal, porque su habla apenas se entiende, así que no se sabe en qué momento dice cada palabra. De ahí que el entrenamiento necesite un objetivo que no dependa de ese alineamiento, como CTC.
+
+\subsection{Adquisición de la señal}
+
+La señal se registra con cuatro matrices de microelectrodos de tipo Utah implantadas en el giro precentral izquierdo. Cada matriz mide $3{,}2 \times 3{,}2$~\si{\milli\metre}, tiene 64 electrodos en una rejilla de $8 \times 8$ y se inserta \SI{1.5}{\milli\metre} en la corteza, así que en total hay 256 electrodos. Se colocaron en cuatro zonas: el área 55b, relacionada con el lenguaje, y tres áreas que controlan los articuladores del habla, que son las partes dorsal y ventral del área premotora 6v y la corteza motora primaria (área 4) \cite{card2024}.
+
+De cada electrodo se obtienen dos características, de modo que cada instante se describe con un vector de 512 valores:
+
+\begin{description}
+  \item[Cruces de umbral (\textit{threshold crossings}).] Número de veces que la señal filtrada cruza un umbral fijado en $-4{,}5$ veces el valor eficaz del ruido del canal. Da una idea de la actividad de las neuronas cercanas al electrodo sin tener que separar las espigas de cada una.
+  \item[Potencia en la banda de espigas (\textit{spike band power}).] Energía de la señal en la banda de frecuencias de las espigas. Complementa a la anterior y depende menos del umbral elegido.
+\end{description}
+
+Las dos se agregan en ventanas de \SI{20}{\milli\second}, lo que da una secuencia a \SI{50}{\hertz}, y se normalizan con una puntuación z dentro de cada bloque de grabación \cite{lightbeam}. En este trabajo se usan tal y como se publican.
+
+\subsection{Organización de los datos}
+
+Los datos se reparten en ficheros HDF5 por sesión. Cada sesión se identifica por su fecha (\texttt{t15.AAAA.MM.DD}) y tiene hasta tres ficheros, uno por partición: entrenamiento, validación y prueba. No todas las sesiones tienen las tres. Dentro de cada fichero, cada ensayo (una frase) se guarda por separado con estos elementos \cite{b2t25}:
+
+\begin{description}
+  \item[\texttt{input\_features}.] Matriz de $T \times 512$ con las características neuronales, donde $T$ es el número de ventanas del ensayo.
+  \item[\texttt{seq\_class\_ids}.] Secuencia de fonemas de la frase.
+  \item[\texttt{transcription}.] Transcripción de la frase.
+  \item[Atributos.] Número de ventanas, longitud de la secuencia de fonemas, texto de la frase e identificadores de sesión, bloque y ensayo.
+\end{description}
+
+Las 45 sesiones van del 11 de agosto de 2023 al 13 de abril de 2025, y en ese tiempo la señal no se mantiene igual. Lo que capta cada electrodo cambia de un día a otro, e incluso dentro del mismo día. Por ejemplo, un electrodo puede moverse un poco respecto al tejido y dejar de registrar una neurona o empezar a registrar otra \cite{sussillo2016}. Es lo que se conoce como no estacionariedad de la señal. La normalización por bloque corrige una parte de estos cambios, pero no todos. Por eso los sistemas de referencia añaden una capa de entrada distinta para cada día \cite{willett2023} y, aun así, suelen necesitar recalibraciones frecuentes para mantener el rendimiento \cite{fan2023corp}. A esto se suma que en unos bloques T15 intenta hablar en voz alta y en otros sin voz, y los organizadores no indican, a propósito, cuál es cuál \cite{b2t25}. Con todo esto, no es lo mismo evaluar el modelo en un día del que ya ha visto frases que en un día nuevo, y es lo que se estudia en el segundo bloque de experimentos (\cref{cap:metodologia}).
+
+\subsection{Particiones y composición}
+
+El conjunto tiene 8.072 ensayos de entrenamiento, 1.426 de validación y 1.450 de prueba \cite{lightbeam}. Las frases se graban en bloques de entre 5 y 50, y los bloques no se mezclan entre entrenamiento y evaluación: 198 bloques, repartidos por las 45 sesiones, forman el entrenamiento, y los 67 restantes, de 41 sesiones, forman la validación y la prueba. Las cuatro sesiones que no tienen validación ni prueba son las del 11/08/2023, 03/03/2024, 25/04/2024 y 28/04/2024.
+
+Son poco más de 8.000 frases de entrenamiento, todas de la misma persona. Es muy poco si se compara con las 180.000 horas de audio con las que se entrenó OWSM v3.1, cuya versión base tiene unos 101 millones de parámetros \cite{peng2024owsmv31}. Con tan pocos datos para un modelo tan grande, es fácil que memorice las frases de entrenamiento en vez de aprender a generalizar. Esto condiciona qué partes del modelo se reutilizan y cómo se entrena (\cref{cap:arquitectura,cap:metodologia}).
+% TODO (Kiril): si calculas las horas de señal del entrenamiento (suma de
+% T x 20 ms de todos los ensayos), ponlas aquí al lado de las 180.000 h.
+
+Las frases proceden de seis corpus distintos (\cref{tab:b2t25-splits}). La mayoría son de Switchboard \cite{godfrey1992switchboard}, un corpus de conversaciones telefónicas en inglés, seguidas de un corpus de palabras frecuentes preparado por los autores y de frases con un vocabulario cerrado de 50 palabras \cite{b2t25}. Tres corpus aparecen solo en validación y prueba: OpenWebText, con texto de páginas web; las frases Harvard, pensadas para cubrir los sonidos del inglés de forma equilibrada \cite{ieee1969}, y secuencias de palabras al azar. Suman 349 frases de un tipo que el modelo no ve al entrenar. Al revés, las frases del vocabulario de 50 palabras solo están en el entrenamiento. La validación tiene, por tanto, frases de otro estilo y palabras que no salen en el entrenamiento, y las secuencias al azar no tienen ninguna estructura gramatical que el modelo pueda aprovechar.
+
+\begin{table}[htbp]
+  \centering
+  \caption[Composición de Brain-to-Text~'25 por corpus de origen]{Composición de Brain-to-Text~'25 por corpus de origen, según \cite{lightbeam}. Estos recuentos suman algunas frases más (11.162) que las tres particiones juntas (10.948).}
+  \label{tab:b2t25-splits}
+  \small
+  \begin{tabular}{lrrl}
+    \toprule
+    \textbf{Corpus} & \textbf{Bloques} & \textbf{Frases} & \textbf{Partición} \\
+    \midrule
+    Switchboard                & 182 & 7.672 & Entrenamiento y validación/prueba \\
+    Palabras frecuentes        &  48 & 2.050 & Entrenamiento y validación/prueba \\
+    Vocabulario de 50 palabras &  25 & 1.091 & Solo entrenamiento \\
+    OpenWebText                &   5 &   172 & Solo validación/prueba \\
+    Frases Harvard             &   3 &    98 & Solo validación/prueba \\
+    Palabras al azar           &   2 &    79 & Solo validación/prueba \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Las transcripciones de la partición de prueba no son públicas. La clasificación de la competición se calcula con ellas y, como este trabajo no participó, no es posible evaluar con esa partición. Por eso aquí la validación oficial hace de conjunto de prueba. Hay indicios de que esto apenas cambia las cifras: LightBeam, por ejemplo, obtiene una tasa de error por palabra (WER) del \SI{6.36}{\percent} en validación y del \SI{5.77}{\percent} y el \SI{6.47}{\percent} en las partes pública y privada de la prueba \cite{lightbeam}. Cómo se usa cada partición en los experimentos se explica en el \cref{cap:metodologia}.
+
+\section{Análisis exploratorio}
+\label{sec:eda}
+
+Este análisis es breve y se centra en las frases. Las características neuronales no se estudian aquí, porque vienen ya calculadas y normalizadas con el procedimiento habitual en la literatura \cite{willett2023,card2024} y este trabajo se centra en el modelo.
+
+% TODO (Kiril): histograma del número de palabras por frase (train y
+% validación) y las tres cifras en rojo.
+Casi siete de cada diez frases son de Switchboard (\cref{tab:b2t25-splits}), así que el estilo que más se repite es el de una conversación espontánea. Las frases tienen de media \textcolor{red}{[X]} palabras, y la mayoría tiene entre \textcolor{red}{[X]} y \textcolor{red}{[X]}.
+
+% TODO (Kiril): % de frases de validación que están tal cual en train
+% (columna frase_en_train de evaluacion.csv) y, si quieres, la
+% distribución de solape_max.
+Las frases casi no se repiten. La mayoría aparece una sola vez en todo el conjunto, y solo el \textcolor{red}{[X]}~\% de las frases de validación está también en el entrenamiento. El modelo, por tanto, se evalúa casi siempre con frases nuevas. No le sirve memorizar frases enteras: tiene que reconocer cada palabra. Esto es lo que se mide en el segundo bloque de experimentos al separar los errores en frases y palabras vistas y no vistas.
+
+% TODO (Kiril): frecuencia de las palabras en train (las más comunes y
+% cuántas salen una sola vez) y % de palabras de validación que no están
+% en train (palabras_en_train). Comprueba que los ejemplos de palabras
+% frecuentes del texto son los que salen.
+Con las palabras ocurre lo contrario. Unas pocas, como \textit{I}, \textit{you}, \textit{the} o \textit{to}, aparecen en muchísimas frases, mientras que muchas otras salen una o dos veces. Las \textcolor{red}{[N]} palabras más frecuentes cubren el \textcolor{red}{[X]}~\% del texto de entrenamiento, y el \textcolor{red}{[X]}~\% de las palabras de validación no aparece nunca en él. El modelo solo puede escribir estas palabras nuevas si las construye a partir de trozos más pequeños, que es lo que permiten las unidades de subpalabra del tokenizador de OWSM.
+
+% TODO (Kiril): figura con el número de frases por sesión a lo largo del
+% tiempo, separando train y validación y marcando las 4 sesiones sin
+% validación.
+Por último, las particiones comparten días. Todas las sesiones tienen frases de entrenamiento, así que cada frase de validación tiene otras grabadas el mismo día en el entrenamiento, aunque en bloques distintos. Es una situación optimista si se compara con el uso real, en el que el sistema tiene que funcionar en días que todavía no ha visto. Por eso, además de la evaluación con todas las sesiones, se hace una evaluación en orden cronológico (\cref{cap:metodologia}). La \textcolor{red}{[figura]} muestra cuántas frases hay en cada sesión a lo largo de los 20 meses.

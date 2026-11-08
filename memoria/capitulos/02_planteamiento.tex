@@ -1,0 +1,53 @@
+% =====================================================================
+%  CAPÍTULO 2 — PLANTEAMIENTO DEL TRABAJO
+% =====================================================================
+
+\chapter{Planteamiento del trabajo}
+\label{cap:planteamiento}
+
+\section{Planteamiento del trabajo}
+\label{sec:planteamiento}
+
+Este trabajo estudia la viabilidad de reutilizar un modelo de reconocimiento del habla preentrenado a gran escala como codificador de señal neuronal en una tarea \textit{brain-to-text}, es decir, para pasar a texto la actividad del cerebro mientras una persona intenta hablar. En concreto, se adapta OWSM (\textit{Open Whisper-style Speech Model}) \cite{peng2023owsm,peng2024owsmv31}, de la librería ESPnet \cite{watanabe2018espnet,someki2024espnetez}. OWSM sigue la idea de Whisper \cite{radford2023whisper}, pero se entrena solo con datos públicos y sus autores publican el código, los modelos y los registros de entrenamiento \cite{peng2024owsmv31}. Por eso es una de las mejores opciones abiertas y reproducibles. La idea de fondo es aprovechar lo que estos modelos han aprendido de grandes cantidades de audio en un problema en el que los datos son muy escasos, porque cada grabación necesita a un paciente con un implante y muchas horas de entrenamiento.
+
+La pregunta principal es qué hay que cambiar del modelo para que funcione con señal neuronal y si esos cambios hacen que la idea sea viable. La entrada de OWSM está pensada para audio, así que hay que sustituirla por un módulo nuevo, el \textit{frontend}, que adapte la señal neuronal al resto del modelo. A partir de ahí se analiza qué partes se pueden aprovechar tal cual, cuáles hay que reentrenar y con qué nivel de ajuste. Este proyecto no se centra en la limpieza y el análisis de las señales neuronales, para las que se usa el preprocesado estándar del conjunto de datos, sino en la capacidad del modelo y sus resultados.
+
+Además de la viabilidad, se quiere ver cómo se comporta el modelo en condiciones parecidas a las de un uso real. Por un lado, con palabras y frases que no ha visto durante el entrenamiento. Por otro, con el paso del tiempo. La actividad que registran los electrodos cambia de un día para otro, y para mantener el rendimiento estos sistemas suelen necesitar recalibraciones frecuentes, que obligan al usuario a dejar de usarlos y grabar datos nuevos \cite{fan2023corp}. Por eso se estudia cuántos datos hacen falta para tener un modelo que no necesite más, y qué se puede concluir sobre la necesidad de datos de este tipo de sistemas.
+
+Tampoco se pretende superar a los mejores sistemas ni competir en los \textit{benchmarks}. Los primeros puestos de estos retos combinan las salidas de varios decodificadores independientes mediante un modelo de lenguaje de gran tamaño \cite{b2t24lessons}. Aquí el interés está en ver hasta dónde llega un modelo de habla abierto por sí solo y entender qué estrategias son las más viables con recursos limitados.
+
+Así pues, el trabajo se divide en dos bloques de experimentos. En el primero se entrena con todas las sesiones y se busca la mejor forma de adaptar OWSM, probando distintas opciones para el \textit{frontend}, el \textit{encoder} y el \textit{decoder}. En el segundo se toma el mejor modelo del primer bloque y se simula su uso real: se entrena solo con las primeras sesiones, en orden de fecha, y se evalúa tanto en esas sesiones como en las que vienen después. Así se analiza su capacidad predictiva en cada sesión para poder concluir el grado de eficiencia.
+
+\section{Objetivos}
+\label{sec:objetivos}
+
+El objetivo general de este trabajo es evaluar la viabilidad de reutilizar un modelo de reconocimiento del habla preentrenado a gran escala, OWSM, para decodificar a texto la actividad neuronal intracortical durante el habla intentada. Para ello se determina qué partes del modelo pueden aprovecharse y cuáles deben adaptarse o reentrenarse, y con qué coste. También se analiza cómo se comporta el sistema ante frases no vistas y con el paso del tiempo, con el fin de estimar cuántos datos necesita.
+
+\subsection{Objetivos específicos}
+\label{sec:objetivos-especificos}
+
+El objetivo general se concreta en cuatro objetivos específicos. Los tres primeros corresponden al primer bloque de experimentos y el cuarto, al segundo.
+
+\begin{enumerate}[label=\textbf{O\arabic*.}, leftmargin=*, itemsep=0.4em]
+
+  \item \textbf{\textit{Frontend}.} Diseñar y comparar varios módulos de entrada que adapten la señal neuronal al \textit{encoder} de OWSM, desde una capa lineal sencilla hasta una red convolucional profunda, y con distinto submuestreo temporal. Se mide tanto el resultado como el coste de entrenamiento, para elegir el mejor compromiso entre ambos.
+
+  \item \textbf{\textit{Encoder}.} Comprobar si los pesos preentrenados del \textit{encoder} de OWSM aportan algo frente al mismo \textit{encoder} entrenado desde cero cuando la entrada es actividad neuronal en lugar de audio.
+
+  \item \textbf{\textit{Decoder}.} Evaluar si el \textit{decoder} preentrenado de OWSM, que aporta el conocimiento del lenguaje, puede usarse sin modificar, si mejora con una adaptación ligera como LoRA \cite{hu2022lora} o si es mejor entrenarlo desde cero.
+
+ \item \textbf{Ventana temporal.} Medir cómo varía el error del mejor modelo de una sesión a otra y simular después un uso real del sistema, entrenando con un número creciente de sesiones en orden cronológico y evaluando en sesiones ya vistas y en sesiones futuras. Con ello se quiere saber cuánto empeora el modelo con el paso del tiempo y cuántos datos hacen falta para que deje de necesitar más. También se analiza qué palabras reconoce mejor y peor, según lo frecuentes que sean en el entrenamiento y si aparecen o no en él, y cómo se comporta con frases que no ha visto.
+
+\end{enumerate}
+
+\section{Alcance y limitaciones}
+\label{sec:alcance}
+
+Este trabajo es un estudio intrapersonal. Se centra en una sola persona, que además habla en inglés, y busca el mejor sistema para ella, no un modelo que funcione con cualquiera. Por eso sus conclusiones no se pueden trasladar sin más a otros participantes. Es lo habitual en este campo, donde la mayoría de los estudios trabajan con un único participante \cite{willett2023,card2024}. Además, todo se evalúa en diferido, sobre grabaciones ya hechas y sin estudiar el funcionamiento en tiempo real, y solo se trabaja con habla intentada, en la que la persona intenta hablar aunque no pueda. El habla imaginada queda fuera.
+
+La limitación más importante es el coste. Los sistemas \textit{brain-to-text} actuales son grandes y caros de entrenar y de usar. Además de combinar varios modelos, el decodificador de referencia de estos retos necesita unos 320\,GB de memoria RAM, algo que limita el acceso tanto a los pacientes como a los investigadores \cite{lightbeam}. Este trabajo, en cambio, se ha hecho con una sola GPU en Google Colab y con un tiempo y un presupuesto limitados. Cada entrenamiento completo tarda varias horas, así que cada configuración se ha entrenado una sola vez y el número de pruebas ha sido limitado. Las limitaciones que salen de los propios resultados se comentan en el \cref{cap:limitaciones}.
+
+\section{Estructura de la memoria}
+\label{sec:estructura}
+
+El resto de la memoria se organiza de la siguiente forma. El \cref{cap:estado-del-arte} repasa el estado del arte de la decodificación del habla a partir de actividad neuronal y de los modelos de habla preentrenados. El \cref{cap:datos} presenta el conjunto de datos utilizado. El \cref{cap:marco-teorico} explica los fundamentos de los modelos y técnicas empleados. El \cref{cap:arquitectura} describe el sistema construido a partir de OWSM y las adaptaciones que se le hacen. El \cref{cap:metodologia} detalla cómo se entrenan y evalúan los modelos y el diseño de los dos bloques de experimentos. El \cref{cap:resultados} recoge y discute los resultados. El \cref{cap:limitaciones} reúne las limitaciones del estudio y las líneas de trabajo futuro y, por último, el \cref{cap:conclusiones} resume las conclusiones. Al final se incluyen los anexos, entre ellos el de la relación del trabajo con los Objetivos de Desarrollo Sostenible.

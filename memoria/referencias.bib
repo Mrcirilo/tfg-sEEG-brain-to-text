@@ -104,7 +104,7 @@
 % VERIFICAR: comprueba la fecha de consulta y que el enlace de Dryad sigue vivo.
 
 @misc{b2t24lessons,
-  author       = {Willett, Francis R. and Kunz, Erin M. and Fan, Chaofei and Card, Nicholas S. and Casey, Benjamin and Stavisky, Sergey D. and Hochberg, Leigh R. and Henderson, Jaimie M.},
+  author       = {Willett, Francis R. and Li, Jingyuan and Le, Trung and Fan, Chaofei and Chen, Mingfei and Shlizerman, Eli and Chen, Yue and Zheng, Xin and Okubo, Tatsuo S. and Benster, Tyler and Lee, Hyun Dong and Kounga, Maxwell and Buchanan, E. Kelly and Zoltowski, David and Linderman, Scott W. and Henderson, Jaimie M.},
   title        = {Brain-to-Text Benchmark '24: Lessons Learned},
   year         = {2024},
   eprint       = {2412.17227},
@@ -114,37 +114,34 @@
 }
 % VERIFICAR autores y si ya está publicado.
 
-@misc{khanday2026,
-  author       = {Khanday, Owais Mujtaba and Gonzalez-Lopez, Jose A. and Ouellet, Marc and Gald{\'o}n, Alberto and Olivares Granados, Gonzalo},
-  title        = {End-to-End Intracortical Speech Decoding from Neural Activity},
-  year         = {2026},
-  eprint       = {2605.24313},
-  eprinttype   = {arxiv},
-  eprintclass  = {eess.AS},
-  doi          = {10.48550/arXiv.2605.24313},
+@inproceedings{khanday2026,
+  author    = {Khanday, Owais Mujtaba and Gonzalez-Lopez, Jose A. and Ouellet, Marc and Gald{\'o}n, Alberto and Olivares Granados, Gonzalo},
+  title     = {End-to-End Intracortical Speech Decoding from Neural Activity},
+  booktitle = {Proc. Odyssey 2026: The Speaker and Language Recognition Workshop},
+  year      = {2026},
+  doi       = {10.21437/Odyssey.2026-24},
 }
 % VERIFICAR: es la referencia comparable más importante del capítulo 7.
 % Confirma el CER de validación (23,80 %) leyendo el propio artículo.
 
-@misc{crossspecies2025,
-  title        = {A Cross-Species Neural Foundation Model for End-to-End Speech Decoding},
-  year         = {2025},
-  eprint       = {2511.21740},
-  eprinttype   = {arxiv},
-  eprintclass  = {cs.LG},
-  doi          = {10.48550/arXiv.2511.21740},
-  note         = {Autores pendientes de completar},
+@inproceedings{crossspecies2025,
+  author     = {Zhang, Yizi and He, Linyang and Fan, Chaofei and Liu, Tingkai and Yu, Han and Le, Trung and Li, Jingyuan and Linderman, Scott and Duncker, Lea and Willett, Francis R. and Mesgarani, Nima and Paninski, Liam},
+  title      = {A Cross-Species Neural Foundation Model for End-to-End Speech Decoding},
+  booktitle  = {International Conference on Learning Representations (ICLR)},
+  year       = {2026},
+  eprint     = {2511.21740},
+  eprinttype = {arxiv},
 }
 % VERIFICAR: completa la lista de autores.
 
 @misc{lightbeam,
+  author       = {Feghhi, Ebrahim and Hu, Junlin and Hadidi, Nima and Kao, Jonathan C.},
   title        = {{LightBeam}: An Accurate and Memory-Efficient {CTC} Decoder for Speech Neuroprostheses},
   year         = {2026},
   eprint       = {2603.14002},
   eprinttype   = {arxiv},
   eprintclass  = {eess.AS},
   doi          = {10.48550/arXiv.2603.14002},
-  note         = {Autores pendientes de completar},
 }
 % VERIFICAR: completa la lista de autores.
 
@@ -324,27 +321,26 @@
 % ---------------------------------------------------------------------
 
 @misc{fiedler2025wav2vec2brain,
-  author       = {Fiedler, Tobias and others},
+  author       = {Fiedler, Tobias and Hermann, Leon and M{\"u}ller, Florian and Cohen, Sarel and Chin, Peter and Friedrich, Tobias and Vaadia, Eilon},
   title        = {Teaching {Wav2Vec2} the Language of the Brain},
   year         = {2025},
   eprint       = {2501.09459},
   eprinttype   = {arxiv},
-  eprintclass  = {cs.CL},
+  eprintclass  = {cs.LG},
   doi          = {10.48550/arXiv.2501.09459},
-  note         = {Código en \url{https://github.com/tfiedlerdev/Wav2Vec2ForBrain}},
 }
 % VERIFICAR: es la referencia con la que contrasta el hallazgo central del
 % trabajo. Completa la lista de autores y confirma las cifras (CER 18,54 %,
 % ventaja de 20,46 puntos sobre entrenamiento desde cero).
 
 @misc{brainwhisperer,
+  author       = {Boccato, Tommaso and Olak, Michal and Ferrante, Matteo},
   title        = {{BrainWhisperer}: Leveraging Large-Scale {ASR} Models for Neural Speech Decoding},
   year         = {2026},
   eprint       = {2603.13321},
   eprinttype   = {arxiv},
   eprintclass  = {eess.AS},
   doi          = {10.48550/arXiv.2603.13321},
-  note         = {Autores pendientes de completar},
 }
 % VERIFICAR autores y el puesto exacto en la competición.
 
@@ -359,12 +355,577 @@
 }
 
 @misc{ecogssl2024,
+  author       = {Yuan, Brian A. and Makin, Joseph G.},
   title        = {Improving Speech Decoding from {ECoG} with Self-Supervised Pretraining},
   year         = {2024},
   eprint       = {2405.18639},
   eprinttype   = {arxiv},
   eprintclass  = {eess.AS},
   doi          = {10.48550/arXiv.2405.18639},
-  note         = {Autores pendientes de completar},
 }
 % VERIFICAR autores.
+
+% =====================================================================
+%  Añadidas para el capítulo 1 (contexto, evolución y motivación)
+% =====================================================================
+
+@article{xu2020als,
+  author  = {Xu, Lu and Liu, Tanxin and Liu, Lili and Yao, Xiaoying and Chen, Lu and Fan, Dongsheng and Zhan, Siyan and Wang, Shengfeng},
+  title   = {Global Variation in Prevalence and Incidence of Amyotrophic Lateral Sclerosis: A Systematic Review and Meta-Analysis},
+  journal = {Journal of Neurology},
+  volume  = {267},
+  number  = {4},
+  pages   = {944--953},
+  year    = {2020},
+  doi     = {10.1007/s00415-019-09652-y},
+}
+
+@article{beukelman2011,
+  author  = {Beukelman, David and Fager, Susan and Nordness, Amy},
+  title   = {Communication Support for People with {ALS}},
+  journal = {Neurology Research International},
+  volume  = {2011},
+  eid     = {714693},
+  year    = {2011},
+  doi     = {10.1155/2011/714693},
+}
+
+@online{sen2026ela,
+  author       = {{Servimedia}},
+  title        = {Los casos de {ELA} aumentarán un 40\,\% en {Europa} en los próximos 25 años},
+  organization = {Servicio de Información sobre Discapacidad (SID-INICO), Universidad de Salamanca},
+  date         = {2026-06-21},
+  url          = {https://sid-inico.usal.es/noticias/los-casos-de-ela-aumentaran-un-40-en-europa-en-los-proximos-25-anos/},
+  urldate      = {2026-11-07},
+  note         = {Datos de la Sociedad Española de Neurología (SEN)},
+}
+
+@article{gbd2024stroke,
+  author  = {{GBD 2021 Stroke Risk Factor Collaborators}},
+  title   = {Global, Regional, and National Burden of Stroke and Its Risk Factors, 1990--2021: A Systematic Analysis for the {Global Burden of Disease Study} 2021},
+  journal = {The Lancet Neurology},
+  volume  = {23},
+  number  = {10},
+  pages   = {973--1003},
+  year    = {2024},
+  doi     = {10.1016/S1474-4422(24)00369-7},
+}
+
+@online{sen2026ictus,
+  author       = {Sánchez, Teresa},
+  title        = {Cerca de 90.000 nuevos casos de ictus en {España} cada año: \enquote{Ha disminuido la mortalidad pero tenemos más personas con secuelas}},
+  organization = {Vozpópuli},
+  date         = {2026-10-29},
+  url          = {https://www.vozpopuli.com/sanitatem/cerca-de-90000-nuevos-casos-de-ictus-en-espana-cada-ano-ha-disminuido-la-mortalidad-pero-tenemos-mas-personas-con-secuelas.html},
+  urldate      = {2026-11-07},
+  note         = {Datos de la Sociedad Española de Neurología (SEN)},
+}
+
+@article{summaka2022,
+  author  = {Summaka, Marwa and Hannoun, Salem and Harati, Hayat and Daoud, Rama and Zein, Hiba and Estephan, Elias and Naim, Ibrahim and Nasser, Zeina},
+  title   = {Neuroanatomical Regions Associated with Non-Progressive Dysarthria Post-Stroke: A Systematic Review},
+  journal = {BMC Neurology},
+  volume  = {22},
+  pages   = {353},
+  year    = {2022},
+  doi     = {10.1186/s12883-022-02877-x},
+}
+
+@article{smith2005lis,
+  author  = {Smith, Eimear and Delargy, Mark},
+  title   = {Locked-In Syndrome},
+  journal = {BMJ},
+  volume  = {330},
+  number  = {7488},
+  pages   = {406--409},
+  year    = {2005},
+  doi     = {10.1136/bmj.330.7488.406},
+}
+
+@article{bruno2011lis,
+  author  = {Bruno, Marie-Aurélie and Bernheim, Jan L. and Ledoux, Didier and Pellas, Frédéric and Demertzi, Athena and Laureys, Steven},
+  title   = {A Survey on Self-Assessed Well-Being in a Cohort of Chronic Locked-In Syndrome Patients: Happy Majority, Miserable Minority},
+  journal = {BMJ Open},
+  volume  = {1},
+  number  = {1},
+  pages   = {e000039},
+  year    = {2011},
+  doi     = {10.1136/bmjopen-2010-000039},
+}
+
+@book{bauby1997,
+  author    = {Bauby, Jean-Dominique},
+  title     = {Le Scaphandre et le Papillon},
+  publisher = {Robert Laffont},
+  location  = {París},
+  year      = {1997},
+}
+
+@article{lin2025dysarthria,
+  author  = {Lin, Lan-Xin and Yao, Shun-Yu and Chen, Quan and Du, Miao-Qiao and Kang, Xu-Hui and Jiang, Dai-Yi and Peng, Yong},
+  title   = {Stroke-Associated Dysarthria},
+  journal = {Frontiers in Neurology},
+  volume  = {16},
+  eid     = {1629640},
+  year    = {2025},
+  doi     = {10.3389/fneur.2025.1629640},
+}
+
+@article{silva2024speech,
+  author  = {Silva, Alexander B. and Littlejohn, Kaylo T. and Liu, Jessie R. and Moses, David A. and Chang, Edward F.},
+  title   = {The Speech Neuroprosthesis},
+  journal = {Nature Reviews Neuroscience},
+  volume  = {25},
+  number  = {7},
+  pages   = {473--492},
+  year    = {2024},
+  doi     = {10.1038/s41583-024-00819-9},
+}
+
+@online{ine2022edad,
+  author       = {{Instituto Nacional de Estadística}},
+  title        = {Encuesta de Discapacidad, Autonomía Personal y Situaciones de Dependencia ({EDAD}). Año 2020},
+  date         = {2022-04-19},
+  url          = {https://www.ine.es/prensa/edad_2020_p.pdf},
+  urldate      = {2026-11-07},
+  note         = {Nota de prensa},
+}
+
+@online{leyela2024,
+  author       = {{Jefatura del Estado}},
+  title        = {Ley 3/2024, de 30 de octubre, para mejorar la calidad de vida de personas con Esclerosis Lateral Amiotrófica y otras enfermedades o procesos de alta complejidad y curso irreversible},
+  organization = {Boletín Oficial del Estado},
+  date         = {2024-10-31},
+  url          = {https://www.boe.es/eli/es/l/2024/10/30/3},
+  urldate      = {2026-11-07},
+  note         = {BOE núm.~263, BOE-A-2024-22438},
+}
+
+@article{londral2015,
+  author  = {Londral, Ana and Pinto, Anabela and Pinto, Susana and Azevedo, Luis and De Carvalho, Mamede},
+  title   = {Quality of Life in Amyotrophic Lateral Sclerosis Patients and Caregivers: Impact of Assistive Communication from Early Stages},
+  journal = {Muscle \& Nerve},
+  volume  = {52},
+  number  = {6},
+  pages   = {933--941},
+  year    = {2015},
+}
+
+@article{vanderheiden2002,
+  author  = {Vanderheiden, Gregg C.},
+  title   = {A Journey through Early Augmentative Communication and Computer Access},
+  journal = {Journal of Rehabilitation Research and Development},
+  volume  = {39},
+  number  = {6, suplemento},
+  pages   = {39--53},
+  year    = {2002},
+}
+
+@article{spataro2014,
+  author  = {Spataro, R. and Ciriacono, M. and Manno, C. and La Bella, V.},
+  title   = {The Eye-Tracking Computer Device for Communication in Amyotrophic Lateral Sclerosis},
+  journal = {Acta Neurologica Scandinavica},
+  volume  = {130},
+  number  = {1},
+  pages   = {40--45},
+  year    = {2014},
+  doi     = {10.1111/ane.12214},
+}
+
+@article{schultz2017,
+  author  = {Schultz, Tanja and Wand, Michael and Hueber, Thomas and Krusienski, Dean J. and Herff, Christian and Brumberg, Jonathan S.},
+  title   = {Biosignal-Based Spoken Communication: A Survey},
+  journal = {IEEE/ACM Transactions on Audio, Speech, and Language Processing},
+  volume  = {25},
+  number  = {12},
+  pages   = {2257--2271},
+  year    = {2017},
+  doi     = {10.1109/TASLP.2017.2752365},
+}
+
+@article{farwell1988,
+  author  = {Farwell, L. A. and Donchin, E.},
+  title   = {Talking off the Top of Your Head: Toward a Mental Prosthesis Utilizing Event-Related Brain Potentials},
+  journal = {Electroencephalography and Clinical Neurophysiology},
+  volume  = {70},
+  number  = {6},
+  pages   = {510--523},
+  year    = {1988},
+  doi     = {10.1016/0013-4694(88)90149-6},
+}
+
+@article{birbaumer1999,
+  author  = {Birbaumer, N. and Ghanayim, N. and Hinterberger, T. and Iversen, I. and Kotchoubey, B. and Kübler, A. and Perelmouter, J. and Taub, E. and Flor, H.},
+  title   = {A Spelling Device for the Paralysed},
+  journal = {Nature},
+  volume  = {398},
+  number  = {6725},
+  pages   = {297--298},
+  year    = {1999},
+  doi     = {10.1038/18581},
+}
+
+@article{hochberg2006,
+  author  = {Hochberg, Leigh R. and Serruya, Mijail D. and Friehs, Gerhard M. and Mukand, Jon A. and Saleh, Maryam and Caplan, Abraham H. and Branner, Almut and Chen, David and Penn, Richard D. and Donoghue, John P.},
+  title   = {Neuronal Ensemble Control of Prosthetic Devices by a Human with Tetraplegia},
+  journal = {Nature},
+  volume  = {442},
+  number  = {7099},
+  pages   = {164--171},
+  year    = {2006},
+  doi     = {10.1038/nature04970},
+}
+
+@article{vansteensel2016,
+  author  = {Vansteensel, Mariska J. and Pels, Elmar G. M. and Bleichner, Martin G. and Branco, Mariana P. and Denison, Timothy and Freudenburg, Zachary V. and Gosselaar, Peter and Leinders, Sacha and Ottens, Thomas H. and Van Den Boom, Max A. and Van Rijen, Peter C. and Aarnoutse, Erik J. and Ramsey, Nick F.},
+  title   = {Fully Implanted Brain--Computer Interface in a Locked-In Patient with {ALS}},
+  journal = {New England Journal of Medicine},
+  volume  = {375},
+  number  = {21},
+  pages   = {2060--2066},
+  year    = {2016},
+  doi     = {10.1056/NEJMoa1608085},
+}
+
+@article{angrick2021,
+  author  = {Angrick, Miguel and Ottenhoff, Maarten C. and Diener, Lorenz and Ivucic, Darius and Ivucic, Gabriel and Goulis, Sophocles and Saal, Jeremy and Colon, Albert J. and Wagner, Louis and Krusienski, Dean J. and Kubben, Pieter L. and Schultz, Tanja and Herff, Christian},
+  title   = {Real-Time Synthesis of Imagined Speech Processes from Minimally Invasive Recordings of Neural Activity},
+  journal = {Communications Biology},
+  volume  = {4},
+  pages   = {1055},
+  year    = {2021},
+  doi     = {10.1038/s42003-021-02578-0},
+}
+
+@article{pandarinath2017,
+  author  = {Pandarinath, Chethan and Nuyujukian, Paul and Blabe, Christine H. and Sorice, Brittany L. and Saab, Jad and Willett, Francis R. and Hochberg, Leigh R. and Shenoy, Krishna V. and Henderson, Jaimie M.},
+  title   = {High Performance Communication by People with Paralysis Using an Intracortical Brain-Computer Interface},
+  journal = {eLife},
+  volume  = {6},
+  pages   = {e18554},
+  year    = {2017},
+  doi     = {10.7554/eLife.18554},
+}
+
+@article{wairagkar2025,
+  author  = {Wairagkar, Maitreyee and Card, Nicholas S. and Singer-Clark, Tyler and Hou, Xianda and Iacobacci, Carrina and Miller, Lee M. and Hochberg, Leigh R. and Brandman, David M. and Stavisky, Sergey D.},
+  title   = {An Instantaneous Voice-Synthesis Neuroprosthesis},
+  journal = {Nature},
+  volume  = {644},
+  number  = {8075},
+  pages   = {145--152},
+  year    = {2025},
+  doi     = {10.1038/s41586-025-09127-3},
+}
+
+@article{oxley2021,
+  author  = {Oxley, Thomas J. and Yoo, Peter E. and Rind, Gil S. and Ronayne, Stephen M. and Lee, C. M. Sarah and Bird, Christin and Hampshire, Victoria and Sharma, Rahul P. and Morokoff, Andrew and Williams, Daryl L. and others},
+  title   = {Motor Neuroprosthesis Implanted with Neurointerventional Surgery Improves Capacity for Activities of Daily Living Tasks in Severe Paralysis: First In-Human Experience},
+  journal = {Journal of NeuroInterventional Surgery},
+  volume  = {13},
+  number  = {2},
+  pages   = {102--108},
+  year    = {2021},
+  doi     = {10.1136/neurintsurg-2020-016862},
+}
+
+% =====================================================================
+%  Añadidas para el capítulo 2 (planteamiento)
+% =====================================================================
+
+@inproceedings{fan2023corp,
+  author    = {Fan, Chaofei and Hahn, Nick and Kamdar, Foram and Avansino, Donald and Wilson, Guy H. and Hochberg, Leigh and Shenoy, Krishna V. and Henderson, Jaimie M. and Willett, Francis R.},
+  title     = {Plug-and-Play Stability for Intracortical Brain-Computer Interfaces: A One-Year Demonstration of Seamless Brain-to-Text Communication},
+  booktitle = {Advances in Neural Information Processing Systems 36 (NeurIPS 2023)},
+  year      = {2023},
+  url       = {https://proceedings.neurips.cc/paper_files/paper/2023/hash/83a14a36de4502bac5b580db36e81858-Abstract.html},
+  urldate   = {2026-11-07},
+}
+
+% ---------------------------------------------------------------------
+% Añadidas para el capítulo 4
+% ---------------------------------------------------------------------
+@article{valescortina2026,
+  author  = {Vales Cortina, Ibon and Khanday, Owais Mujtaba and Ouellet, Marc and P{\'e}rez C{\'o}rdoba, Jos{\'e} Luis and Rodr{\'i}guez San Esteban, Pablo and Miccoli, Laura and Gald{\'o}n Castillo, Alberto and Olivares Granados, Gonzalo and Gonz{\'a}lez L{\'o}pez, Jos{\'e} Andr{\'e}s},
+  title   = {{UGR-MINDVOICE}: A Multimodal {EEG}-Audio Dataset for Overt and Covert {Iberian Spanish} Speech Production},
+  journal = {Computer Speech \& Language},
+  volume  = {100},
+  eid     = {101964},
+  year    = {2026},
+  doi     = {10.1016/j.csl.2026.101964},
+}
+
+@article{kohler2022,
+  author  = {Kohler, Jonas and Ottenhoff, Maarten C. and Goulis, Sophocles and Angrick, Miguel and Colon, Albert J. and Wagner, Louis and Tousseyn, Simon and Kubben, Pieter L. and Herff, Christian},
+  title   = {Synthesizing Speech from Intracranial Depth Electrodes Using an Encoder-Decoder Framework},
+  journal = {Neurons, Behavior, Data Analysis, and Theory},
+  volume  = {6},
+  year    = {2022},
+  doi     = {10.51628/001c.57524},
+}
+
+@article{verwoert2022,
+  author  = {Verwoert, Maxime and Ottenhoff, Maarten C. and Goulis, Sophocles and Colon, Albert J. and Wagner, Louis and Tousseyn, Simon and van Dijk, Johannes P. and Kubben, Pieter L. and Herff, Christian},
+  title   = {Dataset of Speech Production in Intracranial Electroencephalography},
+  journal = {Scientific Data},
+  volume  = {9},
+  eid     = {434},
+  year    = {2022},
+  doi     = {10.1038/s41597-022-01542-9},
+}
+
+@article{sussillo2016,
+  author  = {Sussillo, David and Stavisky, Sergey D. and Kao, Jonathan C. and Ryu, Stephen I. and Shenoy, Krishna V.},
+  title   = {Making Brain--Machine Interfaces Robust to Future Neural Variability},
+  journal = {Nature Communications},
+  volume  = {7},
+  eid     = {13749},
+  year    = {2016},
+  doi     = {10.1038/ncomms13749},
+}
+
+@inproceedings{godfrey1992switchboard,
+  author    = {Godfrey, John J. and Holliman, Edward C. and McDaniel, Jane},
+  title     = {{SWITCHBOARD}: Telephone Speech Corpus for Research and Development},
+  booktitle = {Proc. IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP)},
+  volume    = {1},
+  pages     = {517--520},
+  year      = {1992},
+  doi       = {10.1109/ICASSP.1992.225858},
+}
+
+@article{ieee1969,
+  author  = {{IEEE}},
+  title   = {{IEEE} Recommended Practice for Speech Quality Measurements},
+  journal = {IEEE Transactions on Audio and Electroacoustics},
+  volume  = {17},
+  number  = {3},
+  pages   = {225--246},
+  year    = {1969},
+  doi     = {10.1109/TAU.1969.1162058},
+}
+
+% ---------------------------------------------------------------------
+% Añadidas para el capítulo 5 (marco teórico)
+% ---------------------------------------------------------------------
+@inproceedings{peng2025owsmv4,
+  author    = {Peng, Yifan and Shakeel, Muhammad and Sudo, Yui and Chen, William and Tian, Jinchuan and Lin, Chyi-Jiunn and Watanabe, Shinji},
+  title     = {{OWSM} v4: Improving Open {Whisper}-Style Speech Models via Data Scaling and Cleaning},
+  booktitle = {Proc. Interspeech 2025},
+  year      = {2025},
+  eprint    = {2506.00338},
+  eprinttype = {arxiv},
+}
+
+@inproceedings{vaswani2017attention,
+  author    = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and Kaiser, {\L}ukasz and Polosukhin, Illia},
+  title     = {Attention Is All You Need},
+  booktitle = {Advances in Neural Information Processing Systems 30 (NeurIPS 2017)},
+  pages     = {5998--6008},
+  year      = {2017},
+}
+
+@inproceedings{gulati2020conformer,
+  author    = {Gulati, Anmol and Qin, James and Chiu, Chung-Cheng and Parmar, Niki and Zhang, Yu and Yu, Jiahui and Han, Wei and Wang, Shibo and Zhang, Zhengdong and Wu, Yonghui and Pang, Ruoming},
+  title     = {Conformer: Convolution-Augmented Transformer for Speech Recognition},
+  booktitle = {Proc. Interspeech 2020},
+  pages     = {5036--5040},
+  year      = {2020},
+  doi       = {10.21437/Interspeech.2020-3015},
+}
+
+@inproceedings{peng2022branchformer,
+  author    = {Peng, Yifan and Dalmia, Siddharth and Lane, Ian and Watanabe, Shinji},
+  title     = {Branchformer: Parallel {MLP}-Attention Architectures to Capture Local and Global Context for Speech Recognition and Understanding},
+  booktitle = {Proc. 39th International Conference on Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {162},
+  pages     = {17627--17643},
+  year      = {2022},
+}
+
+@inproceedings{kudo2018sentencepiece,
+  author    = {Kudo, Taku and Richardson, John},
+  title     = {{SentencePiece}: A Simple and Language Independent Subword Tokenizer and Detokenizer for Neural Text Processing},
+  booktitle = {Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing: System Demonstrations},
+  pages     = {66--71},
+  year      = {2018},
+  doi       = {10.18653/v1/D18-2012},
+}
+
+@misc{ba2016layernorm,
+  author     = {Ba, Jimmy Lei and Kiros, Jamie Ryan and Hinton, Geoffrey E.},
+  title      = {Layer Normalization},
+  year       = {2016},
+  eprint     = {1607.06450},
+  eprinttype = {arxiv},
+}
+
+@misc{hendrycks2016gelu,
+  author     = {Hendrycks, Dan and Gimpel, Kevin},
+  title      = {Gaussian Error Linear Units ({GELUs})},
+  year       = {2016},
+  eprint     = {1606.08415},
+  eprinttype = {arxiv},
+}
+
+@article{srivastava2014dropout,
+  author  = {Srivastava, Nitish and Hinton, Geoffrey and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov, Ruslan},
+  title   = {Dropout: A Simple Way to Prevent Neural Networks from Overfitting},
+  journal = {Journal of Machine Learning Research},
+  volume  = {15},
+  number  = {56},
+  pages   = {1929--1958},
+  year    = {2014},
+}
+
+@inproceedings{he2016resnet,
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  title     = {Deep Residual Learning for Image Recognition},
+  booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {770--778},
+  year      = {2016},
+  doi       = {10.1109/CVPR.2016.90},
+}
+
+@article{williams1989teacher,
+  author  = {Williams, Ronald J. and Zipser, David},
+  title   = {A Learning Algorithm for Continually Running Fully Recurrent Neural Networks},
+  journal = {Neural Computation},
+  volume  = {1},
+  number  = {2},
+  pages   = {270--280},
+  year    = {1989},
+  doi     = {10.1162/neco.1989.1.2.270},
+}
+
+@article{watanabe2017hybrid,
+  author  = {Watanabe, Shinji and Hori, Takaaki and Kim, Suyoun and Hershey, John R. and Hayashi, Tomoki},
+  title   = {Hybrid {CTC}/Attention Architecture for End-to-End Speech Recognition},
+  journal = {IEEE Journal of Selected Topics in Signal Processing},
+  volume  = {11},
+  number  = {8},
+  pages   = {1240--1253},
+  year    = {2017},
+  doi     = {10.1109/JSTSP.2017.2763455},
+}
+
+@inproceedings{lee2021interctc,
+  author     = {Lee, Jaesong and Watanabe, Shinji},
+  title      = {Intermediate Loss Regularization for {CTC}-Based Speech Recognition},
+  booktitle  = {IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  year       = {2021},
+  eprint     = {2102.03216},
+  eprinttype = {arxiv},
+}
+
+@inproceedings{yosinski2014transferable,
+  author    = {Yosinski, Jason and Clune, Jeff and Bengio, Yoshua and Lipson, Hod},
+  title     = {How Transferable Are Features in Deep Neural Networks?},
+  booktitle = {Advances in Neural Information Processing Systems 27 (NeurIPS 2014)},
+  pages     = {3320--3328},
+  year      = {2014},
+}
+
+@inproceedings{glorot2010understanding,
+  author    = {Glorot, Xavier and Bengio, Yoshua},
+  title     = {Understanding the Difficulty of Training Deep Feedforward Neural Networks},
+  booktitle = {Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics (AISTATS)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {9},
+  pages     = {249--256},
+  year      = {2010},
+}
+
+@inproceedings{kingma2015adam,
+  author     = {Kingma, Diederik P. and Ba, Jimmy},
+  title      = {Adam: A Method for Stochastic Optimization},
+  booktitle  = {International Conference on Learning Representations (ICLR)},
+  year       = {2015},
+  eprint     = {1412.6980},
+  eprinttype = {arxiv},
+}
+
+@inproceedings{loshchilov2019adamw,
+  author     = {Loshchilov, Ilya and Hutter, Frank},
+  title      = {Decoupled Weight Decay Regularization},
+  booktitle  = {International Conference on Learning Representations (ICLR)},
+  year       = {2019},
+  eprint     = {1711.05101},
+  eprinttype = {arxiv},
+}
+
+@inproceedings{pascanu2013clipping,
+  author    = {Pascanu, Razvan and Mikolov, Tomas and Bengio, Yoshua},
+  title     = {On the Difficulty of Training Recurrent Neural Networks},
+  booktitle = {Proceedings of the 30th International Conference on Machine Learning (ICML)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {28},
+  number    = {3},
+  pages     = {1310--1318},
+  year      = {2013},
+}
+
+@incollection{prechelt1998early,
+  author    = {Prechelt, Lutz},
+  title     = {Early Stopping --- But When?},
+  booktitle = {Neural Networks: Tricks of the Trade},
+  editor    = {Orr, Genevieve B. and M{\"u}ller, Klaus-Robert},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {1524},
+  pages     = {55--69},
+  publisher = {Springer},
+  year      = {1998},
+  doi       = {10.1007/3-540-49430-8_3},
+}
+
+@article{levenshtein1966,
+  author  = {Levenshtein, Vladimir I.},
+  title   = {Binary Codes Capable of Correcting Deletions, Insertions, and Reversals},
+  journal = {Soviet Physics Doklady},
+  volume  = {10},
+  number  = {8},
+  pages   = {707--710},
+  year    = {1966},
+}
+
+% ---------------------------------------------------------------------
+% Añadidas para el capítulo 3 (estado del arte)
+% ---------------------------------------------------------------------
+@misc{jo2024eegtotext,
+  author     = {Jo, Hyejeong and Yang, Yiqian and Han, Juhyeok and Duan, Yiqun and Xiong, Hui and Lee, Won Hee},
+  title      = {Are {EEG}-to-Text Models Working?},
+  year       = {2024},
+  eprint     = {2405.06459},
+  eprinttype = {arxiv},
+  doi        = {10.48550/arXiv.2405.06459},
+}
+
+@inproceedings{baevski2020wav2vec,
+  author    = {Baevski, Alexei and Zhou, Henry and Mohamed, Abdelrahman and Auli, Michael},
+  title     = {wav2vec 2.0: A Framework for Self-Supervised Learning of Speech Representations},
+  booktitle = {Advances in Neural Information Processing Systems 33 (NeurIPS 2020)},
+  pages     = {12449--12460},
+  year      = {2020},
+}
+
+@article{hsu2021hubert,
+  author  = {Hsu, Wei-Ning and Bolte, Benjamin and Tsai, Yao-Hung Hubert and Lakhotia, Kushal and Salakhutdinov, Ruslan and Mohamed, Abdelrahman},
+  title   = {{HuBERT}: Self-Supervised Speech Representation Learning by Masked Prediction of Hidden Units},
+  journal = {IEEE/ACM Transactions on Audio, Speech, and Language Processing},
+  volume  = {29},
+  pages   = {3451--3460},
+  year    = {2021},
+  doi     = {10.1109/TASLP.2021.3122291},
+}
+
+@article{chen2022wavlm,
+  author  = {Chen, Sanyuan and Wang, Chengyi and Chen, Zhengyang and Wu, Yu and Liu, Shujie and Chen, Zhuo and Li, Jinyu and Kanda, Naoyuki and Yoshioka, Takuya and Xiao, Xiong and others},
+  title   = {{WavLM}: Large-Scale Self-Supervised Pre-Training for Full Stack Speech Processing},
+  journal = {IEEE Journal of Selected Topics in Signal Processing},
+  volume  = {16},
+  number  = {6},
+  pages   = {1505--1518},
+  year    = {2022},
+  doi     = {10.1109/JSTSP.2022.3188113},
+}

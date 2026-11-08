@@ -1,140 +1,69 @@
 % =====================================================================
 %  CAPÍTULO 1 — INTRODUCCIÓN
-%  TFG · Decodificación de actividad neuronal a texto mediante la
-%        adaptación de un modelo de habla preentrenado (OWSM)
 % =====================================================================
-% NOTA DE TERMINOLOGÍA (leer antes de tocar nada):
-% Los datos del Brain-to-Text '25 NO son sEEG. Son registros
-% intracorticales obtenidos con cuatro matrices de microelectrodos de
-% alta densidad (64 canales cada una, 256 electrodos en total) en la
-% corteza motora del habla. Si en algún sitio has escrito sEEG,
-% cámbialo. Ver la nota que te he dejado en el chat.
+% El planteamiento, los objetivos, el alcance y la estructura que había
+% antes en este capítulo están ahora en capitulos/movido_del_cap1.tex,
+% pendientes de colocar en el capítulo 2.
 % =====================================================================
 
 \chapter{Introducción}
 \label{cap:introduccion}
 
-\section{Contexto}
+\section{Introducción}
+\label{sec:introduccion}
+
+\subsection{Contexto}
 \label{sec:contexto}
 
-La comunicación verbal es una de las capacidades más básicas de la vida en sociedad y, sin embargo, puede perderse por completo mientras el resto de las funciones cognitivas permanecen intactas. Enfermedades neurodegenerativas como la esclerosis lateral amiotrófica (ELA), los ictus de tronco encefálico o determinadas lesiones medulares altas pueden provocar disartria severa, anartria o incluso el síndrome de cautiverio (\textit{locked-in syndrome}): un estado en el que la persona conserva la conciencia y el lenguaje, pero carece de la vía motora necesaria para articularlo \cite{card2024}. El intento de hablar sigue produciéndose en la corteza motora; lo que falla es el músculo, no el mensaje.
+La comunicación oral es una capacidad básica para vivir en sociedad. Sin embargo, hay enfermedades que pueden quitarla casi por completo, aunque la persona siga pensando y entendiendo con normalidad. Y puede ser la causa de muchos trastornos. Se suelen dividir en disartria y . La disartria es un trastorno motor del habla en el que se pierde el control de los músculos del tracto vocal, cuando la incapacidad de producir un habla que se entienda \cite{silva2024speech} es total, se le llama anartria. Puede aparecer con la esclerosis lateral amiotrófica (ELA), el ictus, el Parkinson, la parálisis cerebral, los traumatismos craneoencefálicos o algunos tumores cerebrales, y su gravedad es variable entre las personas \cite{lin2025dysarthria}. En la afasia falla el propio lenguaje. En la disartria, en cambio, las zonas del cerebro que planifican el habla siguen funcionando: la persona sabe lo que quiere decir e intenta decirlo, pero la orden no llega bien a los músculos \cite{silva2024speech}.
 
-Las tecnologías de apoyo a la comunicación actualmente disponibles, como los teclados controlados por seguimiento ocular, permiten sortear parcialmente esa barrera, pero a un coste elevado en velocidad y esfuerzo: sus tasas de comunicación se sitúan en el orden de unas pocas palabras por minuto, frente a las aproximadamente 150 palabras por minuto del habla conversacional \cite{willett2023}. Esa diferencia de más de un orden de magnitud no es un detalle técnico, sino la distancia que separa el poder deletrear una necesidad del poder mantener una conversación.
 
-Las interfaces cerebro-computador (\textit{Brain-Computer Interfaces}, BCI) abordan el problema desde el otro extremo del canal: en lugar de aprovechar el residuo motor que le quede al usuario, registran directamente la actividad cortical asociada a la intención y la traducen a una acción externa. Una BCI se compone, de forma general, de cuatro etapas: adquisición de la señal neuronal, extracción de características, decodificación mediante un modelo aprendido y realimentación al usuario. Las tecnologías de adquisición se ordenan en un compromiso claro entre invasividad y calidad de señal, que va desde la electroencefalografía (EEG) de superficie, no invasiva pero de baja relación señal-ruido y escasa resolución espacial, hasta los registros intracorticales con matrices de microelectrodos implantadas en el tejido, que resuelven la actividad de poblaciones neuronales locales y son, hoy por hoy, la única modalidad con la que se han alcanzado prestaciones compatibles con una conversación \cite{willett2023,card2024}.
 
-% TODO: si quieres, aquí encaja una figura del pipeline genérico de una BCI
-% (adquisición -> características -> decodificador -> salida).
+La ELA y el ictus son dos ejemplos claros de pérdida completa del habla, y también las enfermedades de la mayoría de las personas que participan en los estudios de la siguiente sección. La ELA va destruyendo las neuronas motoras de la corteza, el tronco del encéfalo y la médula espinal, y los músculos se van paralizando, también los que usamos para hablar, tragar y respirar \cite{beukelman2011}. Su prevalencia en el mundo es de 4,42 casos por cada 100.000 habitantes \cite{xu2020als}. En España la tienen entre 4.000 y 4.500 personas y se diagnostican unos tres casos nuevos al día \cite{sen2026ela}. Entre el \SI{80}{\percent} y el \SI{95}{\percent} de los pacientes llegan a un punto en el que ya no se pueden comunicar hablando en su día a día \cite{beukelman2011}. El ictus es mucho más frecuente: en 2021 hubo 11,9 millones de casos nuevos en el mundo \cite{gbd2024stroke}, en España hay unos 90.000 al año \cite{sen2026ictus}, y entre el \SI{20}{\percent} y el \SI{42}{\percent} de los supervivientes tienen disartria \cite{summaka2022}. Cuando daña la parte ventral de la protuberancia, en el tronco del encéfalo, puede provocar el síndrome de cautiverio (\textit{locked-in syndrome}). La persona queda consciente pero con tetraplejia y anartria, y en la forma clásica solo puede comunicarse parpadeando o moviendo los ojos en vertical \cite{smith2005lis,bruno2011lis}.
 
-\section{Del control motor al habla: los sistemas \textit{brain-to-text}}
+
+
+Aunque aquí se usen estos dos casos como ejemplo, lo que se busca en este trabajo puede servir a cualquier persona que conserve la intención de hablar y no pueda articularla del todo, sea cual sea la causa.
+
+\subsection{Del cuerpo al cerebro: evolución de los sistemas de comunicación}
 \label{sec:brain-to-text}
 
-Durante la última década, las BCI intracorticales han pasado de controlar cursores y brazos robóticos a decodificar lenguaje. Un primer salto cualitativo se produjo al decodificar la escritura manual imaginada, alcanzando unos 90 caracteres por minuto en un participante con tetraplejia \cite{willett2021}. Poco después, dos trabajos simultáneos demostraron la decodificación del habla intentada: uno mediante electrocorticografía \cite{metzger2023} y otro mediante matrices intracorticales en la corteza premotora ventral, con una tasa de error por palabra (\textit{Word Error Rate}, WER) del \SI{23.8}{\percent} sobre un vocabulario de 125.000 palabras a unas 62 palabras por minuto \cite{willett2023}.
+Desde hace décadas se han ido creando sistemas para que estas personas puedan comunicarse de otra forma. Los primeros eran tableros con letras o dibujos que la persona señalaba, y máquinas electromecánicas de escribir que se manejaban con un pulsador o con algún otro movimiento pequeño. En los años sesenta y setenta estas ideas se juntaron y dieron lugar a lo que hoy se llama comunicación aumentativa y alternativa (CAA) \cite{vanderheiden2002}. Después llegaron los ordenadores y los sintetizadores de voz, con los que se escribe un mensaje y el equipo lo lee en voz alta. Son sistemas sencillos, no necesitan cirugía y muchos pacientes los usan hasta el final de la enfermedad \cite{beukelman2011}. Su problema es que son lentos y cansados, y que dependen de que quede algún movimiento voluntario con el que manejarlos \cite{silva2024speech}.
 
-El referente actual, y el que da origen a los datos empleados en este trabajo, es la neuroprótesis descrita por Card \textit{et al.} \cite{card2024}: en un participante con ELA avanzada y disartria severa, el sistema alcanzó un \SI{99.6}{\percent} de acierto con un vocabulario de 50 palabras el primer día de uso y un \SI{90.2}{\percent} sobre un vocabulario de 125.000 palabras el segundo día, sosteniendo posteriormente en torno al \SI{97.5}{\percent} de acierto durante más de ocho meses y permitiendo conversaciones autónomas a unas 32 palabras por minuto a lo largo de más de 248 horas acumuladas de uso. Estos resultados sitúan el problema en una fase distinta: la viabilidad clínica ya no está en discusión, y la pregunta se desplaza hacia la eficiencia, la reproducibilidad y la generalización de los decodificadores.
 
-Resulta especialmente relevante para este trabajo la forma que adopta la arquitectura de estos sistemas. Prácticamente todos ellos comparten la misma estructura: una secuencia de características neuronales muestreada a intervalos regulares se procesa mediante una red recurrente o un \textit{transformer}, se entrena con una pérdida CTC (\textit{Connectionist Temporal Classification}) \cite{graves2006ctc} para emitir una secuencia de fonemas, y esa secuencia se convierte en texto mediante un modelo de lenguaje $n$-grama y, en los sistemas más recientes, un reordenamiento posterior con un modelo de lenguaje de gran tamaño. Es, punto por punto, la arquitectura clásica del reconocimiento automático del habla (\textit{Automatic Speech Recognition}, ASR), con la única diferencia de que la entrada no es un espectrograma sino actividad cortical.
 
-Esa coincidencia estructural plantea una pregunta natural que este trabajo toma como punto de partida. En procesamiento del lenguaje, visión por computador y reconocimiento del habla, el paradigma dominante consiste en preentrenar un modelo de gran capacidad sobre cantidades masivas de datos y adaptarlo después a la tarea concreta con una fracción mínima de datos y cómputo. En decodificación neuronal, en cambio, lo habitual sigue siendo entrenar el decodificador desde cero para cada participante, precisamente en el escenario donde los datos son más caros de obtener: cada hora de entrenamiento exige la colaboración activa de una persona enferma en una sesión clínica supervisada. Si un codificador de habla preentrenado hubiera aprendido algo genuinamente transferible sobre la estructura temporal de la producción del lenguaje, ese conocimiento debería poder reutilizarse aunque la modalidad de entrada cambie por completo.
+Uno de los sistemas más usados en la ELA es el seguimiento ocular. Una cámara detecta hacia dónde mira la persona y así puede elegir letras o palabras en una pantalla. Se usa mucho en fases avanzadas, cuando ya no se puede hablar ni mover las manos, aunque solo permite una comunicación muy lenta o limitada \cite{spataro2014} y en algunos sitios, como al aire libre, estos sistemas no funcionan \cite{vansteensel2016}. Por último, cuando la enfermedad llega a los músculos de los ojos, dejan de servir \cite{spataro2014}.
 
-\section{Planteamiento del trabajo}
-\label{sec:planteamiento}
 
-Este Trabajo de Fin de Grado estudia la viabilidad de reutilizar un modelo de reconocimiento del habla preentrenado a gran escala como codificador de señal neuronal para una tarea \textit{brain-to-text}. Concretamente, se adapta OWSM v3.1 (\textit{Open Whisper-style Speech Model}) \cite{peng2024owsmv31}, una alternativa abierta y reproducible a Whisper \cite{radford2023whisper} construida sobre la arquitectura E-Branchformer \cite{kim2023ebranchformer}, para decodificar a texto la actividad intracortical del conjunto de datos público del Brain-to-Text~'25 \cite{b2t25,card2024}, registrada en el participante T15 mediante 256 microelectrodos a lo largo de 45 sesiones y 20 meses.
 
-La adaptación requiere resolver un desajuste de modalidad: el modelo espera un banco de filtros mel derivado de audio y recibe, en su lugar, un vector de 512 características neuronales por ventana temporal. Para salvarlo se sustituye el \textit{frontend} acústico original por un módulo adaptador entrenado desde cero, se antepone una transformación afín específica de cada sesión que absorbe la deriva de la señal entre días de registro, y se entrena el conjunto con un objetivo CTC puro, prescindiendo del decodificador autorregresivo del modelo original. Sobre esa base se estudian, mediante ablaciones controladas, las cuatro decisiones de diseño que determinan el comportamiento del sistema: cuánto aporta realmente el preentrenamiento, a qué granularidad lingüística conviene leer la corteza, cuántos parámetros hace falta adaptar y qué parte del conocimiento lingüístico acaba residiendo en el decodificador y qué parte en el modelo de lenguaje externo.
+Una evolución que se investiga dependiendo de los usuarios son los electrodos de electromiografía (EMG). Se colocan en la cara y el cuello y se puede reconocer lo que una persona intenta decir aunque no salga ningún sonido, lo que se conoce como habla silenciosa \cite{schultz2017}. Es un método no invasivo y está más cerca del habla real que ir eligiendo letras. Pero cuanta más severa es la parálisis, menos precisión tienen, hasta el punto de que puede no haber ninguna señal.
 
-Conviene precisar desde el principio el carácter del trabajo. No se persigue competir con los sistemas que encabezan el \textit{benchmark} oficial, que recurren a conjuntos de decenas de modelos y a modelos de lenguaje de gran tamaño para la fusión final de hipótesis, y cuyos requisitos de cómputo y memoria exceden con mucho los recursos disponibles aquí. El objetivo es distinto y complementario: producir evidencia experimental limpia y reproducible sobre \textit{qué transfiere y qué no} de un modelo de habla a una modalidad que no es habla, obtenida íntegramente con herramientas de código abierto, datos públicos y una única GPU de gama media.
+
+
+Si no queda ningún músculo útil, solo se puede recurrir al propio cerebro. Las interfaces cerebro-computador (\textit{Brain-Computer Interfaces}, BCI) registran su actividad y la convierten en órdenes para un dispositivo. Las primeras usaban electroencefalografía (EEG), con electrodos sobre el cuero cabelludo. En 1988, Farwell y Donchin presentaron un deletreador basado en la onda P300. En una pantalla se iluminan filas y columnas de letras y el sistema detecta la respuesta del cerebro cuando se ilumina la letra que el usuario quiere \cite{farwell1988}. Ya en 1999, Birbaumer y su equipo consiguieron que pacientes totalmente paralizados por ELA escribieran mensajes controlando los potenciales corticales lentos de su EEG \cite{birbaumer1999}. El EEG no necesita cirugía, pero la señal llega muy atenuada a través del cráneo y tiene mucho ruido, así que estos sistemas eran muy lentos, de unas pocas letras por minuto.
+
+
+
+Para tener mejor señal hay que acercarse a las neuronas, y eso ya obliga a operar. La electrocorticografía (ECoG) coloca electrodos sobre la superficie de la corteza, por debajo del cráneo. En 2016 se publicó el caso de una paciente con ELA en estado de cautiverio que usaba en su casa una BCI de este tipo totalmente implantada. Al intentar mover la mano generaba un \enquote{clic} con el que elegía letras y, aunque era lento, le permitía comunicarse cuando su sistema ocular fallaba \cite{vansteensel2016}. Además, esto permitió dar el salto de elegir letras a decodificar palabras directamente a partir del intento de hablar, primero con un vocabulario pequeño \cite{moses2021} y después con frases completas, voz sintetizada y un avatar \cite{metzger2023}. La estereoelectroencefalografía (sEEG) usa en cambio electrodos de profundidad, que se implantan a pacientes con epilepsia para localizar el origen de sus crisis. Con estos registros se ha llegado a sintetizar voz en tiempo real a partir del habla imaginada, aunque el resultado todavía no se entendía \cite{angrick2021}. Su ventaja es que aprovecha una operación que el paciente ya necesita, pero los electrodos se colocan donde dicta el criterio médico y solo se quedan durante un tiempo corto.
+
+
+
+El último paso son las matrices de microelectrodos intracorticales, que penetran en la corteza y registran la actividad de pequeños grupos de neuronas. En 2006 el ensayo BrainGate mostró que un hombre con tetraplejia podía mover un cursor, abrir el correo o abrir y cerrar una mano protésica solo con la actividad de su corteza motora \cite{hochberg2006}. A partir de ahí se pasó a escribir moviendo un cursor sobre un teclado en pantalla \cite{pandarinath2017}, luego a convertir en texto la escritura a mano imaginada \cite{willett2021} y, por último, a decodificar directamente el habla intentada \cite{willett2023}. Hoy ya hay un participante con ELA que lleva meses usando un sistema así para conversar en su día a día \cite{card2024}. Con el mismo tipo de implante también se ha conseguido sintetizar la voz al instante, con entonación e incluso cantando melodías sencillas \cite{wairagkar2025}. Son, con diferencia, los sistemas con mejores resultados. A cambio, exigen una operación cerebral y de momento solo los han probado unas pocas personas dentro de ensayos clínicos.
+
+
+
+Si se mira toda esta evolución, se ve que cada paso ha aparecido porque el anterior dependía de algo que la enfermedad podía quitar: las manos, los músculos de la boca y los ojos. La actividad del cerebro es lo último que queda, y cuanto más cerca de las neuronas se registra, mejor es la señal pero más invasivo es el método. Las tecnologías BCI han tenido un auge en las últimas décadas y han pasado de controlar cursores o movimientos a poder decodificar lenguaje. Este trabajo se sitúa en esta última etapa, la de los sistemas \textit{brain-to-text}, que traducen a texto la actividad de la corteza motora mientras la persona intenta hablar.
 
 \section{Motivación}
 \label{sec:motivacion}
 
-\subsection{Motivación clínica y social}
+\subsection{Motivación}
+\label{sec:motivacion-general}
 
-La ELA presenta una incidencia aproximada de 2 casos por cada 100.000 habitantes y año en poblaciones europeas, y la mayoría de las personas afectadas desarrolla algún grado de deterioro del habla a lo largo de la enfermedad \cite{longinetti2019}. % TODO: verificar esta cifra y la referencia antes de la entrega.
-A esta población se suman los supervivientes de ictus de tronco y otras lesiones neurológicas que cursan con anartria. Para todas ellas, la pérdida del habla no supone únicamente una limitación funcional: supone la pérdida de la autonomía en la relación con los demás,.
-% TODO (Kiril): aqui tenia una frase diciendo que recuperar el habla aparece
-% sistematicamente entre las prioridades de los pacientes. Es cierto y es un
-% buen argumento, pero necesita cita (hay encuestas de prioridades en ELA y en
-% lesion medular). La he quitado hasta que la tengas; si la recuperas, citala.
+La motivación principal de este trabajo es social. Según la encuesta de discapacidad del INE de 2020, en España había unas 947.500 personas de seis años o más con una discapacidad relacionada con la comunicación \cite{ine2022edad}. No todas tienen las enfermedades descritas en la \cref{sec:contexto}, pero la cifra da una idea de cuánta gente tiene problemas para hacerse entender. Y es un problema que está creciendo, ya que la Sociedad Española de Neurología prevé que los casos de ELA en Europa aumenten un \SI{40}{\percent} en los próximos 25 años \cite{sen2026ela}. Quien no puede hablar depende de otros hasta para pedir lo más básico y, con el tiempo, se va quedando aislado \cite{metzger2023}.
 
-Las neuroprótesis del habla han demostrado ya que esa capacidad puede restituirse con calidad conversacional \cite{card2024}. El cuello de botella se ha desplazado, por tanto, hacia cuestiones de ingeniería que condicionan su despliegue real: cuántos datos de calibración necesita el sistema, cuánto tarda en estar operativo tras el implante, y en qué medida sigue funcionando en una sesión nueva, un día distinto, sin recalibración. Cualquier avance que reduzca la cantidad de datos que hay que pedirle a un paciente enfermo tiene un impacto clínico directo, y el aprendizaje por transferencia es, precisamente, la familia de técnicas diseñada para ello.
+La comunicación pesa mucho en la calidad de vida. En personas con ELA, contar con un sistema de comunicación desde las primeras fases tiene un efecto positivo en su bienestar y en el de sus cuidadores \cite{londral2015}. En España este problema empieza a tener más reconocimiento, por ejemplo con la Ley 3/2024, conocida como \enquote{Ley ELA}, que busca mejorar la calidad de vida de estas personas y agilizar el reconocimiento de su discapacidad y su dependencia \cite{leyela2024}. Sin embargo, aún no existe una verdadera solución al problema, y seguir investigando puede ayudar a muchas personas que lo necesitan.
 
-\subsection{Motivación científica y técnica}
+Asimismo, me motiva desde el punto de vista técnico, porque las BCI del habla son un campo que avanza muy rápido. En unos veinte años se ha pasado de mover un cursor a decodificar frases completas y sintetizar voz en tiempo real. Estos sistemas ya superan la velocidad de las herramientas de comunicación asistida que existen hoy \cite{silva2024speech}. Cada poco tiempo se aplican a problemas nuevos \cite{wairagkar2025}, y se están consolidando como una de las mejores soluciones para la comunicación. Además, retos públicos como Brain-to-Text han puesto estos datos al alcance de cualquier grupo de investigación, aunque no tenga acceso a pacientes \cite{b2t24lessons,b2t25}. El principal inconveniente sigue siendo que hay que operar el cerebro. Aun así, ya se están probando opciones menos invasivas, como electrodos que se introducen por un vaso sanguíneo sin abrir el cráneo \cite{oxley2021}, y en el futuro se espera que estas soluciones se apliquen cada vez más.
 
-Desde el punto de vista técnico, el interés del trabajo reside en que plantea una pregunta que rara vez se formula de manera explícita: ¿qué es exactamente lo que aprende un modelo de habla preentrenado? La respuesta habitual, que aprende a reconocer voz, es demasiado gruesa. Un modelo como OWSM contiene, al menos, tres tipos de conocimiento superpuestos: un \textit{frontend} acústico especializado en la señal de audio, un codificador que modela dependencias temporales de largo alcance en secuencias con estructura de lenguaje, y una cabeza de salida sobre un vocabulario de subpalabras que incorpora estadística ortográfica del inglés. Sustituir la entrada por actividad cortical desacopla estos tres componentes y permite medirlos por separado. Que las unidades de salida a nivel de carácter llegasen a superar a las subpalabras preentrenadas, por ejemplo, no sería un contratiempo experimental, sino una medida informativa sobre dónde reside y dónde no reside el conocimiento transferible.
-
-Existe además un argumento neurocientífico que estructura buena parte de los experimentos. La corteza motora del habla codifica articulación, no ortografía. La unidad de salida a priori correcta es, por tanto, el fonema, y de hecho es la que utilizan tanto el sistema de referencia de este conjunto de datos como la práctica totalidad de las entradas del \textit{benchmark}, que seleccionan modelo por tasa de error de fonema. Comparar sistemáticamente distintas granularidades de salida sobre un mismo eje de evaluación permite contrastar esa hipótesis con datos propios en lugar de asumirla.
-
-\subsection{Motivación de accesibilidad y reproducibilidad}
-
-Los sistemas que encabezan actualmente el \textit{benchmark} combinan decenas de modelos entrenados con semillas distintas y emplean modelos de lenguaje de gran tamaño para la fusión de sus salidas, con unos requisitos de cómputo y de memoria que se detallan en el \cref{cap:estado-del-arte}. Este trabajo se desarrolla íntegramente sobre datos públicos, bibliotecas de código abierto y una única GPU accesible mediante un servicio en la nube de bajo coste, y documenta de forma explícita el presupuesto de cómputo de cada experimento. Mostrar qué parte del problema sigue siendo abordable en esas condiciones tiene valor por sí mismo, tanto para grupos de investigación con recursos limitados como para el propio criterio de reproducibilidad de los resultados publicados.
-
-\subsection{Motivación personal}
-
-% TODO (Kiril): reescribe este párrafo entero con tus palabras. Te dejo un
-% andamiaje para que no partas de cero, pero esto tiene que sonar a ti.
-El interés personal por este trabajo surge de la confluencia de dos ámbitos que hasta ahora había abordado por separado a lo largo del grado: el procesamiento de señal y el aprendizaje profundo aplicado a secuencias, por un lado, y la aplicación de ambos a un problema con una finalidad médica tangible, por otro. Enfrentarse a un problema en el que el modelo no funciona hasta que se entienden simultáneamente la física de la señal, la arquitectura del modelo y la naturaleza lingüística de la salida ha resultado ser, además, la mejor forma posible de cerrar la formación del grado.
-
-\section{Objetivos}
-\label{sec:objetivos}
-
-\subsection{Objetivo general}
-
-El objetivo general de este trabajo es \textbf{evaluar la viabilidad de reutilizar un modelo de reconocimiento del habla preentrenado a gran escala (OWSM v3.1) como codificador de actividad neuronal intracortical en una tarea de decodificación \textit{brain-to-text}}, cuantificando de forma experimental qué componentes de dicho preentrenamiento transfieren a una modalidad no acústica, bajo qué configuración de adaptación lo hacen, y cómo se reparte el conocimiento lingüístico entre el decodificador neuronal y el modelo de lenguaje externo.
-
-\subsection{Preguntas de investigación}
-
-El objetivo general se concreta en tres preguntas de investigación que vertebran el diseño experimental y la discusión de resultados:
-
-\begin{description}
-  \item[PI1. Transferencia.] ¿Qué parte de un modelo de habla preentrenado transfiere a una modalidad que no es habla? Es decir, ¿aporta el preentrenamiento de OWSM una ventaja medible frente a la misma arquitectura inicializada aleatoriamente, y cuántos parámetros del codificador es necesario adaptar para materializarla?
-  \item[PI2. Granularidad.] ¿A qué granularidad lingüística puede leerse la corteza motora del habla? ¿Cómo se comportan las unidades de salida de carácter, fonema, subpalabra y palabra cuando se comparan sobre un mismo eje de evaluación, y qué papel juega en ello el número de ejemplos de entrenamiento disponibles por clase?
-  \item[PI3. Localización del conocimiento lingüístico.] ¿Dónde reside el conocimiento lingüístico del sistema completo, en el codificador neuronal o en el modelo de lenguaje externo? ¿Es el modelo de lenguaje un mero reordenador de hipótesis acústicas o debe guiar activamente la búsqueda durante la decodificación?
-\end{description}
-
-\subsection{Objetivos específicos}
-
-Para dar respuesta a lo anterior se plantean los siguientes objetivos específicos, cada uno asociado a un bloque experimental concreto:
-
-\begin{enumerate}[label=\textbf{OE\arabic*.}, leftmargin=*, itemsep=0.4em]
-
-  \item \textbf{Construir una cadena de procesado y entrenamiento reproducible} que permita ingerir los registros neuronales del Brain-to-Text~'25 en formato HDF5 y entrenar sobre ellos un modelo OWSM mediante ESPnet-EZ \cite{someki2024espnetez,watanabe2018espnet}, incluyendo la verificación de integridad de los datos, la parametrización completa de cada experimento mediante identificadores trazables y el registro sistemático de resultados y curvas de entrenamiento.
-
-  \item \textbf{Diseñar el módulo de adaptación de modalidad} que sustituya al \textit{frontend} acústico del modelo, de forma que las 512 características neuronales por ventana temporal se proyecten al espacio de entrada esperado por el codificador, e incorporar una capa específica de sesión, en forma de transformación afín aprendida por cada día de registro, que compense la deriva de la señal entre sesiones.
-
-  \item \textbf{Cuantificar la aportación real del preentrenamiento} (PI1) mediante un control científico explícito que compare, con presupuesto de cómputo idéntico, tres condiciones: codificador preentrenado y ajustado, codificador preentrenado y congelado, y codificador con inicialización aleatoria y ajustado.
-
-  \item \textbf{Determinar la granularidad de salida más adecuada} (PI2) comparando objetivos CTC de carácter, fonema, subpalabra específica del corpus, palabra de vocabulario cerrado y subpalabra original del modelo preentrenado, evaluando todas las variantes sobre la tasa de error por palabra del texto finalmente decodificado, que constituye el único eje de comparación común entre unidades distintas.
-
-  \item \textbf{Caracterizar el compromiso entre capacidad y coste del módulo adaptador}, comparando arquitecturas de complejidad creciente bajo una receta de entrenamiento idéntica y reportando, junto al rendimiento, el número de parámetros y el tiempo de entrenamiento por época, de modo que las comparaciones queden libres de las confusiones experimentales presentes en las primeras iteraciones del trabajo.
-
-  \item \textbf{Analizar la relación entre parámetros entrenables y rendimiento} (PI1) mediante estrategias de adaptación de coste creciente, desde la adaptación de bajo rango (LoRA) \cite{hu2022lora} sobre un codificador congelado hasta el descongelado progresivo de sus capas superiores, obteniendo una curva que permita identificar el punto de operación más eficiente.
-
-  \item \textbf{Evaluar la generalización a sesiones no observadas}, escenario que reproduce la situación real de despliegue clínico, midiendo la degradación del sistema sobre sesiones excluidas del entrenamiento y cuantificando el compromiso que introduce la capa específica de sesión, así como el coste de una adaptación mínima a una sesión nueva.
-
-  \item \textbf{Determinar el papel del modelo de lenguaje externo} (PI3) integrando un decodificador CTC por búsqueda en haz con un modelo de lenguaje $n$-grama \cite{heafield2011kenlm}, explorando el espacio de sus hiperparámetros de fusión, comparando distintos órdenes del modelo y contrastando su rendimiento con el límite superior que impone la lista de hipótesis acústicas (análisis \textit{oracle}), lo que permite discriminar si el modelo de lenguaje reordena o guía la búsqueda.
-
-  \item \textbf{Consolidar la configuración final y estimar su variabilidad}, entrenando el mejor sistema resultante con varias semillas de inicialización para reportar los resultados con una medida de dispersión que permita distinguir las diferencias reales entre configuraciones del ruido experimental, y situar dichos resultados en el contexto del sistema de referencia oficial del conjunto de datos.
-
-\end{enumerate}
-
-\subsection{Alcance y limitaciones}
-\label{sec:alcance}
-
-Para delimitar con precisión qué se puede y qué no se puede concluir de este trabajo, se hacen explícitas desde el inicio las siguientes restricciones:
-
-\begin{itemize}
-  \item \textbf{Un único participante.} Todos los experimentos se realizan sobre los datos del participante T15. Las conclusiones sobre transferencia y granularidad son, por tanto, específicas de este sujeto, de la localización de sus implantes y del inglés como lengua objetivo, y no pueden extrapolarse sin más a otros participantes o idiomas.
-  \item \textbf{Decodificación fuera de línea.} El sistema se evalúa en diferido sobre grabaciones ya adquiridas. No se aborda la ejecución en tiempo real ni la latencia percibida por el usuario, ambas condiciones necesarias para un uso conversacional.
-  \item \textbf{Vocabulario cerrado en una de las configuraciones.} El objetivo de salida a nivel de palabra, que resulta ser el de mejor rendimiento, sólo puede emitir palabras vistas en entrenamiento. Sus cifras no son extrapolables a un escenario de vocabulario abierto.
-  \item \textbf{Presupuesto de cómputo acotado.} El trabajo se ejecuta sobre una única GPU de gama media en un entorno en la nube. Esto excluye por construcción las técnicas de conjunto de decenas de modelos y el uso de modelos de lenguaje de gran tamaño para la fusión de hipótesis, que son las que sostienen los primeros puestos del \textit{benchmark}. Los resultados absolutos deben leerse teniendo esto presente.
-  \item \textbf{Modelo de lenguaje propio.} El modelo de lenguaje $n$-grama oficial de la competición requiere una cantidad de memoria principal que excede la disponible en el entorno de trabajo, por lo que se entrena un modelo propio de orden reducido sobre las transcripciones del corpus. Esta restricción condiciona los valores absolutos de tasa de error por palabra, aunque no invalida las comparaciones relativas, que se realizan siempre con el mismo modelo de lenguaje.
-  \item \textbf{Ablaciones con presupuesto igualado, no hasta convergencia.} Las comparaciones entre configuraciones se realizan asignando a todas las variantes el mismo número de épocas y desactivando la parada temprana, de modo que la comparación sea justa. Los valores reportados en las ablaciones no corresponden, por tanto, al rendimiento máximo alcanzable por cada configuración, sino a su rendimiento bajo un presupuesto común.
-\end{itemize}
-
-\section{Estructura de la memoria}
-\label{sec:estructura}
-
-% TODO: ajusta esta lista a los títulos definitivos de tus capítulos.
-El resto de la memoria se organiza como sigue. El \cref{cap:estado-del-arte} revisa el estado del arte en neuroprótesis del habla y en la adaptación de modelos de habla preentrenados, y sitúa la aportación de este trabajo respecto a ambas líneas. El \cref{cap:datos} justifica la elección del conjunto de datos frente a las alternativas evaluadas, lo describe en detalle y analiza los retos que impone. El \cref{cap:marco-teorico} desarrolla los fundamentos de los modelos y algoritmos empleados: el codificador atencional, el objetivo CTC, la adaptación de rango bajo, la decodificación con modelo de lenguaje y las métricas. El \cref{cap:arquitectura} describe el sistema propuesto, detallando qué se conserva del modelo preentrenado, qué se sustituye y qué se añade. El \cref{cap:metodologia} expone el protocolo experimental, de evaluación y de comparación, junto con el diseño de los bloques de experimentos. El \cref{cap:resultados} recoge y discute los resultados obtenidos. El \cref{cap:limitaciones} reúne las limitaciones del estudio y las líneas de continuación que se consideran más prometedoras. Finalmente, el \cref{cap:conclusiones} resume las conclusiones del trabajo.
+Por último, también hay una motivación personal. Siempre me ha interesado la biomedicina, y en especial cómo la tecnología puede ayudar a las personas con discapacidad. He participado en hackathons y, sobre todo, he formado parte durante tres años de Daidalonic, un grupo de estudiantes de la UPV que diseña prótesis y otros proyectos biomédicos. Allí trabajé con la EMG y pude hablar con personas con discapacidad. Pero además pude ver de primera mano en el Cybathlon 2024 a muchos grupos de investigación utilizando las BCI para ayudar a personas completamente paralizadas, ya sea con la movilidad, el entretenimiento o la comunicación, y supe que quería investigar algo relacionado.

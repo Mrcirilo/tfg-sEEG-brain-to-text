@@ -376,7 +376,7 @@ Sobre un conjunto de frases, el WER puede calcularse como la media de los WER de
   \label{eq:wer-corpus}
 \end{equation}
 
-La tasa de error por carácter (CER, \textit{Character Error Rate}) se calcula igual, pero con caracteres en lugar de palabras. Es menos severa, porque una palabra con una sola letra mal cuenta como un error de una letra y no de una palabra entera. ESPnet la calcula durante el entrenamiento sobre la salida de la cabeza CTC.
+La tasa de error por carácter (CER, \textit{Character Error Rate}) se calcula igual, pero con caracteres en lugar de palabras. Es menos severa, porque una palabra con una sola letra mal cuenta como un error de una letra y no de una palabra entera. ESPnet la calcula durante el entrenamiento sobre la salida de la cabeza CTC. Algunos trabajos dan, en lugar del error, el acierto, que es su complementario: un acierto por palabra del \SI{95}{\percent} corresponde a un WER del \SI{5}{\percent}.
 
 Por último, la exactitud (\textit{accuracy}, acc) que da ESPnet durante el entrenamiento es la proporción de tokens que acierta el decodificador cuando recibe como contexto los tokens reales (\textit{teacher forcing}):
 \begin{equation}

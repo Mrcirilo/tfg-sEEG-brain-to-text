@@ -91,7 +91,7 @@ La \cref{tab:datasets} resume las cuatro opciones.
 
 Los datos proceden del ensayo clínico BrainGate2 descrito por Card \textit{et al.} \cite{card2024} y se publicaron más tarde como \textit{benchmark} abierto y como competición \cite{b2t25}. El participante, identificado como T15, es un hombre de 45 años con ELA, tetraparesia y una disartria grave. Los electrodos se le implantaron cinco años después del inicio de la enfermedad, y la recogida de datos empezó en agosto de 2023, 25 días después de la operación \cite{card2024}.
 
-La tarea es de copia. En la pantalla aparece una frase y, tras una señal de inicio, T15 intenta pronunciarla a su ritmo mientras se registra su actividad neuronal. No hay audio con el que alinear la señal, porque su habla apenas se entiende, así que no se sabe en qué momento dice cada palabra. De ahí que el entrenamiento necesite un objetivo que no dependa de ese alineamiento, como CTC.
+La tarea es de copia. En la pantalla aparece una frase y, tras una señal de inicio, T15 intenta pronunciarla a su ritmo mientras se registra su actividad neuronal. No hay audio con el que alinear la señal, porque su habla apenas se entiende, así que no se sabe en qué momento dice cada palabra. De ahí que el entrenamiento necesite un objetivo que no dependa de ese alineamiento, como CTC (\cref{sec:ctc}).
 
 \subsection{Adquisición de la señal}
 
@@ -123,7 +123,7 @@ Las 45 sesiones van del 11 de agosto de 2023 al 13 de abril de 2025, y en ese ti
 
 El conjunto tiene 8.072 ensayos de entrenamiento, 1.426 de validación y 1.450 de prueba \cite{lightbeam}. Las frases se graban en bloques de entre 5 y 50, y los bloques no se mezclan entre entrenamiento y evaluación: 198 bloques, repartidos por las 45 sesiones, forman el entrenamiento, y los 67 restantes, de 41 sesiones, forman la validación y la prueba. Las cuatro sesiones que no tienen validación ni prueba son las del 11/08/2023, 03/03/2024, 25/04/2024 y 28/04/2024.
 
-Son poco más de 8.000 frases de entrenamiento, todas de la misma persona. Es muy poco si se compara con las 180.000 horas de audio con las que se entrenó OWSM v3.1, cuya versión base tiene unos 101 millones de parámetros \cite{peng2024owsmv31}. Con tan pocos datos para un modelo tan grande, es fácil que memorice las frases de entrenamiento en vez de aprender a generalizar. Esto condiciona qué partes del modelo se reutilizan y cómo se entrena (\cref{cap:arquitectura,cap:metodologia}).
+Son poco más de 8.000 frases de entrenamiento, todas de la misma persona. Es muy poco si se compara con las 180.000 horas de audio con las que se entrenó OWSM v3.1, cuya versión base tiene unos 101 millones de parámetros \cite{peng2024owsmv31}. Con tan pocos datos para un modelo tan grande, es fácil que memorice las frases de entrenamiento en vez de aprender a generalizar. Esto condiciona qué partes del modelo se reutilizan y cómo se entrena (\cref{cap:metodologia}).
 % TODO (Kiril): si calculas las horas de señal del entrenamiento (suma de
 % T x 20 ms de todos los ensayos), ponlas aquí al lado de las 180.000 h.
 
@@ -148,7 +148,7 @@ Las frases proceden de seis corpus distintos (\cref{tab:b2t25-splits}). La mayor
   \end{tabular}
 \end{table}
 
-Las transcripciones de la partición de prueba no son públicas. La clasificación de la competición se calcula con ellas y, como este trabajo no participó, no es posible evaluar con esa partición. Por eso aquí la validación oficial hace de conjunto de prueba. Hay indicios de que esto apenas cambia las cifras: LightBeam, por ejemplo, obtiene una tasa de error por palabra (WER) del \SI{6.36}{\percent} en validación y del \SI{5.77}{\percent} y el \SI{6.47}{\percent} en las partes pública y privada de la prueba \cite{lightbeam}. Cómo se usa cada partición en los experimentos se explica en el \cref{cap:metodologia}.
+Las transcripciones de la partición de prueba no son públicas. La clasificación de la competición se calcula con ellas y, como este trabajo no participó, no es posible evaluar con esa partición. Por eso aquí la validación oficial hace de conjunto de prueba. Hay indicios de que esto apenas cambia las cifras: LightBeam, por ejemplo, obtiene un WER del \SI{6.36}{\percent} en validación y del \SI{5.77}{\percent} y el \SI{6.47}{\percent} en las partes pública y privada de la prueba \cite{lightbeam}. Cómo se usa cada partición en los experimentos se explica en el \cref{cap:metodologia}.
 
 \section{Análisis exploratorio}
 \label{sec:eda}
@@ -168,7 +168,7 @@ Las frases casi no se repiten. La mayoría aparece una sola vez en todo el conju
 % cuántas salen una sola vez) y % de palabras de validación que no están
 % en train (palabras_en_train). Comprueba que los ejemplos de palabras
 % frecuentes del texto son los que salen.
-Con las palabras ocurre lo contrario. Unas pocas, como \textit{I}, \textit{you}, \textit{the} o \textit{to}, aparecen en muchísimas frases, mientras que muchas otras salen una o dos veces. Las \textcolor{red}{[N]} palabras más frecuentes cubren el \textcolor{red}{[X]}~\% del texto de entrenamiento, y el \textcolor{red}{[X]}~\% de las palabras de validación no aparece nunca en él. El modelo solo puede escribir estas palabras nuevas si las construye a partir de trozos más pequeños, que es lo que permiten las unidades de subpalabra del tokenizador de OWSM.
+Con las palabras ocurre lo contrario. Unas pocas, como \textit{I}, \textit{you}, \textit{the} o \textit{to}, aparecen en muchísimas frases, mientras que muchas otras salen una o dos veces. Las \textcolor{red}{[N]} palabras más frecuentes cubren el \textcolor{red}{[X]}~\% del texto de entrenamiento, y el \textcolor{red}{[X]}~\% de las palabras de validación no aparece nunca en él. El modelo solo puede escribir estas palabras nuevas si las construye a partir de trozos más pequeños, que es lo que permiten las unidades de subpalabra del tokenizador de OWSM (\cref{sec:owsm-arquitectura}).
 
 % TODO (Kiril): figura con el número de frases por sesión a lo largo del
 % tiempo, separando train y validación y marcando las 4 sesiones sin

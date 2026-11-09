@@ -23,10 +23,6 @@ Por coste, cada configuración se entrenó una sola vez y con una sola semilla. 
 
 Además, la validación oficial hace de conjunto de prueba, porque el test de la competición no tiene transcripciones públicas. En la fase 1, la mejor época se eligió con esa misma validación, lo que hace las cifras algo optimistas, aunque por igual para todos los modelos. La fase 2 lo evita con la reserva.
 
-Algunas comparaciones quedaron incompletas. El codificador preentrenado ajustado se paró en la época 20, el decodificador entrenado desde cero con la tasa reducida no llegó a su meseta, y los \textit{frontends} se compararon con 40 épocas, que no es lo máximo que puede dar cada uno. Tampoco se puede saber qué arregló el colapso del principio, porque cambiaron tres cosas a la vez (\cref{sec:fase1}).
-
-Por último, al final del trabajo se vio que todos los entrenamientos tenían un pequeño desajuste. ESPnet-EZ no aplica el preprocesado de texto de OWSM, así que el decodificador aprendía con un símbolo de espacio suelto delante de los tokens iniciales que la búsqueda en haz no pone. Afecta por igual a todos los experimentos, de modo que las comparaciones siguen siendo justas, pero las cifras absolutas podrían ser algo mejores.
-
 \subsection{Recursos}
 
 Todo el trabajo se hizo con una sola GPU NVIDIA L4 en Google Colab. Cada entrenamiento llevaba entre 3 y 15 horas, y las desconexiones obligaron a guardar y reanudar a menudo. Con este presupuesto no se pudieron repetir entrenamientos, buscar hiperparámetros, ajustar la búsqueda en haz ni usar lo que hacen los primeros puestos del Brain-to-Text~'25, como combinar muchos modelos o reordenar las hipótesis con un modelo de lenguaje grande.

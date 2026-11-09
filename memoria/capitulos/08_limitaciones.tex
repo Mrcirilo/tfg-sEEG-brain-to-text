@@ -15,21 +15,21 @@ Este capítulo recoge primero las limitaciones del trabajo, que hay que tener en
 
 Todas las conclusiones salen de una sola persona, el participante T15, con sus cuatro matrices de electrodos en la corteza motora del habla, el inglés como idioma y una tarea en la que copia frases con habla intentada (\cref{sec:b2t25}). No se sabe si los resultados se mantendrían con otra persona, con los implantes en otra zona, en otro idioma o con habla espontánea.
 
-Con el modelo pasa lo mismo. Solo se ha probado OWSM v3.1 base y, en la comparación final, una forma de adaptar su codificador: ajustarlo entero con una tasa de aprendizaje reducida. Que sus pesos no se transfieran no quiere decir que no lo hagan los de otros modelos de voz, y de hecho Fiedler et al. encontraron lo contrario con wav2vec~2.0 \cite{fiedler2025wav2vec2brain}.
+Con el modelo pasa lo mismo. Solo se ha probado OWSM v3.1 base, y que sus pesos no se transfieran, ni congelados, ni con LoRA, ni ajustados enteros, no quiere decir que no lo hagan los de otros modelos de voz, y de hecho Fiedler et al. encontraron lo contrario con wav2vec~2.0 \cite{fiedler2025wav2vec2brain}.
 
 \subsection{Fiabilidad de las cifras}
 
-Por coste, cada configuración se entrenó una sola vez y con una sola semilla. Los intervalos de confianza calculados sobre las frases dicen cuánto podría cambiar el WER con otras frases, pero no cuánto cambiaría al repetir el entrenamiento, así que diferencias de una o dos centésimas, como la de LoRA, no se pueden dar por buenas.
+Por coste, cada configuración se entrenó una sola vez y con una sola semilla. Los intervalos de confianza calculados sobre las frases dicen cuánto podría cambiar el WER con otras frases, pero no cuánto cambiaría al repetir el entrenamiento, así que diferencias de una o dos centésimas, como la de LoRA o la de la capa por sesión, no se pueden dar por buenas.
 
 Además, la validación oficial hace de conjunto de prueba, porque el test de la competición no tiene transcripciones públicas. En la fase 1, la mejor época se eligió con esa misma validación, lo que hace las cifras algo optimistas, aunque por igual para todos los modelos. La fase 2 lo evita con la reserva.
 
-Algunas comparaciones quedaron incompletas. El codificador preentrenado se paró en la época 20, el decodificador entrenado desde cero no tiene WER porque el modelo se perdió, y los \textit{frontends} se compararon con 40 épocas, que no es lo máximo que puede dar cada uno. Tampoco se puede saber qué arregló el colapso del principio, porque cambiaron tres cosas a la vez (\cref{sec:fase1}).
+Algunas comparaciones quedaron incompletas. El codificador preentrenado ajustado se paró en la época 20, el decodificador entrenado desde cero con la tasa reducida no llegó a su meseta, y los \textit{frontends} se compararon con 40 épocas, que no es lo máximo que puede dar cada uno. Tampoco se puede saber qué arregló el colapso del principio, porque cambiaron tres cosas a la vez (\cref{sec:fase1}).
 
 Por último, al final del trabajo se vio que todos los entrenamientos tenían un pequeño desajuste. ESPnet-EZ no aplica el preprocesado de texto de OWSM, así que el decodificador aprendía con un símbolo de espacio suelto delante de los tokens iniciales que la búsqueda en haz no pone. Afecta por igual a todos los experimentos, de modo que las comparaciones siguen siendo justas, pero las cifras absolutas podrían ser algo mejores.
 
 \subsection{Recursos}
 
-Todo el trabajo se hizo con una sola GPU NVIDIA L4 en Google Colab. Cada entrenamiento llevaba entre 3 y 15 horas, y las desconexiones obligaron a guardar y reanudar a menudo; una de ellas hizo perder el decodificador entrenado desde cero. Con este presupuesto no se pudieron repetir entrenamientos, buscar hiperparámetros, ajustar la búsqueda en haz ni usar lo que hacen los primeros puestos del Brain-to-Text~'25, como combinar muchos modelos o reordenar las hipótesis con un modelo de lenguaje grande.
+Todo el trabajo se hizo con una sola GPU NVIDIA L4 en Google Colab. Cada entrenamiento llevaba entre 3 y 15 horas, y las desconexiones obligaron a guardar y reanudar a menudo. Con este presupuesto no se pudieron repetir entrenamientos, buscar hiperparámetros, ajustar la búsqueda en haz ni usar lo que hacen los primeros puestos del Brain-to-Text~'25, como combinar muchos modelos o reordenar las hipótesis con un modelo de lenguaje grande.
 
 \subsection{Distancia al uso real}
 
@@ -42,7 +42,7 @@ Las líneas que siguen van de las más directas, que se podrían probar con los 
 
 \subsection{Mejorar el modelo}
 
-Hay mejoras directas que este trabajo no llegó a probar. La primera son los aumentos de datos que usan los mejores sistemas: además del ruido, desplazar cada canal, suavizar la señal y, sobre todo, el enmascarado temporal, que tapa trozos de cada frase durante el entrenamiento. Feghhi et al. enmascaran de media más de la mitad de cada frase, y es una de las claves de su mejora \cite{feghhi2025timemasked}. La segunda es entrenar más tiempo: el profundo $\times 2$ pasó de 0,223 a 0,209 al doblar las épocas, y el $\times 4$ solo se entrenó 40. La tercera, que no exige reentrenar, es ajustar la búsqueda en haz: el tamaño del haz, el peso de CTC y la penalización por longitud.
+Hay mejoras directas que este trabajo no llegó a probar. La primera son los aumentos de datos que usan los mejores sistemas: además del ruido, desplazar cada canal, suavizar la señal y, sobre todo, el enmascarado temporal, que tapa trozos de cada frase durante el entrenamiento. Feghhi et al. enmascaran de media más de la mitad de cada frase, y es una de las claves de su mejora \cite{feghhi2025timemasked}. La segunda es entrenar más tiempo: el profundo $\times 2$ pasó de 0,224 a 0,209 al doblar las épocas, y el $\times 4$ solo se entrenó 40. La tercera, que no exige reentrenar, es ajustar la búsqueda en haz: el tamaño del haz, el peso de CTC y la penalización por longitud.
 
 También queda por probar una capa de entrada por día con muchos menos parámetros, como la de BrainWhisperer, que combina una matriz por mes con una corrección de rango bajo por día \cite{brainwhisperer}. Aquí la capa por sesión no aportó, pero una versión más ligera, junto con alguna forma de adaptación a días nuevos (\cref{sec:futuro-dias-nuevos}), podría hacerlo.
 

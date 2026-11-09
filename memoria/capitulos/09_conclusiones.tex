@@ -1,3 +1,4 @@
+% !TEX root = ../main.tex
 % =====================================================================
 %  CAPÍTULO 9 — CONCLUSIONES
 % =====================================================================
@@ -5,62 +6,59 @@
 \chapter{Conclusiones}
 \label{cap:conclusiones}
 
-Este trabajo se planteó como un estudio de viabilidad: determinar si un modelo de reconocimiento del habla preentrenado a gran escala puede reutilizarse como codificador de actividad neuronal intracortical para decodificar texto, y bajo qué condiciones. La respuesta a esa pregunta resultó ser negativa, y el trabajo se convirtió en el proceso en algo distinto de lo previsto: en una caracterización de qué factores sí determinan el rendimiento en esta tarea.
+Este trabajo se planteó como un estudio de viabilidad: comprobar si se puede reutilizar OWSM, un modelo de reconocimiento de voz abierto y entrenado con 180.000 horas de audio, para pasar a texto la actividad neuronal de una persona que intenta hablar, qué partes del modelo se aprovechan y cómo se comporta el sistema con el paso del tiempo. La respuesta corta es que sí se puede, pero solo en parte. El decodificador de OWSM se aprovecha tal cual y el codificador hay que entrenarlo desde cero. Con una sola GPU, el sistema llega a un WER de 0,206 en los días que conoce, pero en los días nuevos se queda en torno a 0,8.
 
-\section{Respuesta a las preguntas de investigación}
+\section{Respuesta a los objetivos}
 
-\subsection{PI1: el preentrenamiento de OWSM no transfiere}
+\begin{description}
+  \item[OE1, \textit{frontend}.] El \textit{frontend} decide cuánto cuesta el modelo y cambia el error en hasta 0,12. El profundo $\times 4$ es el mejor compromiso: da el WER más bajo, 0,206, y entrena un 40~\% más rápido que los $\times 2$, porque el codificador procesa la mitad de ventanas. Pasar a un vector cada 80~ms no perjudica, y el \textit{patching} del sistema de referencia del Brain-to-Text~'25 es el que peor funciona en este modelo.
+  \item[OE2, codificador.] Los pesos de OWSM no se transfieren a la señal neuronal. Con ellos el sistema no aprende (WER de 0,967 frente a 0,209), y la señal falsa muestra que no está leyendo la señal. El mismo codificador entrenado desde cero aprende sin problemas.
+  \item[OE3, decodificador.] El decodificador preentrenado sí se transfiere y es necesario. Congelado da prácticamente lo mismo que ajustado con LoRA (0,209 frente a 0,202, dentro del margen de error), y entrenado desde cero aprende de memoria las frases de entrenamiento y generaliza mucho peor.
+  \item[OE4, ventana temporal.] Incluso en los días que conoce, el error cambia mucho de una sesión a otra. En el entrenamiento cronológico, el modelo funciona bien en las sesiones vistas (WER de 0,20 a 0,27 desde diez sesiones) y falla en las futuras (de 0,78 a 0,81), y entrenar con más sesiones antiguas no lo arregla. En un día nuevo pierde sobre todo las palabras de contenido, y sus errores dejan de parecerse a la palabra correcta.
+\end{description}
 
-La primera pregunta era si el preentrenamiento de un modelo de habla aporta ventaja medible frente a la misma arquitectura inicializada al azar. \textbf{No la aporta, y la penaliza}. Con receta idéntica y presupuesto no favorable a la condición ganadora, un codificador inicializado aleatoriamente alcanza una tasa de error por carácter de $0{,}312$ de media sobre tres semillas, frente a $0{,}381$ del mismo codificador inicializado con los pesos de OWSM, y lo hace convergiendo antes y con la mitad de coste.
-
-El hallazgo resiste las dos objeciones que cabía anticipar. Es \textbf{reproducible}: las tres semillas ocupan un intervalo de 2,7 puntos y la peor sigue muy por delante de la condición preentrenada. Y no es un artefacto del ajuste: al conceder a los pesos de OWSM una tasa de aprendizaje cuadruplicada, el rendimiento no mejora sino que se degrada hasta $0{,}689$.
-
-El control que cierra el argumento es, sin embargo, otro. Un codificador \textbf{aleatorio y congelado}, es decir, una proyección fija sin entrenar, alcanza $0{,}414$ frente a los $0{,}440$ del codificador de OWSM congelado con casi el doble de presupuesto. Como extractor de características fijo, ciento ochenta mil horas de habla no superan al azar. El contenido transferible del preentrenamiento a esta modalidad es, por tanto, indistinguible de cero.
-
-La curva completa de conservación no muestra en ningún punto un óptimo intermedio: no existe una cantidad de OWSM que convenga conservar. Y el bloque de profundidad añade que tampoco el tamaño de su arquitectura está justificado por la tarea, ya que reducir el codificador a la mitad cuesta un único punto porcentual.
-
-\subsection{PI2: la unidad óptima es la más lingüística, no la más articulatoria}
-
-La segunda pregunta era a qué granularidad conviene leer la corteza motora del habla. El resultado es monótono y contrario a la predicción con que se partía: \textbf{cuanto más gruesa es la unidad de salida, mejor es el texto final}. Sobre el eje común de tasa de error por palabra, el objetivo de palabra alcanza $0{,}282$, el de subpalabra preentrenada $0{,}323$, el de subpalabra propia $0{,}424$ y el de carácter $0{,}535$.
-
-Los 25 puntos porcentuales que separan los extremos constituyen el mayor efecto medido en todo el trabajo, muy por encima de la contribución del preentrenamiento. Y el vocabulario de 50.002 clases, que esta memoria había descartado por razonamiento a priori sobre escasez de ejemplos por clase, resulta ser el segundo mejor objetivo, alcanzándolo con la mitad de presupuesto y sin haber convergido.
-
-La explicación no está en la neurociencia sino en las propiedades del objetivo de entrenamiento: las clases no observadas no penalizan bajo CTC, y las unidades gruesas producen secuencias objetivo más cortas que mitigan la hipótesis de independencia condicional. Es un resultado conocido en reconocimiento del habla que el razonamiento previo de este trabajo pasó por alto.
-
-\subsection{PI3: el conocimiento lingüístico reside fuera del codificador}
-
-La tercera pregunta era dónde reside el conocimiento lingüístico del sistema completo. La evidencia disponible, preliminar en sus cifras pero estructural en su argumento, indica que \textbf{una parte sustancial reside fuera del codificador neuronal}. La fusión superficial con un modelo de lenguaje de $n$-gramas alcanza una tasa de error por palabra de $0{,}475$, inferior al límite \textit{oracle} de $0{,}503$ de la lista de hipótesis puramente acústicas. Puesto que ningún método de reordenamiento puede superar ese límite, queda demostrado que la transcripción correcta no figuraba entre las hipótesis del modelo acústico y que el modelo de lenguaje la alcanzó guiando la búsqueda.
-
-Este resultado converge con el anterior. Si las unidades de salida gruesas mejoran el texto final en 25 puntos, es porque internalizan dentro del codificador parte de la misma estructura lingüística que el modelo de lenguaje aporta desde fuera. Ambos hallazgos señalan que, en este sistema, \textbf{la reconstrucción lingüística pesa más que la lectura de la señal}.
+Respecto al objetivo general, reutilizar OWSM es viable para los días que el sistema ha visto. Su WER de 0,206 queda por encima del 10-16~\% de los sistemas de extremo a extremo del estado del arte, que tienen muchos más recursos, pero en un rango razonable para una sola GPU y sin modelo de lenguaje externo. Para días nuevos no es viable todavía sin recalibrar.
+% TODO (Kiril): comprueba que los nombres de los OE y del objetivo
+% general coinciden con tu versión del capítulo 2.
 
 \section{Aportaciones}
 
-Las aportaciones de este trabajo pueden resumirse en cinco puntos:
-
 \begin{enumerate}[leftmargin=*, itemsep=0.35em]
-  \item \textbf{Un resultado negativo medido con control explícito.} La ausencia de transferencia desde OWSM se establece frente a un control de inicialización aleatoria, con réplica entre semillas, con la objeción del ajuste desfavorable refutada y con un control de proyección aleatoria congelada que descarta la explicación alternativa. La diferencia entre no encontrar transferencia y no haberla medido es precisamente lo que separa este trabajo de los que asumen el beneficio del preentrenamiento sin comprobarlo.
-  \item \textbf{Una comparación sistemática de granularidades de salida} sobre un mismo modelo, un mismo presupuesto y un mismo eje de evaluación, que no se había realizado sobre este conjunto de datos y cuyo resultado contradice la práctica dominante del campo.
-  \item \textbf{Evidencia de que la capa de sesión, solución estándar frente a la no estacionariedad, es contraproducente ante días no vistos}, por memorizar días concretos en lugar de aprender una corrección generalizable.
-  \item \textbf{Una cadena de experimentación reproducible} sobre datos públicos, herramientas de código abierto y una única GPU de gama media, con el presupuesto de cómputo documentado experimento a experimento.
-  \item \textbf{Un sistema competitivo con la literatura reciente sobre el mismo conjunto}: $0{,}267$ de tasa de error por carácter frente al $0{,}238$ de la referencia comparable, en condiciones idénticas de unidad y decodificación.
+  \item \textbf{Una adaptación completa de OWSM a la señal intracortical}, con herramientas abiertas, datos públicos y una sola GPU, que incluye los problemas prácticos que hubo que resolver por el camino.
+  \item \textbf{Una comparación controlada de qué parte del modelo se transfiere.} El decodificador sí y el codificador no, comprobado con la señal falsa.
+  \item \textbf{Una comparación de seis \textit{frontends} que mide a la vez el error y el coste.} En la literatura revisada cada sistema usa uno distinto sin compararlo con los demás.
+  \item \textbf{Una evaluación cronológica} que separa las frases de días vistos y futuros, mide el hueco entre ambos y muestra que más sesiones antiguas no lo cierran.
+  \item \textbf{Un análisis de los errores palabra a palabra}, que muestra qué se pierde en los días nuevos más allá del WER.
 \end{enumerate}
 
-\section{Lecciones metodológicas}
+\section{Lecciones aprendidas}
 
-Al margen de los resultados, el trabajo deja tres lecciones que condicionaron su desarrollo y que se consideran transferibles.
+Además de los resultados, el trabajo deja algunas lecciones sobre cómo hacerlo.
 
-La primera es que \textbf{los valores por omisión de las herramientas gobiernan decisiones que no son suyas}. El criterio de parada temprana de la herramienta empleada monitoriza la pérdida y no la métrica de la tarea, lo que interrumpió un entrenamiento que seguía mejorando y conservó modelos peores durante buena parte del trabajo. Ningún valor por omisión que gobierne la selección de modelo debería darse por bueno sin comprobarlo.
+La primera es comprobar lo que hacen las herramientas por defecto. Varios problemas no dieron ningún error y solo aparecieron al revisar: la parada temprana de ESPnet vigilaba la pérdida y no la métrica de la tarea, un parámetro de la búsqueda en haz desactivaba la detección del final de la frase y hacía la evaluación siete veces más lenta, y ESPnet-EZ no aplicaba el preprocesado de texto de OWSM.
 
-La segunda es que \textbf{el razonamiento a priori sobre decisiones de diseño es poco fiable incluso cuando sus premisas son ciertas}. La predicción de que un vocabulario de 50.002 clases sería inviable partía de un hecho correcto, la escasez de ejemplos por clase, y llegaba a la conclusión opuesta a la verdadera por no considerar un segundo factor. El experimento no fue una confirmación de lo previsto sino su refutación, que es exactamente para lo que sirve.
+La segunda es hacer pruebas sencillas antes de las grandes. La prueba de memorización separó los errores del código de los problemas de generalización al principio, y la señal falsa explicó en un momento por qué fallaba el codificador preentrenado.
 
-La tercera es que \textbf{una diferencia sólo es un resultado si excede la resolución de la medida}. Con doscientos ensayos evaluados el intervalo de confianza ronda los tres a cinco puntos porcentuales, de modo que buena parte de las mejoras observadas en las primeras iteraciones del trabajo estaban por debajo del umbral de detección y no significaban nada.
+La tercera es medir con la métrica adecuada y saber cuánta precisión tiene. La acc de ESPnet sirve para elegir la época, pero para comparar modelos hay que generar texto, y con 1.426 frases una diferencia de menos de una centésima de WER no dice nada.
+
+La cuarta es evaluar como se usaría el sistema. Con frases de los mismos días que el entrenamiento, el modelo parecía estar cerca de funcionar; solo la evaluación cronológica mostró que el problema real son los días nuevos.
+
+\section{Relación con los estudios cursados}
+
+% TODO (Kiril): pon los nombres exactos de las asignaturas del grado
+% donde están los corchetes, y quita las que no encajen.
+Este trabajo pone en práctica buena parte de lo aprendido en el Grado en Ciencia de Datos. El núcleo es aprendizaje automático y redes neuronales profundas (\textcolor{red}{[asignaturas]}): entrenar modelos grandes, regularizarlos, elegir épocas y evaluarlos sin engañarse con los datos. La estadística (\textcolor{red}{[asignaturas]}) está en los intervalos de confianza por \textit{bootstrap} y en el diseño de comparaciones justas. El procesamiento del lenguaje natural (\textcolor{red}{[asignaturas]}) aparece en la tokenización en subpalabras, los modelos de lenguaje y las métricas de texto. El tratamiento de señales y series temporales (\textcolor{red}{[asignaturas]}) está en la entrada al modelo, y la ingeniería de datos y el cómputo en la nube (\textcolor{red}{[asignaturas]}), en la lectura de los ficheros HDF5 y en entrenar con GPU en Colab. Por último, la visualización (\textcolor{red}{[asignaturas]}) está en todas las figuras de la memoria.
+
+También ha exigido competencias que no se enseñan en una asignatura concreta: organizar un proyecto largo, leer literatura reciente, decidir qué experimentos hacer con recursos limitados y contar los resultados con honestidad, incluidos los que no salieron como se esperaba.
+
+\section{Legado}
+
+% TODO (Kiril): comprueba que los notebooks están en el repositorio.
+El código del trabajo, con los notebooks de entrenamiento, evaluación y análisis, y esta memoria están en un repositorio público de GitHub\footnote{\url{https://github.com/Mrcirilo/tfg-sEEG-brain-to-text}}. Los datos son públicos \cite{b2t25} y el sistema solo usa herramientas abiertas, ESPnet y OWSM, así que los experimentos se pueden reproducir con una GPU como la usada aquí. Cada entrenamiento guarda su receta junto a sus resultados, lo que facilita repetirlo.
 
 \section{Valoración final}
 
-El trabajo no ha demostrado lo que se propuso demostrar. Se planteó verificar que un modelo de habla preentrenado podía reutilizarse para decodificar actividad cortical, y ha establecido con bastante solidez que este modelo concreto no puede, o más precisamente que su preentrenamiento no aporta nada que no aporte igual una inicialización al azar.
+El trabajo no termina con un sistema listo para que alguien lo use, y tampoco era ese el objetivo. Lo que sí deja es una respuesta concreta a la pregunta de partida: de OWSM sirve el decodificador y no el codificador, y con eso se llega, con muy pocos recursos, a un error razonable en los días que el modelo conoce.
 
-Ese resultado tiene valor por tres razones. Está \textbf{medido y no supuesto}, lo que en un campo donde el preentrenamiento se adopta habitualmente sin control no es trivial. \textbf{Contradice a la literatura previa de forma informativa}, acotando la pregunta abierta de qué tipo de preentrenamiento produce representaciones reutilizables fuera de su modalidad, que es una pregunta más interesante que la que este trabajo se hizo originalmente. Y tiene \textbf{consecuencias prácticas}: si los pesos no aportan y el tamaño tampoco, el problema admite modelos sensiblemente menores y más baratos que los que la intuición del campo sugeriría.
-
-Los dos hallazgos colaterales resultan, además, de mayor alcance práctico que el central. Que la unidad de salida produzca un efecto de 25 puntos porcentuales, cuatro veces mayor que el del preentrenamiento, señala dónde conviene invertir el esfuerzo de diseño. Y que la degradación ante un día de registro no visto alcance los 27 puntos, con la solución estándar del campo agravándola, identifica la no estacionariedad como el obstáculo real que separa estos sistemas de un uso clínico cotidiano.
-
-Puesto que el objetivo declarado era un estudio de viabilidad y no un sistema de competición, un resultado que delimita con precisión qué no funciona, por qué, y qué sí importa en su lugar, cumple ese objetivo tanto como lo habría cumplido el resultado contrario.
+Deja también claro cuál es el siguiente problema. Ninguna decisión sobre el modelo cambia tanto el error como pasar de un día conocido a uno nuevo, y resolverlo es lo que separa a estos sistemas de un uso diario. Es, además, un problema que se puede atacar con lo construido aquí, como se propone en el \cref{cap:limitaciones}.
+% TODO (Kiril): si quieres, una o dos frases personales para cerrar.

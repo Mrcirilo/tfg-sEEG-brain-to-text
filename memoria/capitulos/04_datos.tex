@@ -1,3 +1,4 @@
+% !TEX root = ../main.tex
 % =====================================================================
 %  CAPÍTULO 4 — CONJUNTO DE DATOS
 % =====================================================================
@@ -98,8 +99,6 @@ De cada electrodo se obtienen dos características, de modo que cada instante se
 
 Las dos se agregan en ventanas de \SI{20}{\milli\second}, lo que da una secuencia a \SI{50}{\hertz}, y se normalizan con una puntuación z dentro de cada bloque de grabación \cite{lightbeam}. En este trabajo se usan tal y como se publican.
 
-La \cref{fig:brain-to-text} resume el sistema: las matrices de microelectrodos registran la actividad de la corteza mientras T15 intenta hablar, y esa señal se procesa para obtener el texto de la frase.
-
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.75\linewidth]{04_brainToText}
@@ -122,7 +121,7 @@ Las 45 sesiones van del 11 de agosto de 2023 al 13 de abril de 2025, y en ese ti
 
 \subsection{Particiones y composición}
 
-El conjunto tiene 8.072 ensayos de entrenamiento, 1.426 de validación y 1.450 de prueba \cite{lightbeam}. Las frases se graban en bloques de entre 5 y 50, y los bloques no se mezclan entre entrenamiento y evaluación: 198 bloques de los cual 45 sesiones, forman el entrenamiento, y los 67 restantes, de 41 sesiones, forman la validación y la prueba.
+El conjunto tiene 8.072 ensayos de entrenamiento, 1.426 de validación y 1.450 de prueba \cite{lightbeam}. Las frases se graban en bloques de entre 5 y 50, y los bloques no se mezclan entre entrenamiento y evaluación: 198 bloques (en 45 sesiones), forman el entrenamiento, y los 67 restantes (en 41 sesiones), forman la validación y la prueba.
 
 Son aproximadamente 8.000 frases de entrenamiento, todas de la misma persona. A pesar de ser un dataset grande para BCI, los modelos se suelen entrenar con muchas más horas de audio. Esto condiciona qué partes del modelo se reutilizan y cómo se entrena (\cref{cap:metodologia}).
 
@@ -174,7 +173,7 @@ Las frases casi no se repiten. La mayoría aparece una sola vez en todo el conju
 
 % TODO (Kiril): % de palabras de validación que no están en train
 % (palabras_en_train).
-Con las palabras ocurre lo normal en cualquier texto: unas pocas aparecen muchísimo y la mayoría muy poco. Las más frecuentes son pronombres, artículos y preposiciones, como \textit{I}, \textit{the}, \textit{to} o \textit{you} (\cref{fig:palabras-frecuentes}a), que son las más usadas en una conversación normal. El vocabulario de entrenamiento tiene 3.745 palabras, pero las 100 más frecuentes ya cubren el \SI{61}{\percent} del texto (\cref{fig:palabras-frecuentes}b). Aun así, es importante ver que un \textcolor{red}{[X]}~\% de las palabras de validación no aparece nunca en el entrenamiento. El modelo solo puede escribir estas palabras nuevas relacionándolas con el contexto y usando su conocimiento de los audios.
+Con las palabras ocurre lo normal en cualquier texto: unas pocas aparecen muchísimo y la mayoría muy poco. Las más frecuentes son pronombres, artículos y preposiciones, como \textit{I}, \textit{the}, \textit{to} o \textit{you} (\cref{fig:palabras-frecuentes}a), que son las más usadas en una conversación normal. El vocabulario de entrenamiento tiene 3.745 palabras, pero las 100 más frecuentes ya cubren el \SI{61}{\percent} del texto (\cref{fig:palabras-frecuentes}b). Aun así, es importante ver que un \SI{4.2}{\percent}  de las palabras de validación no aparece nunca en el entrenamiento. El modelo solo puede escribir estas palabras nuevas relacionándolas con el contexto y usando su conocimiento de los audios.
 
 \begin{figure}[htbp]
   \centering

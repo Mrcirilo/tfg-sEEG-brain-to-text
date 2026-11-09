@@ -1,3 +1,4 @@
+% !TEX root = ../main.tex
 % =====================================================================
 %  CAPÍTULO 5 — MARCO TEÓRICO
 % =====================================================================
@@ -15,17 +16,15 @@ En este capítulo se explican los modelos y técnicas que forman el sistema: qu�
 \section{Planteamiento del problema}
 \label{sec:planteamiento-formal}
 
-Sea $\mathbf{X} = (\mathbf{x}_1, \dots, \mathbf{x}_T)$ una secuencia de $T$ vectores de características neuronales, con $\mathbf{x}_t \in \mathbb{R}^{512}$, obtenida durante un intento de habla, y sea $\mathbf{y} = (y_1, \dots, y_L)$ la secuencia de unidades de texto de la frase que el participante intentaba pronunciar, con $y_l \in \mathcal{V}$. En este trabajo, $\mathcal{V}$ es el vocabulario de subpalabras de OWSM (\cref{sec:owsm-arquitectura}).
+Sea $\mathbf{X} = (\mathbf{x}_1, \dots, \mathbf{x}_T)$ una secuencia de $T$ vectores de características neuronales, con $\mathbf{x}_t \in \mathbb{R}^{512}$, obtenida durante un intento de habla, y sea $\mathbf{y} = (y_1, \dots, y_L)$ la secuencia de unidades de texto de la frase que el participante intentaba pronunciar, con $y_l \in \mathcal{V}$. En este trabajo, $\mathcal{V}$ es el vocabulario de subpalabras de OWSM 
 
-El problema consiste en aprender una función $f_\theta: \mathbb{R}^{T \times 512} \rightarrow \mathcal{V}^{*}$ que estime $\mathbf{y}$ a partir de $\mathbf{X}$. Presenta tres características que condicionan las decisiones del trabajo:
+El problema consiste en aprender una función $f_\theta: \mathbb{R}^{T \times 512} \rightarrow \mathcal{V}^{*}$ que estime $\mathbf{y}$ a partir de $\mathbf{X}$. Con tres condiciones:
 
 \begin{enumerate}[label=(\alph*), leftmargin=*]
-  \item \textbf{Es una tarea de transducción de secuencias de longitud variable}, con $T \gg L$: a \SI{50}{\hertz}, una frase de pocos segundos produce cientos de ventanas temporales frente a unas decenas de unidades de salida.
-  \item \textbf{No se dispone de alineamiento} entre las posiciones de $\mathbf{X}$ y las de $\mathbf{y}$. Al no existir audio de referencia, no puede saberse qué ventanas corresponden a cada unidad.
-  \item \textbf{El orden se preserva}, esto es, la correspondencia entre entrada y salida es monótona: a diferencia de la traducción automática, la unidad $y_l$ nunca precede temporalmente a $y_{l-1}$.
+  \item Es una tarea de transducción de secuencias de longitud variable, con $T > L$: a \SI{50}{\hertz}, una frase corta produce muchas de ventanas temporales frente a unas decenas de unidades de salida.
+  \item No se dispone de alineamiento entre las posiciones de $\mathbf{X}$ y las de $\mathbf{y}$.
+  \item El orden se preserva: la unidad $y_l$ nunca precede temporalmente a $y_{l-1}$.
 \end{enumerate}
-
-La combinación de (b) y (c) es el escenario para el que se diseñó la clasificación temporal conexionista, descrita en la \cref{sec:ctc}.
 
 \section{Datos de entrada al modelo}
 \label{sec:datos-entrada}
@@ -33,9 +32,9 @@ La combinación de (b) y (c) es el escenario para el que se diseñó la clasific
 \subsection{Lotes, relleno y máscaras}
 \label{sec:mascaras}
 
-Durante el entrenamiento, las frases se procesan en lotes de $B$ frases a la vez, porque así se aprovecha mejor la GPU. Cada frase tiene su propia longitud $T_b$, pero un lote se guarda como un único tensor de tamaño $B \times T_{\max} \times 512$, donde $T_{\max}$ es la longitud de la frase más larga del lote. Las demás se completan con ceros al final. Este relleno (\textit{padding}) no es señal y el modelo no debe tenerlo en cuenta. Para ello, junto al lote se guardan las longitudes reales y, a partir de ellas, una máscara:
+Durante el entrenamiento, las frases se procesan en batches de $B$ frases a la vez, porque así se aprovecha mejor la GPU. Cada frase tiene su propia longitud $T_b$, pero un batch se debe guardar como un único tensor de tamaño igual. En este caso, $B \times T_{\max} \times 512$, donde $T_{\max}$ es la longitud de la frase más larga del lote y las demás frases se completan con ceros al final. Este relleno lo llamamos (\textit{padding}) y no es una señal. El modelo no debe tenerlo en cuenta. Para ello, junto al lote se guardan las longitudes reales y, a partir de ellas, una máscara:
 \begin{equation}
-  m_{b,t} =
+ m_{b,t} =
   \begin{cases}
     1 & \text{si } t \le T_b \text{ (dato real)},\\
     0 & \text{si } t > T_b \text{ (relleno)}.
@@ -43,7 +42,7 @@ Durante el entrenamiento, las frases se procesan en lotes de $B$ frases a la vez
   \label{eq:mascara}
 \end{equation}
 
-La máscara se usa en varios sitios. En la atención (\cref{sec:atencion}), las posiciones de relleno reciben una puntuación de $-\infty$ antes de la \textit{softmax}, así que su peso es cero y ninguna posición real las tiene en cuenta. En la pérdida, las posiciones y los tokens de relleno no se cuentan. Además, cualquier capa con término de sesgo convierte los ceros del relleno en otros valores, de modo que antes de una convolución hay que volver a ponerlos a cero multiplicando por la máscara. Por último, cuando una capa reduce el número de ventanas, las longitudes y la máscara se recalculan con la misma regla que esa capa, la de la \cref{eq:conv-longitud}.
+La máscara se usa en varios sitios. En la atención (\cref{sec:atencion}), las posiciones de relleno reciben una puntuación de $-\infty$ antes de la \textit{softmax}, así que su peso es cero y ninguna posición real las tiene en cuenta. En la pérdida, las posiciones y los tokens de relleno no se cuentan. Hay que tener en cuenta que cualquier capa con término de sesgo convierte los ceros del relleno en otros valores, de modo que antes de una convolución hay que volver a ponerlos a cero multiplicandolos por la máscara. Por último, cuando una capa reduce el número de ventanas, las longitudes y la máscara se recalculan con la misma regla que esa capa, \cref{eq:conv-longitud}.
 
 \subsection{Capa de entrada por sesión}
 \label{sec:capa-sesion}
@@ -53,9 +52,9 @@ Como se vio en el \cref{cap:datos}, la señal que registra cada electrodo cambia
   \mathbf{z}_t = \mathrm{softsign}\left( \mathbf{W}_{s}\,\mathbf{x}_t + \mathbf{b}_{s} \right), \qquad \mathrm{softsign}(u) = \frac{u}{1+|u|},
   \label{eq:capa-sesion}
 \end{equation}
-donde $s$ es la sesión a la que pertenece la frase, $\mathbf{W}_{s} \in \mathbb{R}^{512 \times 512}$ y $\mathbf{b}_{s} \in \mathbb{R}^{512}$. La idea es que cada día tenga su propia corrección y que, después de ella, la señal de todos los días se parezca más. La función \textit{softsign} deja cada valor entre $-1$ y $1$, así que una matriz mal ajustada no puede generar valores extremos. Las matrices empiezan siendo la identidad y los sesgos, cero, de modo que al principio la capa solo aplica la \textit{softsign}.
+donde $s$ es la sesión a la que pertenece la frase, $\mathbf{W}_{s} \in \mathbb{R}^{512 \times 512}$ y $\mathbf{b}_{s} \in \mathbb{R}^{512}$. La idea es que cada día tenga su propia corrección y que, después de ella, la señal de todos los días se parezca más. 
 
-Cada sesión añade $512^2 + 512 = 262.656$ parámetros, unos 11,8 millones con las 45 sesiones. Además, la capa solo existe para los días que tienen datos de entrenamiento: para un día nuevo no hay matriz aprendida y habría que recalibrar con datos de ese día.
+Cada sesión añade $512^2 + 512 = 262.656$ parámetros, unos 11,8 millones con las 45 sesiones. Además, la capa solo existe para los días que tienen datos de entrenamiento: para un día nuevo no hay matriz aprendida y habría que recalibrar con datos de ese día. Incluimos esto en el marco teórico porque es una capa muy común en la literatura, y podemos comprobar su utilidad en este trabajo.
 
 % =====================================================================
 % SECCIÓN COMENTADA (pendiente de decidir): preprocesado y aumento de
@@ -80,11 +79,11 @@ Cada sesión añade $512^2 + 512 = 262.656$ parámetros, unos 11,8 millones con 
 \section{\textit{Frontend}}
 \label{sec:frontend}
 
-En reconocimiento de voz se llama \textit{frontend} a la primera etapa del modelo, la que convierte la entrada en algo que el codificador pueda procesar. En OWSM, esa etapa toma la forma de onda, calcula un espectrograma en escala mel y reduce su resolución temporal con convoluciones (\cref{sec:owsm-arquitectura}). Con señal neuronal no tiene sentido calcular un espectrograma, porque la entrada ya son características, así que esa parte se sustituye por un módulo nuevo. En este trabajo se llama \textit{frontend} a ese módulo.
+En reconocimiento de voz se llama \textit{frontend} a la primera etapa del modelo, la que convierte la entrada que tenemos en algo que el codificador pueda procesar. En OWSM, esa etapa toma la forma de onda, calcula un espectrograma en escala mel y reduce su resolución temporal con convoluciones (\cref{sec:owsm-arquitectura}). Pero para esta tarea no tiene sentido proque nosotros no tenemos una señal de unidimensional de audio sino las características de 256 señales. Así que esa parte se sustituye por un módulo nuevo. En este trabajo se llama \textit{frontend} a ese módulo.
 
-El \textit{frontend} tiene dos tareas: pasar los 512 valores de cada ventana a la dimensión $d$ que espera el codificador (384 en OWSM base) y reducir el número de ventanas. Si reduce la secuencia por un factor $s$, cada vector de salida resume $20s$~ms de señal; con $s = 4$, por ejemplo, el codificador recibe un vector cada \SI{80}{\milli\second}. Menos ventanas hacen el codificador más barato, porque el coste de la atención crece con el cuadrado de la longitud, pero CTC necesita al menos una ventana por cada unidad de salida (\cref{sec:ctc}).
+El \textit{frontend} tiene dos tareas. La primera es pasar los 512 valores de cada ventana a la dimensión $d$ que espera el codificador (384 en el OWSM escogido). La segunda es reducir el número de ventanas por un factor $s$, de manera que cada ventana que recibe el codificador resume $20s$~ms de señal (\SI{80}{\milli\second} con $s = 4$). Menos ventanas hacen el codificador más barato, porque el coste de la atención crece con el cuadrado de la longitud, pero CTC necesita al menos una ventana por cada unidad de salida (\cref{sec:ctc}), así que hay que encontrar hasta dónde merece la pena reducir.
 
-Los \textit{frontends} se construyen combinando unas pocas capas:
+Los \textit{frontends} de la literatura se construyen combinando unas pocas piezas, que se describen a continuación:
 
 \begin{description}
   \item[Capa lineal.] Multiplica cada vector por una matriz y le suma un sesgo:
@@ -99,7 +98,7 @@ Los \textit{frontends} se construyen combinando unas pocas capas:
     \mathbf{u}_{t} = [\mathbf{x}_{st};\, \mathbf{x}_{st+1};\, \dots;\, \mathbf{x}_{st+k-1}] \in \mathbb{R}^{512k}.
     \label{eq:apilado}
   \end{equation}
-  El paso $s$ indica cuántas ventanas se avanza de un vector al siguiente. Con $k = s$ los grupos no se solapan y la secuencia se reduce por $s$. Con $k > s$ se solapan y cada vector ve más contexto; a esto se le suele llamar \textit{patching}.
+  El paso $s$ indica cuántas ventanas se avanza de un vector al siguiente. Con $k = s$ los grupos no se solapan y la secuencia se reduce por $s$. Si $k > s$ se solapan y ocurre el \textit{patching} donde cada vector ve más contexto.
 
   \item[Convolución temporal.] Recorre la secuencia con un filtro que mira $k$ ventanas seguidas, el núcleo:
   \begin{equation}
@@ -112,28 +111,32 @@ Los \textit{frontends} se construyen combinando unas pocas capas:
     \label{eq:conv-longitud}
   \end{equation}
 
-  \item[Función de activación.] Se aplica a cada valor después de una capa lineal o convolucional, para que el modelo pueda aprender relaciones no lineales. Las dos más usadas en el sistema son ReLU, $\mathrm{ReLU}(u) = \max(0, u)$, y GELU \cite{hendrycks2016gelu}:
+  \item[Función de activación.] Se aplica a cada valor después de una capa lineal o convolucional, para que el modelo pueda aprender relaciones no lineales. Las dos usadas en el sistema son ReLU y GELU\cite{hendrycks2016gelu}:
+
+  \begin{equation}
+    \mathrm{ReLU}(u) = \max(0, u)
+  \end{equation}
+
   \begin{equation}
     \mathrm{GELU}(u) = u\,\Phi(u),
     \label{eq:gelu}
   \end{equation}
-  donde $\Phi$ es la función de distribución de una normal estándar. GELU se comporta como una ReLU suave: deja pasar los valores positivos y atenúa los negativos poco a poco.
+  donde $\Phi$ es la función de distribución de una normal atenuando los negativos poco a poco.
 
-  \item[Normalización por capas (\textit{LayerNorm}).] Normaliza cada vector con su propia media y su propia varianza \cite{ba2016layernorm}:
+  \item[Normalización por capas (\textit{LayerNorm}).] Normaliza cada vector con su propia media y su propia varianza añadiendo unos parámetros que se aprenden \cite{ba2016layernorm}:
   \begin{equation}
     \mathrm{LN}(\mathbf{h}) = \boldsymbol{\gamma} \odot \frac{\mathbf{h} - \mu}{\sqrt{\sigma^2 + \epsilon}} + \boldsymbol{\beta},
     \label{eq:layernorm}
   \end{equation}
-  donde $\mu$ y $\sigma^2$ son la media y la varianza de los $d$ valores de $\mathbf{h}$, $\epsilon$ es una constante pequeña y $\boldsymbol{\gamma}$ y $\boldsymbol{\beta}$ se aprenden. Mantiene los valores en una escala parecida de una capa a otra, lo que estabiliza el entrenamiento.
 
-  \item[\textit{Dropout}.] Durante el entrenamiento pone a cero cada valor con probabilidad $p$ y multiplica los demás por $1/(1-p)$ \cite{srivastava2014dropout}. Así el modelo no puede depender de unas pocas neuronas concretas. En la evaluación no se apaga nada.
+  \item[\textit{Dropout}.] Durante el entrenamiento pone a cero cada valor con probabilidad $p$ y multiplica los demás por $1/(1-p)$ \cite{srivastava2014dropout}. Se hace para evitar sobreajuste y asi no cae todo el peso en unas pocas neuronas.
 
   \item[Conexión residual.] Suma la entrada de un bloque a su salida \cite{he2016resnet}:
   \begin{equation}
     \mathbf{y} = \mathbf{x} + F(\mathbf{x}).
     \label{eq:residual}
   \end{equation}
-  El bloque solo tiene que aprender la corrección $F(\mathbf{x})$ y el gradiente llega mejor a las primeras capas, lo que permite apilar muchas.
+  El bloque solo tiene que aprender la corrección $F(\mathbf{x})$ y el gradiente llega mejor a las primeras capas permitiendo apilar muchas.
 
   \item[Codificación posicional.] La atención no sabe por sí misma en qué orden están las ventanas (\cref{sec:atencion}). Para que lo sepa, se suma a cada vector un patrón que depende de su posición $t$ \cite{vaswani2017attention}:
   \begin{equation}
@@ -152,46 +155,52 @@ Qué combinación de estas capas forma cada \textit{frontend} probado se explica
 
 Whisper \cite{radford2023whisper} es un modelo de reconocimiento de voz de OpenAI que, en su versión original, se entrenó con unas 680.000 horas de audio de internet. Es multilingüe y hace varias tareas, como transcribir, traducir o identificar el idioma. Sus pesos son públicos, pero no lo son los datos ni el proceso completo de entrenamiento. OWSM (\textit{Open Whisper-style Speech Model}) reproduce ese tipo de entrenamiento con datos públicos y con la herramienta de código abierto ESPnet \cite{watanabe2018espnet}, y publica las recetas, el código, los registros de entrenamiento y los pesos \cite{peng2023owsm}. Las primeras versiones usan un codificador y un decodificador Transformer, y OWSM v3 se entrenó con unas 180.000 horas.
 
-OWSM v3.1 \cite{peng2024owsmv31} cambia el codificador por un E-Branchformer (\cref{sec:ebranchformer}) con los mismos datos, y mejora a la vez la precisión y la velocidad. Cubre 151 idiomas y se publica en tres tamaños: \textit{base} (101 millones de parámetros), \textit{small} (367 millones) y \textit{medium} (1.020 millones). OWSM v4 \cite{peng2025owsmv4} sigue la misma línea y, sobre todo, añade datos: 166.000 horas de YODAS, un conjunto de audio de internet con licencia Creative Commons que los autores limpiaron, hasta llegar a unas 320.000 horas en total. Su versión base tiene 102 millones de parámetros. En este trabajo se usan las versiones base de v3.1 y v4, las más pequeñas de cada serie.
+OWSM v3.1 \cite{peng2024owsmv31} cambia el codificador por un E-Branchformer (\cref{sec:ebranchformer}) con los mismos datos mejorando precisión y velocidad. Cubre 151 idiomas y se publica en tres tamaños: \textit{base} (101 millones de parámetros), \textit{small} (367 millones) y \textit{medium} (1.020 millones). .En este trabajo se usa la version base de v3.1. Aunque hay versiones posteriores como v4, se ha escogido por v3.1 por tener mas información al comienzo del proyecto, pero cabe destacar que hay margen de mejora
 
 \subsection{Arquitectura}
 \label{sec:owsm-arquitectura}
 
-OWSM es un modelo codificador-decodificador con atención, al que se añade una cabeza CTC sobre la salida del codificador. Con audio, el proceso completo es el siguiente:
+OWSM es un modelo codificador-decodificador con atención, al que se añade una cabeza CTC sobre la salida del codificador. Con audio, el proceso completo sería el siguiente:
 
 \begin{enumerate}[leftmargin=*, itemsep=0.3em]
-  \item \textbf{\textit{Frontend} acústico.} La forma de onda se convierte en un espectrograma en escala mel y se normaliza.
+  \item \textbf{\textit{Frontend}} La forma de onda se convierte en un espectrograma en escala mel y se normaliza.
   \item \textbf{Submuestreo convolucional.} Dos convoluciones bidimensionales, que tratan el espectrograma como una imagen de tiempo por frecuencia, reducen la secuencia (por cuatro en OWSM v3.1). Una capa lineal la lleva a la dimensión $d$ y se suma la codificación posicional.
   \item \textbf{Codificador.} Una pila de bloques E-Branchformer transforma la secuencia en otra de la misma longitud, $\mathbf{H} = (\mathbf{h}_1, \dots, \mathbf{h}_{T'})$, en la que cada vector describe lo que pasa en ese instante teniendo en cuenta toda la frase.
   \item \textbf{Decodificador.} Un Transformer genera el texto token a token. En cada paso mira los tokens que ya ha escrito y, mediante la atención cruzada, la salida del codificador.
   \item \textbf{Cabeza CTC.} Una capa lineal sobre cada $\mathbf{h}_t$ da una distribución sobre los tokens. Se usa en el entrenamiento y en la decodificación (\cref{sec:ctc}).
 \end{enumerate}
 
-En la versión base, el codificador y el decodificador tienen 6 capas cada uno y trabajan con vectores de dimensión $d = 384$.
+En la versión base, la que usamos, el codificador y el decodificador tienen 6 capas cada uno y la dimensión de los vectores es 384
 
-El texto se representa con un vocabulario de unas 50.000 subpalabras obtenido con SentencePiece \cite{kudo2018sentencepiece}. Las palabras frecuentes son un solo token y las raras se parten en varios trozos, así que el modelo puede escribir palabras que no ha visto nunca juntando trozos conocidos. Además hay tokens especiales que indican el idioma (\texttt{<eng>}), la tarea (\texttt{<asr>}, transcribir) y si se quieren marcas de tiempo (\texttt{<notimestamps>}). La secuencia que procesa el decodificador empieza con \texttt{<sos>} y estos tokens especiales, sigue con el texto de la frase y termina con \texttt{<eos>}.
+El vocabulario de OWSM son 50000 subpalabras obtenido con SentencePiece \cite{kudo2018sentencepiece}. Las palabras frecuentes son un solo token y las raras se parten en varios trozos, así que el modelo puede escribir palabras que no ha visto nunca juntando trozos conocidos. Además hay tokens especiales para etiquetar como el idioma o las marcas de tiempo.
 
-% TODO (Kiril): figura con la arquitectura de OWSM (frontend, codificador,
-% decodificador y cabeza CTC).
+La \cref{fig:esquema-modelo} resume cómo se adapta esta arquitectura en este trabajo: la señal neuronal sustituye al audio y un \textit{frontend} nuevo ocupa el lugar del espectrograma y el submuestreo, mientras que el codificador, el decodificador y la cabeza CTC son los de OWSM.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{esquema_modelo}
+  \caption[Esquema del modelo]{Esquema del modelo.}
+  \label{fig:esquema-modelo}
+\end{figure}
 
 \subsection{Atención}
 \label{sec:atencion}
 
-La atención es la operación que permite a cada posición de una secuencia mirar a las demás y decidir cuáles le importan. Cada vector se proyecta, con matrices aprendidas, en tres vectores: una consulta, una clave y un valor. La consulta de una posición se compara con las claves de todas mediante un producto escalar, y cuanto más se parecen, más peso recibe el valor de esa posición. En forma matricial:
+La atención es la operación que permite a cada posición de una secuencia mirar a las demás y decidir cuáles le importan, de modo que su representación tenga en cuenta el contexto. Cada vector de la secuencia se proyecta, con matrices aprendidas, en tres vectores: una consulta, una clave y un valor. La forma matricial de la operación es:
 \begin{equation}
   \text{Atención}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \mathrm{softmax}\!\left( \frac{\mathbf{Q}\mathbf{K}^{\top}}{\sqrt{d_k}} + \mathbf{M} \right) \mathbf{V},
   \label{eq:atencion}
 \end{equation}
-donde las filas de $\mathbf{Q}$, $\mathbf{K}$ y $\mathbf{V}$ son las consultas, las claves y los valores, $d_k$ es su dimensión y $\mathbf{M}$ es la máscara, con $0$ en las posiciones permitidas y $-\infty$ en las que no se pueden mirar (\cref{sec:mascaras}). La \textit{softmax} convierte cada fila de puntuaciones en pesos positivos que suman uno, y la división por $\sqrt{d_k}$ evita que los productos crezcan con la dimensión y saturen la \textit{softmax}. Cada salida es, por tanto, una media ponderada de los valores.
+donde las filas de $\mathbf{Q}$, $\mathbf{K}$ y $\mathbf{V}$ son las consultas, las claves y los valores, $d_k$ es su dimensión y $\mathbf{M}$ es la máscara, con $0$ en las posiciones permitidas y $-\infty$ en las que no se pueden mirar (\cref{sec:mascaras}). Cada salida es una media ponderada de los valores, con más peso en las posiciones que más se parecen a la consulta.
 
-En la autoatención, las consultas, las claves y los valores salen de la misma secuencia. En la atención cruzada, que usa el decodificador, las consultas salen del texto y las claves y los valores, de la salida del codificador. La atención multicabeza repite la operación $h$ veces en paralelo, con proyecciones distintas de dimensión $d/h$, y concatena los resultados, de modo que cada cabeza puede fijarse en un tipo de relación distinto \cite{vaswani2017attention}.
+En la autoatención, las consultas, las claves y los valores salen de la misma secuencia; la usan el codificador y el decodificador. En la atención cruzada, que solo usa el decodificador, las consultas salen del texto y las claves y los valores, de la salida del codificador \cite{vaswani2017attention}. En la práctica, la operación se repite varias veces en paralelo con proyecciones distintas (atención multicabeza), para que cada cabeza pueda fijarse en un tipo de relación distinto.
 
-Su ventaja es que cualquier posición puede relacionarse con cualquier otra en una sola capa, por lejos que esté. Su inconveniente es el coste: compara todas las posiciones con todas, así que crece con el cuadrado de la longitud de la secuencia.
+Así, cualquier posición puede relacionarse con cualquier otra en una sola capa, pero el coste crece con el cuadrado de la longitud de la secuencia.
 
 \subsection{Codificador E-Branchformer}
 \label{sec:ebranchformer}
 
-En el habla hay patrones a dos escalas. Los locales duran unas pocas decenas de milisegundos, como el paso de un sonido al siguiente, y los globales abarcan la frase entera. La atención capta bien lo global, pero lo local tiene que aprenderlo de los datos. Las convoluciones, al revés, captan bien lo local, pero solo ven lo que cabe en su núcleo. Por eso los codificadores de voz actuales combinan las dos: Conformer \cite{gulati2020conformer} las pone una detrás de otra dentro de cada bloque, Branchformer \cite{peng2022branchformer} las pone en dos ramas paralelas y E-Branchformer \cite{kim2023ebranchformer}, el codificador de OWSM v3.1, mejora la forma de unir esas dos ramas.
+En el habla se distinguen dos escalas de patrones. Los locales duran unas pocas decenas de milisegundos, como el paso de un sonido al siguiente, y los globales abarcan la frase entera. La atención capta bien lo global; las convoluciones captan bien lo local, pero solo ven lo que cabe en su núcleo. Por eso los codificadores de voz actuales combinan las dos: Conformer \cite{gulati2020conformer} las pone una detrás de otra, Branchformer \cite{peng2022branchformer} las pone en paralelo y E-Branchformer \cite{kim2023ebranchformer} mejora la forma de unirlas.
 
 Cada bloque E-Branchformer recibe una secuencia $\mathbf{E} \in \mathbb{R}^{T' \times d}$ y calcula:
 \begin{align}
@@ -204,40 +213,40 @@ Cada bloque E-Branchformer recibe una secuencia $\mathbf{E} \in \mathbb{R}^{T' \
 donde $\mathrm{LN}$ es la normalización por capas y $\mathrm{MHSA}$, la autoatención multicabeza. Las piezas son estas:
 
 \begin{description}
-  \item[Redes \textit{feed-forward} (FFN).] Dos capas lineales con una activación $\sigma$ entre ellas, aplicadas a cada vector por separado: $\mathrm{FFN}(\mathbf{h}) = \mathbf{W}_2\,\sigma(\mathbf{W}_1\mathbf{h} + \mathbf{b}_1) + \mathbf{b}_2$. La capa intermedia es más ancha que $d$. Hay una al principio y otra al final del bloque, cada una con peso un medio, una disposición que se conoce como \textit{macaron}.
+  \item[Redes \textit{feed-forward} (FFN).] Dos capas lineales con una activación entre ellas, aplicadas a cada vector por separado. Hay una al principio y otra al final del bloque, y cada una suma solo la mitad de su salida.
   \item[Rama global.] La autoatención multicabeza, que relaciona cada instante con toda la frase.
-  \item[Rama local (cgMLP).] Un perceptrón con una puerta convolucional. Una capa lineal ensancha cada vector y aplica GELU. El resultado se parte en dos mitades, $\mathbf{Z}_1$ y $\mathbf{Z}_2$; la segunda se normaliza, pasa por una convolución en profundidad y se multiplica elemento a elemento por la primera, $\tilde{\mathbf{Z}} = \mathbf{Z}_1 \odot \mathrm{DWConv}(\mathrm{LN}(\mathbf{Z}_2))$. Por último, otra capa lineal vuelve a la dimensión $d$. La convolución en profundidad filtra cada canal por separado a lo largo del tiempo, así que es barata y solo mira a los vecinos de cada instante.
-  \item[Fusión.] Concatena las salidas de las dos ramas, $\mathbf{C} = [\mathbf{E}_G;\, \mathbf{E}_L]$, les suma una convolución en profundidad y vuelve a la dimensión $d$ con una capa lineal: $\text{Fusión}(\mathbf{E}_G, \mathbf{E}_L) = \mathbf{W}_f\,(\mathbf{C} + \mathrm{DWConv}(\mathbf{C}))$. Esa convolución es lo que añade E-Branchformer respecto a Branchformer: hace que la combinación de las dos ramas dependa también de los instantes vecinos.
+  \item[Rama local (cgMLP).] Un perceptrón con una convolución dentro. La convolución filtra cada canal por separado a lo largo del tiempo, así que es barata y solo mira a los instantes vecinos. Su salida actúa como una puerta que decide cuánto deja pasar de cada valor.
+  \item[Fusión.] Junta las salidas de las dos ramas y las devuelve a la dimensión $d$. Antes de juntarlas les aplica otra convolución corta, de modo que la mezcla tiene en cuenta los instantes vecinos. Esta convolución es lo que añade E-Branchformer respecto a Branchformer.
 \end{description}
 
 Los bloques se apilan uno detrás de otro. Cada bloque mantiene la longitud y la dimensión, y la salida del último es la secuencia $\mathbf{H}$ que usan el decodificador y la cabeza CTC.
-
 % TODO (Kiril): figura de un bloque E-Branchformer (si usas la del artículo
 % original, pon en el pie que está adaptada de Kim et al.).
 
 \subsection{Decodificador Transformer}
 \label{sec:decoder-teoria}
 
-El decodificador genera la frase token a token. Para escribir el token $y_l$ recibe los anteriores, $y_1, \dots, y_{l-1}$, que se convierten en vectores con una tabla de \textit{embeddings} a la que se suma la codificación posicional. Cada una de sus capas tiene tres partes, todas con conexión residual y normalización:
+El decodificador genera la frase token a token. Para escribir el token $y_l$ recibe los anteriores, $y_1, \dots, y_{l-1}$, que se convierten en vectores con una tabla de \textit{embeddings}, después se suma la codificación posicional. Cada una de sus capas tiene tres partes, todas con conexión residual y normalización:
 
 \begin{enumerate}[leftmargin=*, itemsep=0.3em]
   \item \textbf{Autoatención con máscara causal.} Cada token mira solo a los anteriores y a sí mismo. La máscara causal pone $-\infty$ en las posiciones futuras, de modo que el modelo no puede ver lo que todavía no ha escrito.
-  \item \textbf{Atención cruzada.} Las consultas salen del texto y las claves y los valores, de la salida del codificador $\mathbf{H}$. Es el único punto en el que el decodificador mira la señal.
+  \item \textbf{Atención cruzada.} Las consultas salen del texto y las claves y los valores, de la salida del codificador $\mathbf{H}$. 
   \item \textbf{Red \textit{feed-forward}}, como las del codificador.
 \end{enumerate}
 
-Al final, una capa lineal y una \textit{softmax} sobre el último vector, $\mathbf{g}_l$, dan la probabilidad de cada token del vocabulario:
+Al final, se añade una capa lineal y una \textit{softmax} sobre el último vector $\mathbf{g}_l$ para dar la probabilidad de cada token del vocabulario:
 \begin{equation}
   p(y_l \mid y_{<l}, \mathbf{X}) = \mathrm{softmax}\left( \mathbf{W}_o\,\mathbf{g}_l + \mathbf{b}_o \right)_{y_l}.
   \label{eq:decoder}
 \end{equation}
 
-En el entrenamiento, los tokens anteriores son siempre los de la frase real, aunque el modelo se hubiera equivocado en ellos (\textit{teacher forcing}) \cite{williams1989teacher}, y se minimiza la entropía cruzada:
+Se minimiza la entropía cruzada:
+
 \begin{equation}
   \mathcal{L}_{\mathrm{att}} = -\sum_{l=1}^{L} \log p(y_l \mid y_{<l}, \mathbf{X}).
   \label{eq:loss-att}
 \end{equation}
-En la inferencia no hay frase real: el modelo usa sus propias predicciones y sigue hasta que genera \texttt{<eos>} (\cref{sec:decodificacion}).
+En la inferencia no hay frase real: el modelo usa sus propias predicciones y sigue hasta que genera \texttt{<eos>}.
 
 Como cada token depende de los anteriores, el decodificador aprende qué secuencias de palabras son probables, es decir, funciona como un modelo de lenguaje interno. El de OWSM lo ha aprendido con las transcripciones de cientos de miles de horas de habla, y por eso es la parte del modelo que aporta el conocimiento del lenguaje.
 
@@ -246,74 +255,93 @@ Como cada token depende de los anteriores, el decodificador aprende qué secuenc
 
 \subsection{Formulación y cabeza CTC}
 
-CTC \cite{graves2006ctc} permite entrenar con pares $(\mathbf{X}, \mathbf{y})$ sin saber qué ventanas corresponden a cada token. Para ello añade al vocabulario un símbolo en blanco, $\varnothing$, que significa «aquí no se emite nada», y trabaja con alineamientos: secuencias $\boldsymbol{\pi} = (\pi_1, \dots, \pi_{T'})$ que asignan un símbolo de $\mathcal{V}' = \mathcal{V} \cup \{\varnothing\}$ a cada ventana de salida del codificador.
+Al entrenar un modelo de habla se conoce la frase, pero no en qué momento de la señal se dice cada token. CTC \cite{graves2006ctc} permite entrenar sin esa información. El modelo emite un símbolo en cada ventana de salida del codificador, y se da por buena cualquier secuencia de símbolos que, una vez limpia, dé la frase correcta.
 
-La cabeza CTC es la capa que da la probabilidad de cada símbolo en cada ventana. Es una capa lineal seguida de una \textit{softmax} sobre $\mathcal{V}'$:
+Para poder emitir algo en todas las ventanas, CTC añade al vocabulario un símbolo en blanco, $\varnothing$, que quiere decir «aquí no sale nada nuevo». Una secuencia con un símbolo de $\mathcal{V}' = \mathcal{V} \cup \{\varnothing\}$ por ventana se llama alineamiento, $\boldsymbol{\pi} = (\pi_1, \dots, \pi_{T'})$.
+
+La cabeza CTC es la capa que da, en cada ventana, la probabilidad de cada símbolo. Es una capa lineal seguida de una \textit{softmax} sobre $\mathcal{V}'$:
+
 \begin{equation}
   p(\pi_t \mid \mathbf{X}) = \mathrm{softmax}\left( \mathbf{W}_c\,\mathbf{h}_t + \mathbf{b}_c \right)_{\pi_t}, \qquad t = 1, \dots, T'.
   \label{eq:cabeza-ctc}
 \end{equation}
 
-Un alineamiento se convierte en texto con la función de colapso $\mathcal{B}$, que primero une las repeticiones seguidas y después quita los blancos. Por ejemplo, $(\text{h},\text{h},\varnothing,\text{o},\text{o})$ y $(\varnothing,\text{h},\varnothing,\varnothing,\text{o})$ dan los dos \texttt{ho}. El blanco hace falta para poder escribir dos símbolos iguales seguidos: \texttt{oo} necesita un blanco entre las dos \texttt{o}. Esto también fija un mínimo: la salida del codificador tiene que tener al menos tantas ventanas como tokens tiene la frase, más una por cada par de tokens iguales seguidos.
+Un alineamiento se convierte en texto con la función de colapso $\mathcal{B}$: primero se juntan los símbolos repetidos seguidos y después se quitan los blancos. Con letras se ve enseguida. En ocho ventanas, tanto \texttt{h h $\varnothing$ o l l $\varnothing$ a} como \texttt{$\varnothing$ h o o l $\varnothing$ a a} se quedan en \texttt{hola}, y hay muchos más alineamientos que dan lo mismo. Para escribir dos símbolos iguales seguidos, como las dos \texttt{l} de \texttt{llama}, hace falta un blanco entre ellos (\texttt{l $\varnothing$ l}); sin él, el colapso los juntaría en uno. De aquí sale un límite: el codificador tiene que dar al menos una ventana por cada token de la frase, más una por cada pareja de tokens iguales seguidos.
 
-Si se supone que, dada la entrada, cada ventana es independiente de las demás, la probabilidad de un alineamiento es el producto de las probabilidades de cada ventana, y la de la frase es la suma sobre todos los alineamientos que colapsan a ella:
+Para calcular la probabilidad de la frase, CTC supone que, conocida la señal, lo que se emite en una ventana no depende de lo que se emite en las otras. Así, la probabilidad de un alineamiento es el producto de las de sus ventanas, y la de la frase es la suma de las de todos los alineamientos que colapsan a ella:
+
 \begin{align}
   p(\boldsymbol{\pi} \mid \mathbf{X}) &= \prod_{t=1}^{T'} p(\pi_t \mid \mathbf{X}), \label{eq:ctc-alineamiento}\\[0.3em]
   p(\mathbf{y} \mid \mathbf{X}) &= \sum_{\boldsymbol{\pi} \in \mathcal{B}^{-1}(\mathbf{y})} p(\boldsymbol{\pi} \mid \mathbf{X}). \label{eq:ctc-marginal}
 \end{align}
 
-La pérdida es $\mathcal{L}_{\mathrm{CTC}} = -\log p(\mathbf{y} \mid \mathbf{X})$. El número de alineamientos crece de forma exponencial con $T'$, pero la suma se calcula de forma exacta, en un tiempo proporcional a $T' \cdot L$, con un algoritmo de programación dinámica hacia delante y hacia atrás.
+El entrenamiento minimiza $\mathcal{L}_{\mathrm{CTC}} = -\log p(\mathbf{y} \mid \mathbf{X})$, lo que sube a la vez la probabilidad de todos los alineamientos que llevan a la frase correcta. Son tantos que no se pueden sumar uno a uno: su número crece de forma exponencial con $T'$. Pero muchos comparten el principio, así que se puede avanzar ventana a ventana guardando sumas parciales. Este algoritmo de programación dinámica, llamado hacia delante y hacia atrás, da el resultado exacto con un coste proporcional a $T' \cdot L$, donde $L$ es el número de tokens de la frase.
 
-La hipótesis de independencia es lo que hace posible el cálculo, pero también su punto débil: la predicción de cada ventana no tiene en cuenta lo que se emite en las demás, así que CTC no aprende por sí mismo qué secuencias de palabras son probables.
+La independencia entre ventanas es lo que permite hacer esta cuenta, pero tiene un precio. Cada ventana decide sin saber qué han emitido las demás, de modo que CTC, por sí solo, no aprende qué palabras suelen ir juntas.
 
-% TODO (Kiril): si quieres, una figura con un ejemplo de alineamiento CTC.
+La \cref{fig:ctc-alineamientos} muestra algunos ejemplos con la palabra \texttt{cat} en seis ventanas. En la figura, el blanco se representa con $\epsilon$.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\linewidth]{05_ctcAllignment}
+  \caption[Alineamientos CTC válidos y no válidos]{Alineamientos CTC válidos y no válidos para la salida \texttt{cat} en seis ventanas; $\epsilon$ es el símbolo en blanco. A la izquierda, tres alineamientos que colapsan a \texttt{cat}. A la derecha, tres que no: el primero da \texttt{ccat}, porque el blanco separa las dos \texttt{c}; el segundo solo tiene cinco símbolos para seis ventanas, y el tercero no emite la \texttt{a}. Adaptada de \cite{hannun2017ctc}.}
+  \label{fig:ctc-alineamientos}
+\end{figure}
 
 \subsection{Pérdida conjunta e InterCTC}
 
-OWSM se entrena con una pérdida que combina CTC y el decodificador \cite{kim2017jointctc,watanabe2017hybrid}:
+OWSM se entrena con CTC y con el decodificador a la vez, sumando las dos pérdidas con un peso $\lambda$ \cite{kim2017jointctc,watanabe2017hybrid}:
+
 \begin{equation}
   \mathcal{L} = \lambda\, \mathcal{L}_{\mathrm{CTC}} + (1-\lambda)\, \mathcal{L}_{\mathrm{att}}, \qquad \lambda \in [0,1].
   \label{eq:joint-ctc-att}
 \end{equation}
-Las dos partes se ayudan. CTC obliga a que la correspondencia entre señal y texto sea monótona, y eso guía al decodificador, que por sí solo es demasiado flexible y tarda más en aprender a qué parte de la señal debe mirar. El decodificador, a su vez, aporta el contexto entre tokens que le falta a CTC.
 
-InterCTC \cite{lee2021interctc} añade otra pérdida CTC, con la misma cabeza, sobre la salida de una capa intermedia $k$ del codificador, además de la de la última capa $N$:
+Cada parte cubre un hueco de la otra. CTC solo admite alineamientos que avanzan en orden, del principio de la señal al final, y eso ayuda al decodificador a encontrar antes en qué parte de la señal se tiene que fijar. El decodificador, por su lado, tiene en cuenta los tokens anteriores, que es lo que le falta a CTC.
+
+InterCTC \cite{lee2021interctc} añade una segunda pérdida CTC a mitad del codificador. La misma cabeza se aplica a la salida de una capa intermedia $k$, además de a la de la última capa $N$, y las dos pérdidas se mezclan con un peso $w$:
+
 \begin{equation}
   \mathcal{L}_{\mathrm{CTC}} = (1-w)\,\mathcal{L}_{\mathrm{CTC}}^{(N)} + w\, \mathcal{L}_{\mathrm{CTC}}^{(k)}, \qquad k < N.
   \label{eq:interctc}
 \end{equation}
-Así las primeras capas reciben un gradiente más directo y se las obliga a que su salida ya se pueda convertir en texto, lo que funciona como regularización. Solo se usa en el entrenamiento.
+
+Con esto, las primeras capas reciben el gradiente de forma más directa y tienen que dar ya una salida que se pueda convertir en texto. Sirve de regularización y solo se usa durante el entrenamiento.
 
 \subsection{Decodificación}
 \label{sec:decodificacion}
 
-Una vez entrenado, el modelo puede convertir la señal en texto de dos formas. La más sencilla usa solo la cabeza CTC: toma en cada ventana el símbolo más probable y aplica el colapso,
+Con el modelo entrenado hay dos maneras de pasar de la señal al texto. La más sencilla solo usa la cabeza CTC: en cada ventana se queda con el símbolo más probable y luego aplica el colapso,
+
 \begin{equation}
   \hat{\mathbf{y}}_{\mathrm{voraz}} = \mathcal{B}\left( \arg\max_{\pi_1} p(\pi_1 \mid \mathbf{X}), \dots, \arg\max_{\pi_{T'}} p(\pi_{T'} \mid \mathbf{X}) \right).
   \label{eq:ctc-greedy}
 \end{equation}
-Es muy rápida, porque no necesita el decodificador, y muestra lo que ha aprendido el codificador por sí solo. Es una aproximación, ya que la frase más probable no tiene por qué corresponder al alineamiento más probable.
 
-La segunda es la búsqueda en haz \cite{watanabe2017hybrid}. El texto se genera token a token con el decodificador, pero en cada paso se guardan las $K$ hipótesis parciales con mejor puntuación en lugar de solo la mejor. La puntuación de cada hipótesis $\hat{y}_{1:l}$ combina el decodificador y CTC:
+Es muy rápida, porque no pasa por el decodificador, y enseña lo que ha aprendido el codificador sin ayuda. Aun así, es una aproximación: la probabilidad de una frase está repartida entre muchos alineamientos, y la frase más probable no tiene por qué salir del alineamiento más probable.
+
+La otra manera es la búsqueda en haz \cite{watanabe2017hybrid}, que sí usa el decodificador. El texto se escribe token a token, pero en cada paso se guardan las $K$ frases parciales con mejor puntuación, no solo la mejor. La puntuación de cada una, $\hat{y}_{1:l}$, junta las dos partes del modelo:
+
 \begin{equation}
   s(\hat{y}_{1:l}) = \lambda \log p_{\mathrm{CTC}}(\hat{y}_{1:l} \mid \mathbf{X}) + (1-\lambda) \log p_{\mathrm{att}}(\hat{y}_{1:l} \mid \mathbf{X}),
   \label{eq:beam}
 \end{equation}
-donde $p_{\mathrm{att}}$ es el producto de las probabilidades de la \cref{eq:decoder} y $p_{\mathrm{CTC}}$ es la probabilidad, según CTC, de que la frase empiece por $\hat{y}_{1:l}$. CTC penaliza las hipótesis que no encajan con la señal, por ejemplo las que repiten palabras o se alargan sin motivo, y el decodificador favorece las que tienen sentido como frase. La búsqueda acaba cuando las mejores hipótesis terminan en \texttt{<eos>}. En este trabajo no se añade ningún modelo de lenguaje externo: el conocimiento del lenguaje sale del decodificador.
+
+donde $p_{\mathrm{att}}$ es el producto de las probabilidades de la \cref{eq:decoder} y $p_{\mathrm{CTC}}$ es la probabilidad, según CTC, de que la frase empiece por $\hat{y}_{1:l}$. CTC castiga las frases que no cuadran con la señal, como las que repiten palabras o se alargan sin motivo, y el decodificador puntúa mejor las que tienen sentido. La búsqueda termina cuando las mejores hipótesis acaban en \texttt{<eos>}. En este trabajo no se usa ningún modelo de lenguaje externo, así que todo el conocimiento del lenguaje viene del decodificador.
 
 \section{Adaptación de un modelo preentrenado}
 \label{sec:adaptacion}
 
-Un modelo preentrenado es un modelo que ya se ha entrenado con muchos datos para una tarea, como OWSM con cientos de miles de horas de audio. Reutilizarlo en una tarea nueva se llama aprendizaje por transferencia: en lugar de empezar de cero, se parte de unos pesos que ya han aprendido algo útil y se ajustan con los datos nuevos (\textit{fine-tuning}) \cite{yosinski2014transferable}. Suele funcionar mejor cuanto más se parecen las dos tareas.
+Un modelo preentrenado es un modelo que ya se ha entrenado con muchos datos para una tarea. OWSM ha sido entrenado con mas de cien mil horas de audio. Reutilizarlo en una tarea nueva se llama aprendizaje por transferencia: en lugar de empezar de cero, se parte de unos pesos que ya han aprendido algo útil y se ajustan con los datos nuevos (\textit{fine-tuning}) \cite{yosinski2014transferable}.
 
-Entrenar un componente desde cero significa partir de pesos aleatorios. No se inicializan a cero: si todos los pesos de una capa empezaran iguales, todas sus neuronas calcularían lo mismo y recibirían el mismo gradiente, así que nunca llegarían a diferenciarse. Por eso se sortean valores pequeños, con una escala que depende del tamaño de la capa para que las señales no crezcan ni se apaguen al atravesar la red \cite{glorot2010understanding}. Hay casos concretos en los que sí tiene sentido empezar con un valor fijo, como la identidad de la capa por sesión (\cref{sec:capa-sesion}) o la matriz $\mathbf{B}$ de LoRA.
+Entrenar un componente desde cero significa partir de pesos aleatorios que sortean valores pequeños, con una escala que depende del tamaño de la capa para que las señales no crezcan ni se apaguen al atravesar la red \cite{glorot2010understanding}. Hay casos concretos en los que sí tiene sentido empezar con un valor fijo, como la identidad de la capa por sesión (\cref{sec:capa-sesion}) o la matriz $\mathbf{B}$ de LoRA.
 
-Congelar un componente significa que sus pesos no se actualizan durante el entrenamiento. Sigue funcionando igual en la pasada hacia delante y el gradiente lo sigue atravesando hacia las capas anteriores, de modo que un decodificador congelado puede seguir indicando al codificador qué salida necesita. Descongelar es lo contrario, y se puede hacer con todo el componente o solo con algunas capas, normalmente las más cercanas a la salida. También se puede dar a cada parte del modelo una tasa de aprendizaje distinta (\cref{sec:entrenamiento-teoria}), por ejemplo más baja para lo preentrenado que para lo nuevo.
+Cuando mencionamos congelar una capa, nos refierimos a  pesos no se actualizan durante el entrenamiento. Sigue funcionando igual en la pasada hacia delante y el gradiente lo sigue atravesando hacia las capas anteriores, de modo que un decodificador congelado puede seguir indicando al codificador qué salida necesita. Descongelar es lo contrario, y se puede hacer con todo el componente o solo con algunas capas. También se puede dar a cada parte del modelo una tasa de aprendizaje distinta (\cref{sec:entrenamiento-teoria}), por ejemplo más baja para lo preentrenado que para lo nuevo.
 
 \subsection{LoRA}
 \label{sec:lora-teoria}
 
-LoRA (\textit{Low-Rank Adaptation}) \cite{hu2022lora} ajusta un modelo preentrenado cambiando muy pocos parámetros. Parte de la idea de que el cambio que necesitan los pesos para la tarea nueva tiene rango bajo. Para una matriz preentrenada $\mathbf{W}_0 \in \mathbb{R}^{d \times k}$, en lugar de aprender un cambio completo $\Delta\mathbf{W}$, se aprende como el producto de dos matrices estrechas:
+LoRA (\textit{Low-Rank Adaptation}) es un método de aprendizaje por transferencia muy eficiente que ajuste cambiando muy pocos parámetros\cite{hu2022lora}. Parte de la idea de que el cambio que necesitan los pesos para la tarea nueva tiene rango bajo. Para una matriz preentrenada $\mathbf{W}_0 \in \mathbb{R}^{d \times k}$, en lugar de aprender un cambio completo $\Delta\mathbf{W}$, se aprende como el producto de dos matrices estrechas:
 \begin{equation}
   \mathbf{W} = \mathbf{W}_0 + \frac{\alpha}{r}\,\mathbf{B}\mathbf{A}, \qquad \mathbf{B} \in \mathbb{R}^{d \times r},\; \mathbf{A} \in \mathbb{R}^{r \times k},\; r \ll \min(d,k).
   \label{eq:lora}
@@ -326,61 +354,71 @@ $\mathbf{W}_0$ se queda congelada y solo se entrenan $\mathbf{A}$ y $\mathbf{B}$
 Esta sección resume los conceptos de entrenamiento que aparecen en el resto de la memoria. Los valores de cada experimento están en el \cref{cap:metodologia}.
 
 \begin{description}
-  \item[Parámetros e hiperparámetros.] Los parámetros son los pesos que aprende el modelo. Los hiperparámetros se fijan antes de entrenar, como la tasa de aprendizaje, el tamaño del lote o el número de épocas. Los parámetros entrenables son los que se actualizan, y pueden ser muchos menos que el total si hay partes congeladas.
+  \item[Parámetros e hiperparámetros.] Los parámetros son los pesos que aprende el modelo. Los hiperparámetros se fijan antes de entrenar, como la tasa de aprendizaje, el tamaño del lote o el número de épocas. Los parámetros entrenables son los que se actualizan durante el entrenamiento.
 
-  \item[Conjuntos de datos.] El de entrenamiento sirve para ajustar los pesos. El de validación sirve para tomar decisiones durante el entrenamiento, como elegir la mejor época, y para detectar el sobreajuste. El de prueba solo se usa al final, para medir el resultado con datos que no han influido en ninguna decisión. A veces se aparta una parte del entrenamiento, una reserva, para que haga de validación.
+  \item[Conjuntos de datos.] Divisiónes que realizamos sobre los datos para poder obtener métricas reales. El conjunto de entrenamiento sirve para ajustar los pesos. El de validación sirve para tomar decisiones durante el entrenamiento y el de prueba solo se usa al final, para medir el resultado con datos que no han influido en ninguna decisión.
 
-  \item[Lote, paso y época.] Un lote es el grupo de frases que se procesa a la vez. En cada paso se calcula la pérdida de un lote y se actualizan los pesos una vez. Una época es una pasada completa por el conjunto de entrenamiento, aunque algunas herramientas, como ESPnet, permiten fijarla como un número de pasos.
+  \item[Lote, paso y época.] Un lote es el grupo de frases que se procesa a la vez. En cada paso se calcula la pérdida de un lote y se actualizan los pesos una vez. Una época es una pasada completa por el conjunto de entrenamiento.
 
-  \item[Descenso por gradiente.] Entrenar es buscar los parámetros $\boldsymbol{\theta}$ que minimizan la pérdida. En cada paso se calcula el gradiente $\mathbf{g} = \nabla_{\boldsymbol{\theta}} \mathcal{L}$ mediante retropropagación y los parámetros se mueven en la dirección contraria, con un tamaño de paso dado por la tasa de aprendizaje $\eta$: $\boldsymbol{\theta} \leftarrow \boldsymbol{\theta} - \eta\, \mathbf{g}$.
+  \item[Optimización.] Entrenar es buscar los parámetros que minimizan la pérdida. En cada paso se calcula el gradiente de la pérdida con retropropagación y los parámetros se mueven un poco en la dirección contraria. Cuánto se mueven lo decide la tasa de aprendizaje $\eta$. Aquí se usa AdamW \cite{kingma2015adam,loshchilov2019adamw}, una variante que adapta el tamaño del paso a cada parámetro según cómo han ido sus gradientes anteriores. Además, aplica un decaimiento de pesos que los empuja poco a poco hacia cero y sirve de regularización.
 
-  \item[AdamW.] En la práctica se usa una versión mejorada de esa regla. Adam \cite{kingma2015adam} lleva una media móvil del gradiente y otra de su cuadrado, y adapta el paso a cada parámetro. AdamW \cite{loshchilov2019adamw} le añade el decaimiento de pesos por separado. En el paso $n$:
-  \begin{align}
-    \mathbf{m}_n &= \beta_1 \mathbf{m}_{n-1} + (1-\beta_1)\,\mathbf{g}_n, &
-    \mathbf{v}_n &= \beta_2 \mathbf{v}_{n-1} + (1-\beta_2)\,\mathbf{g}_n^2, \nonumber\\
-    \hat{\mathbf{m}}_n &= \frac{\mathbf{m}_n}{1-\beta_1^n}, &
-    \hat{\mathbf{v}}_n &= \frac{\mathbf{v}_n}{1-\beta_2^n}, \nonumber\\
-    \boldsymbol{\theta}_n &= \boldsymbol{\theta}_{n-1} - \eta_n \left( \frac{\hat{\mathbf{m}}_n}{\sqrt{\hat{\mathbf{v}}_n} + \epsilon} + \lambda_{\mathrm{wd}}\, \boldsymbol{\theta}_{n-1} \right), \label{eq:adamw}
-  \end{align}
-  donde $\beta_1$ y $\beta_2$ controlan cuánto pesan los pasos anteriores en las medias, $\epsilon$ evita dividir por cero y $\lambda_{\mathrm{wd}}$ es el decaimiento de pesos, que empuja los pesos hacia cero y funciona como regularización.
+  \item[Tasa de aprendizaje y calentamiento.] Al principio del entrenamiento, los pasos grandes pueden desestabilizar el modelo, sobre todo en los Transformers. Por eso la tasa de aprendizaje empieza siendo pequeña y sube poco a poco durante unos pasos de calentamiento (\textit{warmup}). Después va bajando despacio. ESPnet usa la regla del Transformer original \cite{vaswani2017attention}: la tasa sube en línea recta hasta su valor máximo y luego baja de forma proporcional a la inversa de la raíz cuadrada del número de pasos.
 
-  \item[Tasa de aprendizaje y calentamiento.] Al principio del entrenamiento, los pasos grandes pueden desestabilizar el modelo, sobre todo en los Transformers. Por eso se empieza con una tasa pequeña que sube poco a poco, el calentamiento (\textit{warmup}), y luego baja. La regla que usa ESPnet viene del Transformer original \cite{vaswani2017attention}:
-  \begin{equation}
-    \eta_n = \eta_0 \cdot w^{0{,}5} \cdot \min\!\left( n^{-0{,}5},\; n\, w^{-1{,}5} \right),
-    \label{eq:warmup}
-  \end{equation}
-  donde $\eta_0$ es la tasa máxima y $w$ el número de pasos de calentamiento. La tasa sube en línea recta hasta $\eta_0$ en el paso $w$ y después baja de forma proporcional a $1/\sqrt{n}$.
+  \item[Recorte del gradiente.] Si el gradiente es demasiado grande, se reduce para que su norma no pase de un umbral. Así un lote raro no puede dar un paso enorme y desestabilizar el entrenamiento \cite{pascanu2013clipping}.
 
-  \item[Recorte del gradiente.] Si la norma del gradiente supera un umbral $c$, se reescala para que valga $c$: $\mathbf{g} \leftarrow c\,\mathbf{g}/\lVert\mathbf{g}\rVert$. Así un lote raro no puede dar un paso enorme y desestabilizar el entrenamiento \cite{pascanu2013clipping}.
-
-  \item[Sobreajuste.] Ocurre cuando el modelo aprende de memoria el entrenamiento y deja de generalizar: la pérdida de entrenamiento sigue bajando, pero la de validación se estanca o sube. Es más probable cuantos más parámetros tiene el modelo en relación con los datos. Lo frenan la regularización (decaimiento de pesos, \textit{dropout} o aumento de datos) y la parada temprana.
+  \item[Sobreajuste.] Ocurre cuando el modelo aprende de memoria el entrenamiento y deja de generalizar: la pérdida de entrenamiento sigue bajando, pero la de validación se estanca o sube.
 
   \item[Parada temprana.] Se evalúa en validación al final de cada época, se guarda la mejor y se para si no mejora durante un número de épocas seguidas, la paciencia \cite{prechelt1998early}.
 
-  \item[Semilla.] La inicialización, el orden de los lotes y el \textit{dropout} dependen de números aleatorios. La semilla fija esa aleatoriedad para poder repetir un entrenamiento. Con semillas distintas, la misma receta puede dar resultados algo distintos.
+  \item[Semilla.] La inicialización, el orden de los lotes y el \textit{dropout} dependen de números aleatorios. La semilla fija esa aleatoriedad para poder repetir un entrenamiento.
 \end{description}
 
 \section{Métricas de evaluación}
 \label{sec:metricas-teoria}
 
-Las métricas de texto se basan en la distancia de Levenshtein \cite{levenshtein1966}, que cuenta el número mínimo de errores entre la hipótesis y la referencia: sustituciones ($S$, palabras cambiadas), eliminaciones ($D$, palabras de la referencia que faltan en la hipótesis) e inserciones ($I$, palabras de más en la hipótesis). La tasa de error por palabra (WER, \textit{Word Error Rate}) divide ese número entre las $N$ palabras de la referencia:
+Durante el entrenamiento, ESPnet da muchas métricas en cada época. La más directa es la propia pérdida, la combinación de CTC y del decodificador de la \cref{eq:joint-ctc-att}. Es lo que el modelo optimiza, pero su valor depende del peso $\lambda$ y no dice cuántos tokens o palabras acierta, así que no sirve para comparar. En este trabajo se usan dos métricas, cada una con un papel distinto: la exactitud de ESPnet, para comparar las épocas de un mismo modelo y quedarse con la mejor, y la tasa de error por palabra, para comparar modelos distintos entre sí.
+
+\subsection{Exactitud de ESPnet}
+
+La exactitud (\textit{accuracy}, acc) es la proporción de tokens que acierta el decodificador cuando recibe como contexto los tokens reales de la frase (\textit{teacher forcing}):
+\begin{equation}
+  \mathrm{acc} = \frac{1}{\sum_i L_i} \sum_{i} \sum_{l=1}^{L_i} \mathbb{I}\!\left[ \arg\max_{v \in \mathcal{V}} p(v \mid y_{i,<l}, \mathbf{X}_i) = y_{i,l} \right],
+  \label{eq:acc}
+\end{equation}
+donde $L_i$ es el número de tokens de la frase $i$ e $\mathbb{I}[\cdot]$ vale 1 si se cumple la condición y 0 si no.
+
+Es el criterio que se usa durante el entrenamiento para elegir la mejor época de cada modelo. Su gran ventaja es que sale casi gratis: se obtiene en la misma pasada que la pérdida de validación, sin generar texto, así que se tiene en cada época. Además, mide si el decodificador acierta los tokens, que son los que al final forman el texto.
+
+Su inconveniente es que resulta optimista. Con el contexto real, un error no afecta a los tokens siguientes; al generar texto, en cambio, un error al principio puede desviar el resto de la frase. También cuenta tokens y no palabras, y deja fuera la cabeza CTC y la búsqueda en haz. Por eso sirve para ordenar las épocas de un mismo modelo, pero no para comparar modelos distintos, que pueden fallar de maneras distintas al generar.
+
+\subsection{Tasa de error por palabra}
+
+Para comparar modelos hay que mirar el texto que escriben. Las métricas de texto se basan en la distancia de Levenshtein \cite{levenshtein1966}, que cuenta el número mínimo de errores entre la hipótesis y la referencia: sustituciones ($S$, palabras cambiadas), eliminaciones ($D$, palabras de la referencia que faltan en la hipótesis) e inserciones ($I$, palabras de más en la hipótesis). La tasa de error por palabra (WER, \textit{Word Error Rate}) divide ese número entre las $N$ palabras de la referencia:
 \begin{equation}
   \mathrm{WER} = \frac{S + D + I}{N}.
   \label{eq:wer}
 \end{equation}
-Por ejemplo, si la referencia es \textit{i want some water} y el modelo escribe \textit{i want the water please}, hay una sustitución (\textit{the} en lugar de \textit{some}) y una inserción (\textit{please}), así que el WER es $2/4 = \SI{50}{\percent}$. Como el número de inserciones no tiene límite, el WER puede pasar del \SI{100}{\percent} si el modelo escribe mucho más de lo que había.
-
-Sobre un conjunto de frases, el WER puede calcularse como la media de los WER de cada frase o sumando antes los errores y las palabras de todas. Lo habitual es lo segundo, el WER de corpus, que da a cada frase un peso proporcional a su longitud:
+Es la métrica estándar en reconocimiento de voz y la que dan los trabajos de decodificación del habla del estado del arte. Sobre un conjunto de frases se puede calcular de dos formas: como la media de los WER de cada frase, o sumando primero los errores y las palabras de todas. Lo habitual es lo segundo, el WER de corpus, que da a cada frase un peso proporcional a su longitud:
 \begin{equation}
   \mathrm{WER}_{\mathrm{corpus}} = \frac{\sum_{i} (S_i + D_i + I_i)}{\sum_{i} N_i}.
   \label{eq:wer-corpus}
 \end{equation}
 
-La tasa de error por carácter (CER, \textit{Character Error Rate}) se calcula igual, pero con caracteres en lugar de palabras. Es menos severa, porque una palabra con una sola letra mal cuenta como un error de una letra y no de una palabra entera. ESPnet la calcula durante el entrenamiento sobre la salida de la cabeza CTC. Algunos trabajos dan, en lugar del error, el acierto, que es su complementario: un acierto por palabra del \SI{95}{\percent} corresponde a un WER del \SI{5}{\percent}.
+Cuanto más bajo es el WER, mejor. En el ejemplo de la \cref{tab:ejemplo-wer}, la referencia tiene cuatro palabras y la hipótesis comete una sustitución y una inserción, así que el WER es $2/4 = \SI{50}{\percent}$. Como el número de inserciones no tiene límite, el WER puede pasar del \SI{100}{\percent}: si la referencia es \textit{yes} y el modelo escribe \textit{yes i do}, hay dos inserciones sobre una palabra y el WER de esa frase es del \SI{200}{\percent}.
 
-Por último, la exactitud (\textit{accuracy}, acc) que da ESPnet durante el entrenamiento es la proporción de tokens que acierta el decodificador cuando recibe como contexto los tokens reales (\textit{teacher forcing}):
-\begin{equation}
-  \mathrm{acc} = \frac{1}{\sum_i L_i} \sum_{i} \sum_{l=1}^{L_i} \mathbb{I}\!\left[ \arg\max_{v \in \mathcal{V}} p(v \mid y_{i,<l}, \mathbf{X}_i) = y_{i,l} \right],
-  \label{eq:acc}
-\end{equation}
-donde $\mathbb{I}[\cdot]$ vale 1 si se cumple la condición y 0 si no. Es rápida de calcular, porque no hace falta generar texto, y por eso se usa para seguir el entrenamiento y elegir épocas. Suele ser más optimista que el WER: con el contexto real, un error no afecta a los tokens siguientes, mientras que al generar texto un error al principio puede desviar el resto de la frase.
+\begin{table}[htbp]
+  \centering
+  \caption{Ejemplo de cálculo del WER. $S$: sustitución; $I$: inserción.}
+  \label{tab:ejemplo-wer}
+  \begin{tabular}{lccccc}
+    \hline
+    Referencia & \textit{me} & \textit{encantan} & \textit{los} & \textit{datos} & --- \\
+    Hipótesis  & \textit{me} & \textit{encantan} & \textit{los}  & \textit{datos} & \textit{cerebrales} \\
+    Error      &            &               & $S$           &                & $I$ \\
+    \hline
+  \end{tabular}
+\end{table}
+
+El WER es la medida más fiel, pero no se puede calcular de forma eficiente en cada época. Para obtenerlo hay que generar el texto de cada frase con la búsqueda en haz (\cref{sec:decodificacion}), token a token y guardando varias hipótesis a la vez, mientras que la exactitud sale de una sola pasada que procesa todos los tokens en paralelo. Por eso se calcula al final, con el modelo ya elegido.
+
+La tasa de error por carácter (CER) y la tasa de error por fonema (PER) se calculan igual, pero con caracteres o fonemas en lugar de palabras. Son las métricas naturales cuando el modelo escribe esas unidades. El CER es además menos severo, porque una palabra con una sola letra mal cuenta como un error de una letra y no de una palabra entera; ESPnet lo calcula durante el entrenamiento sobre la salida de la cabeza CTC. Aquí el objetivo es escribir palabras, así que la medida final es el WER. Por último, algunos trabajos dan el acierto en lugar del error, que es su complementario: un acierto por palabra del \SI{95}{\percent} corresponde a un WER del \SI{5}{\percent}.

@@ -10,12 +10,14 @@
 
 \providecommand{\figpendiente}[1]{\fbox{\parbox{0.92\textwidth}{\centering\vspace{1.3cm}\textit{[Figura pendiente: #1]}\vspace{1.3cm}}}}
 
-\chapter{Metodología}
-\label{cap:metodologia}
+\chapter{Diseño de la experimentación}
+\label{cap:experimentacion}
 
 La metodología tiene dos fases, que corresponden a los dos bloques de experimentos de la \cref{sec:planteamiento}. En la primera se busca el mejor modelo posible con un presupuesto de cómputo limitado, comparando lo que mejora cada cambio con lo que cuesta. En la segunda se toma ese modelo y se estudia cómo se comporta con el paso del tiempo y cuántos datos necesita. Antes se describen el sistema de partida y la forma de evaluarlo. Todos los entrenamientos se han hecho en Google Colab, con una sola GPU NVIDIA L4, usando ESPnet a través de su interfaz ESPnet-EZ \cite{watanabe2018espnet,someki2024espnetez}.
 
-\section{Adaptación de OWSM a la señal neuronal}
+\section{Detalles de implementación}
+
+\subsection{Configuración de entrenamiento}
 \label{sec:adaptacion-modalidad}
 
 El punto de partida es OWSM v3.1 en su versión base (\cref{sec:owsm-teoria}). Se eligió OWSM porque es abierto y está entrenado solo con datos públicos, lo que permite reproducir el trabajo, y la versión base porque, con unos 100 millones de parámetros, se puede entrenar en una sola GPU y es un tamaño más razonable para las cerca de 8.000 frases de entrenamiento del conjunto. Para que trabaje con señal neuronal en lugar de audio se hacen estos cambios:
@@ -29,7 +31,7 @@ El punto de partida es OWSM v3.1 en su versión base (\cref{sec:owsm-teoria}). S
 
 El modelo se entrena con la pérdida conjunta de la \cref{eq:joint-ctc-att}, con $\lambda = 0{,}3$, el mismo valor con el que se entrenó OWSM. Se añade InterCTC en la segunda capa del codificador, con $w = 0{,}3$ (\cref{eq:interctc}), para que las primeras capas reciban un gradiente más directo, lo que ayuda sobre todo cuando el codificador empieza desde cero. El \textit{frontend} y la cabeza CTC usan una tasa de aprendizaje de $10^{-3}$, y el codificador, una 20 veces menor: con la misma tasa para todo el modelo, el entrenamiento divergía. El resto de la receta está en el \cref{anexo:receta}.
 
-\section{Evaluación}
+\subsection{Marco de evaluación}
 \label{sec:protocolo-evaluacion}
 
 Como el test oficial no tiene transcripciones públicas, la validación oficial hace de conjunto de prueba (\cref{sec:b2t25}). Es lo habitual con este conjunto: Khanday et al. solo dan resultados en validación \cite{khanday2026}, y LightBeam da los dos y obtiene cifras parecidas en validación y en las dos partes del test \cite{lightbeam}. Las cuatro sesiones sin validación solo aportan datos de entrenamiento. Antes de calcular el error, la referencia y la hipótesis se normalizan para que las mayúsculas y la puntuación no cuenten como errores: se pasan a minúsculas y se quitan los signos de puntuación, salvo los apóstrofos y los guiones.

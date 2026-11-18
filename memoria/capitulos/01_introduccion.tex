@@ -2,63 +2,57 @@
 % =====================================================================
 %  CAPÍTULO 1 — INTRODUCCIÓN
 % =====================================================================
-% El planteamiento, los objetivos, el alcance y la estructura que había
-% antes en este capítulo están ahora en capitulos/movido_del_cap1.tex,
-% pendientes de colocar en el capítulo 2.
+% Estructura que piden los tutores (18/11/2026): prefacio sin número,
+% 1.1 Contexto, 1.2 Motivación, 1.3 Planteamiento del trabajo y
+% 1.4 Objetivos y alcance. Desde la 1.3 es lo que antes era el
+% capítulo 2 (02_planteamiento.tex), que ya no se incluye en main.tex.
 % =====================================================================
 
 \chapter{Introducción}
 \label{cap:introduccion}
 
-\section{Introducción}
-\label{sec:introduccion}
+% Prefacio del capítulo (sin número)
 
-\subsection{Contexto}
+La comunicación oral es una capacidad básica para vivir en sociedad. Sin embargo, hay enfermedades que pueden quitarla casi por completo, aunque la persona siga pensando y entendiendo con normalidad, esta puede ser la causa de muchos trastornos. Se suelen dividir en disartria y anartria. La disartria es un trastorno motor del habla en el que se pierde el control de los músculos del tracto vocal \cite{enderby2013}. Cuando la incapacidad de producir un habla que se entienda es total, se le llama anartria \cite{silva2024speech}. Puede aparecer con la esclerosis lateral amiotrófica (ELA), el ictus, el Parkinson, la parálisis cerebral, los traumatismos craneoencefálicos o algunos tumores cerebrales, y su gravedad es variable entre las personas \cite{enderby2013,tomik2010,lin2025dysarthria}. En la afasia falla el propio lenguaje. En la disartria, en cambio, las zonas del cerebro que planifican el habla siguen funcionando: la persona sabe lo que quiere decir e intenta decirlo, pero la orden no llega bien a los músculos \cite{silva2024speech}.
+
+
+
+La ELA es uno de los ejemplos más representativos de pérdida completa del habla, y también la enfermedad de la persona que participa en el conjunto de datos del presente trabajo. La ELA va destruyendo las neuronas motoras de la corteza, el tronco del encéfalo y la médula espinal, y los músculos se van paralizando, también los que usamos para hablar, tragar y respirar \cite{beukelman2011}. En el \SI{30}{\percent} de los casos empieza por el habla y la deglución, lo que se llama inicio bulbar, y en el resto por la debilidad de brazos y piernas \cite{sen2026ela}. Su prevalencia en el mundo es de 4,42 casos por cada 100.000 habitantes \cite{xu2020als}. En España la tienen entre 4.000 y 4.500 personas, se diagnostican unos tres casos nuevos al día y la supervivencia media tras el diagnóstico es de entre dos y cinco años \cite{sen2026ela}. Entre el \SI{80}{\percent} y el \SI{95}{\percent} de los pacientes llegan a un punto en el que ya no se pueden comunicar hablando en su día a día \cite{beukelman2011}. En las fases más avanzadas puede llevar al síndrome de cautiverio (conocido en la literatura científica como \textit{locked-in syndrome}) \cite{silva2024speech}. La persona queda consciente pero con tetraplejia y anartria, y en la forma clásica solo puede comunicarse parpadeando o moviendo los ojos en vertical \cite{smith2005lis,bruno2011lis}.
+
+
+Aquí se usa la ELA como ejemplo; sin embargo, lo que se busca en este trabajo no es exclusivo de esta enfermedad. Podría aplicarse también a las otras enfermedades mencionadas antes, siempre que la persona conserve la intención de hablar y no pueda articularla del todo.
+
+\section{Contexto}
 \label{sec:contexto}
-
-La comunicación oral es una capacidad básica para vivir en sociedad. Sin embargo, hay enfermedades que pueden quitarla casi por completo, aunque la persona siga pensando y entendiendo con normalidad, esta puede ser la causa de muchos trastornos. Se suelen dividir en disartria y anartria. La disartria es un trastorno motor del habla en el que se pierde el control de los músculos del tracto vocal, cuando la incapacidad de producir un habla que se entienda \cite{silva2024speech} es total, se le llama anartria. Puede aparecer con la esclerosis lateral amiotrófica (ELA), el ictus, el Parkinson, la parálisis cerebral, los traumatismos craneoencefálicos o algunos tumores cerebrales, y su gravedad es variable entre las personas \cite{lin2025dysarthria}. En la afasia falla el propio lenguaje. En la disartria, en cambio, las zonas del cerebro que planifican el habla siguen funcionando: la persona sabe lo que quiere decir e intenta decirlo, pero la orden no llega bien a los músculos \cite{silva2024speech}.
-
-
-
-La ELA y el ictus son dos ejemplos claros de pérdida completa del habla, y también las enfermedades de la mayoría de las personas que participan en los estudios de la siguiente sección. La ELA va destruyendo las neuronas motoras de la corteza, el tronco del encéfalo y la médula espinal, y los músculos se van paralizando, también los que usamos para hablar, tragar y respirar \cite{beukelman2011}. Su prevalencia en el mundo es de 4,42 casos por cada 100.000 habitantes \cite{xu2020als}. En España la tienen entre 4.000 y 4.500 personas y se diagnostican unos tres casos nuevos al día \cite{sen2026ela}. Entre el \SI{80}{\percent} y el \SI{95}{\percent} de los pacientes llegan a un punto en el que ya no se pueden comunicar hablando en su día a día \cite{beukelman2011}. El ictus es mucho más frecuente: en 2021 hubo 11,9 millones de casos nuevos en el mundo \cite{gbd2024stroke}, en España hay unos 90.000 al año \cite{sen2026ictus}, y entre el \SI{20}{\percent} y el \SI{42}{\percent} de los supervivientes tienen disartria \cite{summaka2022}. Cuando daña la parte ventral de la protuberancia, en el tronco del encéfalo, puede provocar el síndrome de cautiverio (\textit{locked-in syndrome}). La persona queda consciente pero con tetraplejia y anartria, y en la forma clásica solo puede comunicarse parpadeando o moviendo los ojos en vertical \cite{smith2005lis,bruno2011lis}.
-
-
-
-Aunque aquí se usen estos dos casos como ejemplo, lo que se busca en este trabajo puede servir a cualquier persona que conserve la intención de hablar y no pueda articularla del todo, sea cual sea la causa.
-
-\subsection{Del cuerpo al cerebro: evolución de los sistemas de comunicación}
 \label{sec:brain-to-text}
 
-Desde hace décadas se han ido creando sistemas para que estas personas puedan comunicarse de otra forma. Los primeros eran tableros con letras o dibujos que la persona señalaba, y máquinas electromecánicas de escribir que se manejaban con un pulsador o con algún otro movimiento pequeño. En los años sesenta y setenta estas ideas se juntaron y dieron lugar a lo que hoy se llama comunicación aumentativa y alternativa (CAA) \cite{vanderheiden2002}. Después llegaron los ordenadores y los sintetizadores de voz, con los que se escribe un mensaje y el equipo lo lee en voz alta. Son sistemas sencillos, no necesitan cirugía y muchos pacientes los usan hasta el final de la enfermedad \cite{beukelman2011}. Su problema es que son lentos y cansados, y que dependen de que quede algún movimiento voluntario con el que manejarlos \cite{silva2024speech}.
+Desde hace décadas se han ido creando sistemas para que estas personas puedan comunicarse de otra forma. Los primeros eran tableros con letras o dibujos que la persona señalaba, y máquinas electromecánicas de escribir que se manejaban con un pulsador, soplando por un tubo o con algún otro movimiento pequeño \cite{maling1963possum}. En los años sesenta y setenta estas ideas se juntaron y dieron lugar a lo que hoy se llama comunicación aumentativa y alternativa (CAA) \cite{vanderheiden2002}. Después llegaron los ordenadores y los sintetizadores de voz, con los que se escribe un mensaje y el equipo lo lee en voz alta. Son sistemas sencillos, no necesitan cirugía y muchos pacientes los usan hasta el final de la enfermedad \cite{beukelman2011}. Su problema es que son lentos y cansados, y que dependen de que quede algún movimiento voluntario con el que manejarlos \cite{silva2024speech}.
 
 
-
-Uno de los sistemas más usados en la ELA es el seguimiento ocular. Una cámara detecta hacia dónde mira la persona y así puede elegir letras o palabras en una pantalla. Se usa mucho en fases avanzadas, cuando ya no se puede hablar ni mover las manos, aunque solo permite una comunicación muy lenta o limitada \cite{spataro2014} y en algunos sitios, como al aire libre, estos sistemas no funcionan \cite{vansteensel2016}. Por último, cuando la enfermedad llega a los músculos de los ojos, dejan de servir \cite{spataro2014}.
-
-
-
-Una evolución que se investiga dependiendo de los usuarios son los electrodos de electromiografía (EMG). Se colocan en la cara y el cuello y se puede reconocer lo que una persona intenta decir aunque no salga ningún sonido, lo que se conoce como habla silenciosa \cite{schultz2017}. Es un método no invasivo y está más cerca del habla real que ir eligiendo letras. Pero cuanta más severa es la parálisis, menos precisión tienen, hasta el punto de que puede no haber ninguna señal.
-
-
+Uno de los sistemas más utilizados en la ELA es el seguimiento ocular. Una cámara detecta hacia dónde mira la persona, permitiéndole seleccionar letras o palabras en una pantalla. Se emplea especialmente en fases avanzadas, cuando ya no se puede hablar ni utilizar las manos, aunque solo permite una comunicación muy lenta o limitada \cite{spataro2014} y en algunos sitios, como al aire libre, estos sistemas no funcionan \cite{vansteensel2016}. Otra alternativa, todavía en investigación, es la electromiografía (EMG), que utiliza electrodos colocados en la cara y el cuello para detectar la actividad muscular asociada al habla, incluso cuando no se produce ningún sonido, lo que se conoce como habla silenciosa \cite{schultz2017}. Se acerca más al habla natural, pero tiene el mismo límite que el seguimiento ocular: los dos necesitan músculos que todavía respondan y dejan de servir cuando la parálisis llega a ellos.
 
 Si no queda ningún músculo útil, solo se puede recurrir al propio cerebro. Las interfaces cerebro-computador (\textit{Brain-Computer Interfaces}, BCI) registran su actividad y la convierten en órdenes para un dispositivo. Las primeras usaban electroencefalografía (EEG), con electrodos sobre el cuero cabelludo. En 1988, Farwell y Donchin presentaron un deletreador basado en la onda P300. En una pantalla se iluminan filas y columnas de letras y el sistema detecta la respuesta del cerebro cuando se ilumina la letra que el usuario quiere \cite{farwell1988}. Ya en 1999, Birbaumer y su equipo consiguieron que pacientes totalmente paralizados por ELA escribieran mensajes controlando los potenciales corticales lentos de su EEG \cite{birbaumer1999}. El EEG no necesita cirugía, pero la señal llega muy atenuada a través del cráneo y tiene mucho ruido, así que estos sistemas eran muy lentos, de unas pocas letras por minuto.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{01_01_modalidadesRegistro}
+  \caption[Posición de los electrodos según el tipo de registro]{Posición de los electrodos según el tipo de registro: EEG, ECoG, sEEG y matriz intracortical (esquema, no a escala).}
+  \label{fig:modalidades}
+\end{figure}
 
 
-Para tener mejor señal hay que acercarse a las neuronas, y eso ya obliga a operar. La electrocorticografía (ECoG) coloca electrodos sobre la superficie de la corteza, por debajo del cráneo. En 2016 se publicó el caso de una paciente con ELA en estado de cautiverio que usaba en su casa una BCI de este tipo totalmente implantada. Al intentar mover la mano generaba un \enquote{clic} con el que elegía letras y, aunque era lento, le permitía comunicarse cuando su sistema ocular fallaba \cite{vansteensel2016}. Además, esto permitió dar el salto de elegir letras a decodificar palabras directamente a partir del intento de hablar, primero con un vocabulario pequeño \cite{moses2021} y después con frases completas, voz sintetizada y un avatar \cite{metzger2023}. La estereoelectroencefalografía (sEEG) usa en cambio electrodos de profundidad, que se implantan a pacientes con epilepsia para localizar el origen de sus crisis. Con estos registros se ha llegado a sintetizar voz en tiempo real a partir del habla imaginada, aunque el resultado todavía no se entendía \cite{angrick2021}. Su ventaja es que aprovecha una operación que el paciente ya necesita, pero los electrodos se colocan donde dicta el criterio médico y solo se quedan durante un tiempo corto.
+Para tener mejor señal hay que acercarse a las neuronas, y eso ya obliga a operar. La electrocorticografía (ECoG) coloca electrodos sobre la superficie de la corteza, por debajo del cráneo. En 2016 se publicó el caso de una paciente con \textit{locked-in syndrome} causado por ELA que usaba en su casa una BCI de este tipo invasivamente implantada. Al intentar mover la mano generaba un \enquote{clic} con el que elegía letras y, aunque era lento, le permitía comunicarse cuando su sistema ocular fallaba \cite{vansteensel2016}. Además, esto permitió dar el salto de elegir letras a decodificar palabras directamente a partir del intento de hablar, primero con un vocabulario pequeño \cite{moses2021} y después con frases completas, voz sintetizada y un avatar \cite{metzger2023}. La estereoelectroencefalografía (sEEG) usa en cambio electrodos de profundidad, que se implantan a pacientes con epilepsia para localizar el origen de sus crisis. Con estos registros se ha llegado a sintetizar voz en tiempo real a partir del habla imaginada, aunque el resultado todavía no se entendía \cite{angrick2021}. Su ventaja es que aprovecha una operación que el paciente ya necesita, pero los electrodos se colocan donde dicta el criterio médico y solo se quedan durante un tiempo corto.
 
 
 
-El último paso son las matrices de microelectrodos intracorticales, que penetran en la corteza y registran la actividad de pequeños grupos de neuronas. En 2006 el ensayo BrainGate mostró que un hombre con tetraplejia podía mover un cursor, abrir el correo o abrir y cerrar una mano protésica solo con la actividad de su corteza motora \cite{hochberg2006}. A partir de ahí se pasó a escribir moviendo un cursor sobre un teclado en pantalla \cite{pandarinath2017}, luego a convertir en texto la escritura a mano imaginada \cite{willett2021} y, por último, a decodificar directamente el habla intentada \cite{willett2023}. Hoy ya hay un participante con ELA que lleva meses usando un sistema así para conversar en su día a día \cite{card2024}. Con el mismo tipo de implante también se ha conseguido sintetizar la voz al instante, con entonación e incluso cantando melodías sencillas \cite{wairagkar2025}. Son, con diferencia, los sistemas con mejores resultados. A cambio, exigen una operación cerebral y de momento solo los han probado unas pocas personas dentro de ensayos clínicos.
+Otra alternativa serían las matrices de microelectrodos intracorticales, que penetran en la corteza y registran la actividad de pequeños grupos de neuronas. En 2006 el ensayo BrainGate mostró que un hombre con tetraplejia podía mover un cursor, abrir el correo o abrir y cerrar una mano protésica solo con la actividad de su corteza motora \cite{hochberg2006}. A partir de ahí se pasó a escribir moviendo un cursor sobre un teclado en pantalla \cite{pandarinath2017}, luego a convertir en texto la escritura a mano imaginada \cite{willett2021} y, por último, a decodificar directamente el habla intentada \cite{willett2023}. Hoy ya hay un participante con ELA que lleva meses usando un sistema así para conversar en su día a día \cite{card2024}. Con el mismo tipo de implante también se ha conseguido sintetizar la voz al instante, con entonación e incluso cantando melodías sencillas \cite{wairagkar2025}. Son, con diferencia, los sistemas con mejores resultados. A cambio, exigen una operación cerebral y de momento solo los han probado unas pocas personas dentro de ensayos clínicos.
 
 
 
-Si se mira toda esta evolución, se ve que cada paso ha aparecido porque el anterior dependía de algo que la enfermedad podía quitar: las manos, los músculos de la boca y los ojos. La actividad del cerebro es lo último que queda, y cuanto más cerca de las neuronas se registra, mejor es la señal pero más invasivo es el método. Las tecnologías BCI han tenido un auge en las últimas décadas y han pasado de controlar cursores o movimientos a poder decodificar lenguaje. Este trabajo se sitúa en esta última etapa, la de los sistemas \textit{brain-to-text}, que traducen a texto la actividad de la corteza motora mientras la persona intenta hablar.
+Si se mira toda esta evolución, se ve que cada paso ha aparecido porque el anterior dependía de algo que la enfermedad podía quitar: las manos, los músculos de la boca y los ojos. La actividad del cerebro es lo último que queda, y cuanto más cerca de las neuronas se registra, mejor es la señal pero más invasivo es el método. Las tecnologías BCI han tenido un auge en las últimas décadas y han pasado de controlar cursores o movimientos a poder decodificar el habla continua. Este trabajo se sitúa en esta última etapa, la de los sistemas \textit{brain-to-text}, que traducen a texto la actividad de la corteza motora mientras la persona intenta hablar.
 
 \section{Motivación}
 \label{sec:motivacion}
-
-\subsection{Motivación}
 \label{sec:motivacion-general}
 
 La motivación principal de este trabajo es social. Según la encuesta de discapacidad del INE de 2020, en España había unas 947.500 personas de seis años o más con una discapacidad relacionada con la comunicación \cite{ine2022edad}. No todas tienen las enfermedades descritas en la \cref{sec:contexto}, pero la cifra da una idea de cuánta gente tiene problemas para hacerse entender. Y es un problema que está creciendo, ya que la Sociedad Española de Neurología prevé que los casos de ELA en Europa aumenten un \SI{40}{\percent} en los próximos 25 años \cite{sen2026ela}. Quien no puede hablar depende de otros hasta para pedir lo más básico y, con el tiempo, se va quedando aislado \cite{metzger2023}.
@@ -68,3 +62,52 @@ La comunicación pesa mucho en la calidad de vida. En personas con ELA, contar c
 Asimismo, me motiva desde el punto de vista técnico, porque las BCI del habla son un campo que avanza muy rápido. En unos veinte años se ha pasado de mover un cursor a decodificar frases completas y sintetizar voz en tiempo real. Estos sistemas ya superan la velocidad de las herramientas de comunicación asistida que existen hoy \cite{silva2024speech}. Cada poco tiempo se aplican a problemas nuevos \cite{wairagkar2025}, y se están consolidando como una de las mejores soluciones para la comunicación. Además, retos públicos como Brain-to-Text han puesto estos datos al alcance de cualquier grupo de investigación, aunque no tenga acceso a pacientes \cite{b2t24lessons,b2t25}. El principal inconveniente sigue siendo que hay que operar el cerebro. Aun así, ya se están probando opciones menos invasivas, como electrodos que se introducen por un vaso sanguíneo sin abrir el cráneo \cite{oxley2021}, y en el futuro se espera que estas soluciones se apliquen cada vez más.
 
 Por último, también hay una motivación personal. Siempre me ha interesado la biomedicina, y en especial cómo la tecnología puede ayudar a las personas con discapacidad. He participado en hackathons y, sobre todo, he formado parte durante tres años de Daidalonic, un grupo de estudiantes de la UPV que diseña prótesis y otros proyectos biomédicos. Allí trabajé con la EMG y pude hablar con personas con discapacidad. Pero además pude ver de primera mano en el Cybathlon 2024 a muchos grupos de investigación utilizando las BCI para ayudar a personas completamente paralizadas, ya sea con la movilidad, el entretenimiento o la comunicación, y supe que quería investigar algo relacionado.
+
+\section{Planteamiento del trabajo}
+\label{sec:planteamiento}
+
+Este trabajo estudia la viabilidad de reutilizar un modelo de reconocimiento del habla preentrenado a gran escala como codificador de señal neuronal en una tarea \textit{brain-to-text}, es decir, para pasar a texto la actividad del cerebro mientras una persona intenta hablar. En concreto, se adapta OWSM (\textit{Open Whisper-style Speech Model}) \cite{peng2023owsm,peng2024owsmv31}, de la librería ESPnet \cite{watanabe2018espnet,someki2024espnetez}. OWSM sigue la idea de Whisper \cite{radford2023whisper}, pero se entrena solo con datos públicos y sus autores publican el código, los modelos y los registros de entrenamiento \cite{peng2024owsmv31}. Por eso es una de las mejores opciones abiertas y reproducibles. La idea de fondo es aprovechar lo que estos modelos han aprendido de grandes cantidades de audio en un problema en el que los datos son muy escasos, porque cada grabación necesita a un paciente con un implante y muchas horas de entrenamiento.
+
+La pregunta principal es qué hay que cambiar del modelo para que funcione con señal neuronal y si esos cambios hacen que la idea sea viable. La entrada de OWSM está pensada para audio, así que hay que sustituirla por un módulo nuevo, el \textit{frontend}, que adapte la señal neuronal al resto del modelo. A partir de ahí se analiza qué partes se pueden aprovechar tal cual, cuáles hay que reentrenar y con qué nivel de ajuste. Este proyecto no se centra en la limpieza y el análisis de las señales neuronales, para las que se usa el preprocesado estándar del conjunto de datos, sino en la capacidad del modelo y sus resultados.
+
+Además de la viabilidad, se quiere ver cómo se comporta el modelo en condiciones parecidas a las de un uso real. Por un lado, con palabras y frases que no ha visto durante el entrenamiento. Por otro, con el paso del tiempo. La actividad que registran los electrodos cambia de un día para otro, y para mantener el rendimiento estos sistemas suelen necesitar recalibraciones frecuentes, que obligan al usuario a dejar de usarlos y grabar datos nuevos \cite{fan2023corp}. Por eso se estudia cuántos datos hacen falta para tener un modelo que no necesite más, y qué se puede concluir sobre la necesidad de datos de este tipo de sistemas.
+
+Tampoco se pretende superar a los mejores sistemas ni competir en los \textit{benchmarks}. Los primeros puestos de estos retos combinan las salidas de varios decodificadores independientes mediante un modelo de lenguaje de gran tamaño \cite{b2t24lessons}. Aquí el interés está en ver hasta dónde llega un modelo de habla abierto por sí solo y entender qué estrategias son las más viables con recursos limitados.
+
+Así pues, el trabajo se divide en dos bloques de experimentos. En el primero se entrena con todas las sesiones y se busca la mejor forma de adaptar OWSM, probando distintas opciones para el \textit{frontend}, el \textit{encoder} y el \textit{decoder}. En el segundo se toma el mejor modelo del primer bloque y se simula su uso real: se entrena solo con las primeras sesiones, en orden de fecha, y se evalúa tanto en esas sesiones como en las que vienen después. Así se analiza su capacidad predictiva en cada sesión para poder concluir el grado de eficiencia.
+
+\section{Objetivos y alcance}
+\label{sec:objetivos}
+
+% De momento van los objetivos y después el alcance, uno detrás de otro.
+% Falta decidir cómo se combinan.
+
+El objetivo general de este trabajo es evaluar la viabilidad de reutilizar un modelo de reconocimiento del habla preentrenado a gran escala, OWSM, para decodificar a texto la actividad neuronal intracortical durante el habla intentada. Para ello se determina qué partes del modelo pueden aprovecharse y cuáles deben adaptarse o reentrenarse, y con qué coste. También se analiza cómo se comporta el sistema ante frases no vistas y con el paso del tiempo, con el fin de estimar cuántos datos necesita.
+
+\subsection{Objetivos específicos}
+\label{sec:objetivos-especificos}
+
+Este objetivo general se concreta en cuatro objetivos específicos. Los tres primeros corresponden al primer bloque de experimentos y el cuarto, al segundo descritos anteriormente. Las partes del sistema que se nombran en ellos se explican en el \cref{cap:marco-teorico}.
+
+\begin{enumerate}[label=\textbf{O\arabic*.}, leftmargin=*, itemsep=0.4em]
+
+  \item \textbf{\textit{Frontend}.} Diseñar y comparar varios módulos de entrada que adapten la señal neuronal al \textit{encoder} de OWSM, desde una capa lineal sencilla hasta una red convolucional profunda, y con distinto submuestreo temporal. Se mide tanto el resultado como el coste de entrenamiento, para elegir el mejor compromiso entre ambos.
+
+  \item \textbf{\textit{Encoder}.} Comprobar si los pesos preentrenados del \textit{encoder} de OWSM aportan algo frente al mismo \textit{encoder} entrenado desde cero cuando la entrada es actividad neuronal en lugar de audio.
+
+  \item \textbf{\textit{Decoder}.} Evaluar si el \textit{decoder} preentrenado de OWSM, que aporta el conocimiento del lenguaje, puede usarse sin modificar, si mejora con una adaptación ligera como LoRA \cite{hu2022lora} o si es mejor entrenarlo desde cero.
+
+ \item \textbf{Ventana temporal.} Medir cómo varía el error del mejor modelo de una sesión a otra y simular después un uso real del sistema, entrenando con un número creciente de sesiones en orden cronológico y evaluando en sesiones ya vistas y en sesiones futuras. Con ello se quiere saber cuánto empeora el modelo con el paso del tiempo y cuántos datos hacen falta para que deje de necesitar más. También se analiza qué palabras reconoce mejor y peor, según lo frecuentes que sean en el entrenamiento y si aparecen o no en él, y cómo se comporta con frases que no ha visto.
+
+\end{enumerate}
+
+\subsection{Alcance}
+\label{sec:alcance}
+
+Este trabajo es un estudio intrapersonal. Se centra en una sola persona, que además habla en inglés, y busca el mejor sistema para ella, no un modelo que funcione con cualquiera. Por eso sus conclusiones no se pueden trasladar sin más a otros participantes. Es lo habitual en este campo, dada la escasez de datos que compartan las mismas condiciones de experimentación, siendo habitual los estudios en un único sujeto \cite{willett2023,card2024}. Además, todo se evalúa en diferido, sobre grabaciones ya hechas y sin estudiar el funcionamiento en tiempo real, y solo se trabaja con habla intentada, en la que la persona intenta hablar aunque no pueda. El habla imaginada queda fuera.
+
+% No está en la estructura de los tutores: falta decidir si se queda.
+\section{Estructura de la memoria}
+\label{sec:estructura}
+
+El resto de la memoria se organiza de la siguiente forma. El \cref{cap:estado-del-arte} repasa el estado del arte de la decodificación del habla a partir de actividad neuronal y de los modelos de habla preentrenados. El \cref{cap:datos} presenta el conjunto de datos utilizado. El \cref{cap:marco-teorico} explica los fundamentos de los modelos y técnicas empleados. El \cref{cap:arquitectura} describe el sistema construido a partir de OWSM y las adaptaciones que se le hacen. El \cref{cap:metodologia} detalla cómo se entrenan y evalúan los modelos y el diseño de los dos bloques de experimentos. El \cref{cap:resultados} recoge y discute los resultados. El \cref{cap:limitaciones} reúne las limitaciones del estudio y las líneas de trabajo futuro y, por último, el \cref{cap:conclusiones} resume las conclusiones. Al final se incluyen los anexos, entre ellos el de la relación del trabajo con los Objetivos de Desarrollo Sostenible.

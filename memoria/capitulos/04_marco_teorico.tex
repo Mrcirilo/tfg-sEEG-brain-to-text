@@ -188,12 +188,12 @@ El entrenamiento minimiza $\mathcal{L}_{\mathrm{CTC}} = -\log p(\mathbf{y} \mid 
 
 La independencia entre ventanas es lo que permite hacer esta cuenta, pero tiene un precio. Cada ventana decide sin saber qué han emitido las demás, de modo que CTC, por sí solo, no aprende qué palabras suelen ir juntas.
 
-La \cref{fig:ctc-alineamientos} muestra algunos ejemplos con la palabra \texttt{cat} en seis ventanas. En la figura, el blanco se representa con $\epsilon$.
+La \cref{fig:ctc-alineamientos} muestra algunos ejemplos con la palabra \texttt{datos} en siete ventanas.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics{04_02_ctcAlineamientos}
-  \caption[Alineamientos CTC válidos y no válidos]{Alineamientos CTC para la salida \texttt{datos} en siete ventanas; $\varnothing$ es el blanco. Los de la izquierda colapsan a \texttt{datos}. Los de la derecha no: el primero da \texttt{daatos}, porque el blanco separa las dos \texttt{a}; al segundo le falta un símbolo, y el tercero no emite la \texttt{t}. Adaptada de \cite{hannun2017ctc}.}
+  \caption[Alineamientos CTC válidos y no válidos]{Alineamientos CTC para la salida \texttt{datos} en siete ventanas; $\varnothing$ es el blanco. Los de la izquierda colapsan a \texttt{datos}. Los de la derecha no \cite{hannun2017ctc}.}
   \label{fig:ctc-alineamientos}
 \end{figure}
 

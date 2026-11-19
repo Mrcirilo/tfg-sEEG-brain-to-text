@@ -10,14 +10,14 @@
 \chapter{Estado del arte}
 \label{cap:estado-del-arte}
 
-Este capítulo repasa lo que se ha hecho hasta ahora en la decodificación del habla a partir de la actividad cerebral y en la reutilización de modelos de habla convencional. Primero, se comparan las técnicas de registro y se recogen las cifras de las neuroprótesis del habla más recientes (\cref{sec:sota-bci,sec:sota-neuroprotesis}). Después, se explica cómo están construidos los decodificadores actuales y por qué (\cref{sec:sota-anatomia}), y qué resultados se obtienen en el \textit{benchmark} Brain-to-Text~'25 (\cref{sec:sota-benchmarks}). Por último, se resumen los modelos de habla preentrenados y los trabajos que los han llevado a la señal neuronal (\cref{sec:sota-habla}), se comparan todos los sistemas vistos (\cref{sec:sota-resumen}) y se sitúa este trabajo respecto a ellos (\cref{sec:sota-posicionamiento}). En el capítulo aparecen algunos conceptos, como las métricas de error o las partes de un modelo, que se explican más adelante, en el marco teórico (\cref{cap:marco-teorico}).
+Este capítulo repasa lo que se ha hecho hasta ahora en la decodificación del habla a partir de la actividad cerebral y en la reutilización de modelos de habla convencional. Primero, se comparan las técnicas de registro y se recogen las cifras de las neuroprótesis del habla más recientes (\cref{sec:sota-bci,sec:sota-neuroprotesis}). Después, se explica cómo están construidos los decodificadores actuales y por qué (\cref{sec:sota-anatomia}). Por último, se resumen los modelos de habla preentrenados y los trabajos que los han llevado a la señal neuronal (\cref{sec:sota-habla}), se comparan todos los sistemas vistos (\cref{sec:sota-resumen}) y se sitúa este trabajo respecto a ellos (\cref{sec:sota-posicionamiento}). En el capítulo aparecen algunos conceptos, como las métricas de error o las partes de un modelo, que se explican más adelante, en la metodología (\cref{cap:metodologia}).
 
 \section{Modalidades de registro en interfaces cerebro-computador}
 \label{sec:sota-bci}
 
 La técnica de registro condiciona qué información se puede extraer y qué tipo de decodificador tiene sentido construir. Las técnicas utilizadas en BCI del habla van de menos a más invasivas. En general, cuanto más invasiva es la técnica, mejor es la señal.
 
-La \cref{fig:modalidades} muestra dónde se colocan los electrodos de cada una y la \cref{tab:sota-modalidades} las compara.
+La \cref{fig:modalidades} es una representación de como se coloca cada una y la \cref{tab:sota-modalidades} las compara.
 
 \begin{table}[htbp]
   \centering
@@ -46,7 +46,7 @@ La \cref{fig:modalidades} muestra dónde se colocan los electrodos de cada una y
 \item[Electroencefalografía (EEG).] Es una técnica no invasiva, aequible y fácil de conseguir. Registra, a través del cráneo, la actividad sumada de grandes grupos de neuronas, por lo que la señal tiene mucho ruido. Funciona bien para elegir entre pocas opciones, pero la decodificación de texto a partir de EEG está en discusión: la efectividad de estos modelos se ha visto comprometida al comprobar que pueden rendir casi igual utilizando solo ruido que utilizando EEG \cite{jo2024eegtotext}. Además, suele presentar problemas de portabilidad y comodidad, y es la técnica más afectada por el paso del tiempo.
 \item[Estereoelectroencefalografía (sEEG).] Utiliza electrodos de profundidad que se implantan con fines diagnósticos en clínicas, a través de pequeños orificios y sin necesidad de abrir el cráneo \cite{verwoert2022}. Tiene buena resolución temporal y permite llegar a estructuras profundas, pero la colocación de los electrodos responde a criterios clínicos y no a las necesidades del decodificador.
 \item[Electrocorticografía (ECoG).] Utiliza rejillas de electrodos colocadas sobre la superficie de la corteza, lo que obliga a abrir el cráneo \cite{kohler2022}. Estas rejillas cubren una zona amplia, son estables durante mucho tiempo y han permitido construir los primeros sistemas de habla en tiempo real \cite{moses2021,metzger2023}.
-\item[Matrices intracorticales de microelectrodos.] Son matrices de electrodos que penetran en la corteza, normalmente de tipo Utah, y registran la actividad de pequeños grupos de neuronas cercanos a cada electrodo. Es la técnica con mayor riesgo quirúrgico, pero con ella se han conseguido prestaciones propias de una conversación \cite{willett2023,card2024}. Es la técnica utilizada para obtener los datos de este trabajo, cuyas características se describen en el \cref{cap:datos}.
+\item[Matrices intracorticales de microelectrodos.] Son matrices de electrodos que penetran en la corteza y registran la actividad de pequeños grupos de neuronas cercanos a cada electrodo. Es la técnica con mayor riesgo quirúrgico, pero con ella se han conseguido prestaciones propias de una conversación \cite{willett2023,card2024}. Es la técnica utilizada para obtener los datos de este trabajo, cuyas características se describen en el \cref{cap:datos}.
 \end{description}
 
 \section{Evolución de las neuroprótesis del habla}
@@ -81,7 +81,7 @@ Influenciados por los sistemas de reconocimiento del habla convencional, la unid
 
 Pero los fonemas no son lenguaje natural directo. Para pasar a palabras hace falta un diccionario de pronunciación, que indica qué fonemas forman cada palabra, y un modelo de lenguaje. En este paso está buena parte del rendimiento final. Los sistemas de referencia usan un modelo de $n$-gramas, que estima la probabilidad de cada palabra a partir de las anteriores \cite{jurafsky2026slp}, y reordenan sus resultados con modelos de lenguaje grandes.
 
-Este esquema es caro. Por ejemplo, un modelo de 5-gramas necesita unos \SI{300}{\giga\byte} de memoria y cada decodificación tarda unos \SI{750}{\milli\second}, frente a menos de \SI{2}{\giga\byte} y unos \SI{50}{\milli\second} de un sistema de extremo a extremo \cite{brainwhisperer}. Además, el codificador y el modelo de lenguaje se entrenan por separado y no se pueden optimizar juntos \cite{crossspecies2025}. Por eso están apareciendo sistemas de extremo a extremo, que pasan de la señal al texto con un solo modelo, prediciendo directamente letras o palabras \cite{khanday2026,brainwhisperer}. Todavía quedan por detrás de los sistemas con modelo de lenguaje (\cref{sec:sota-benchmarks}), pero son más baratos y sencillos de usar y están aumentando rápidamente su precisión.
+Este esquema es caro. Por ejemplo, un modelo de 5-gramas necesita unos \SI{300}{\giga\byte} de memoria y cada decodificación tarda unos \SI{750}{\milli\second}, frente a menos de \SI{2}{\giga\byte} y unos \SI{50}{\milli\second} de un sistema de extremo a extremo \cite{brainwhisperer}. Además, el codificador y el modelo de lenguaje se entrenan por separado y no se pueden optimizar juntos \cite{crossspecies2025}. Por eso están apareciendo sistemas de extremo a extremo, que pasan de la señal al texto con un solo modelo, prediciendo directamente letras o palabras \cite{khanday2026,brainwhisperer}. Todavía quedan por detrás de los sistemas con modelo de lenguaje, pero son más baratos y sencillos de usar y están aumentando rápidamente su precisión.
 
 % \section{El \textit{benchmark} Brain-to-Text~'25}
 % \label{sec:sota-benchmarks}
@@ -106,44 +106,38 @@ Otros transfieren los pesos aprendidos con audio. Fiedler \textit{et al.} sustit
 \section{Comparativa de los sistemas revisados}
 \label{sec:sota-resumen}
 
-La \cref{tab:sota-resumen} reúne los sistemas que han aparecido en este capítulo. No todas las cifras se pueden  directamente entre sí. Pero podemos usar estos datos para discutir los resultados de este trabajo. Los sistemas clínicos se evaluaron en tiempo real, cada uno con su participante y su vocabulario, mientras que el resto se evalúa en diferido. 
-
 \begin{table}[H]
   \centering
-  \caption{Resumen de los sistemas revisados en este capítulo.}
+  \caption{Resumen de los sistemas revisados en este capítulo. El error es el WER, salvo donde pone CER, que es el error por carácter.}
   \label{tab:sota-resumen}
   \footnotesize
-  \setlength{\tabcolsep}{3.5pt}
+  \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.15}
-  \begin{tabular}{>{\raggedright\arraybackslash}p{0.22\linewidth}
-                  l l l
-                  >{\raggedright\arraybackslash}p{0.14\linewidth}
-                  l}
+  \begin{tabular}{>{\raggedright\arraybackslash}p{0.30\linewidth} l l l l}
     \toprule
-    \textbf{Trabajo} & \textbf{Registro} & \textbf{Participante} & \textbf{Vocabulario} & \textbf{WER} & \textbf{Velocidad} \\
+    \textbf{Trabajo} & \textbf{Registro} & \textbf{Participante} & \textbf{Vocabulario} & \textbf{Error} \\
     \midrule
-    \multicolumn{6}{l}{\textit{Sistemas clínicos, en tiempo real}} \\
-    Moses \textit{et al.} \cite{moses2021}     & ECoG          & Anartria    & 50 palabras      & 25,6\,\%         & 15 ppm \\
-    Willett \textit{et al.} \cite{willett2021} & Intracortical & Tetraplejia & Escritura        & $<$\,1\,\%$^{*}$ & 90 cpm \\
-    Metzger \textit{et al.} \cite{metzger2023} & ECoG          & Anartria    & 1.024 palabras   & 25\,\%           & 78 ppm \\
-    Willett \textit{et al.} \cite{willett2023} & Intracortical & ELA (T12)   & 125.000 palabras & 23,8\,\%         & 62 ppm \\
-    Card \textit{et al.} \cite{card2024}       & Intracortical & ELA (T15)   & 125.000 palabras & $\sim$2,5\,\%    & 32 ppm \\
+    \multicolumn{5}{l}{\textit{Sistemas clínicos, en tiempo real}} \\
+    Moses \textit{et al.} \cite{moses2021}     & ECoG          & Anartria    & 50 palabras      & 25,6\,\% \\
+    Willett \textit{et al.} \cite{willett2021} & Intracortical & Tetraplejia & Escritura        & 5,9\,\% (CER) \\
+    Metzger \textit{et al.} \cite{metzger2023} & ECoG          & Anartria    & 1.024 palabras   & 25\,\% \\
+    Willett \textit{et al.} \cite{willett2023} & Intracortical & ELA (T12)   & 125.000 palabras & 23,8\,\% \\
+    Card \textit{et al.} \cite{card2024}       & Intracortical & ELA (T15)   & 125.000 palabras & 2,5\,\% \\
     \midrule
-    \multicolumn{6}{l}{\textit{Brain-to-Text~'25 con modelo de lenguaje externo, en diferido}} \\
-    Referencia de la competición \cite{b2t25} & Intracortical & ELA (T15) & 125.000 palabras & 6,7\,\%$^{\dagger}$ & -- \\
-    BrainWhisperer \cite{brainwhisperer}      & Intracortical & ELA (T15) & 125.000 palabras & 5,9\,\% (5,2\,\%)$^{\dagger}$ & -- \\
-    Primeros puestos \cite{b2t25}             & Intracortical & ELA (T15) & --               & $\approx$\,1,5\,\%$^{\dagger}$ & -- \\
+    \multicolumn{5}{l}{\textit{Brain-to-Text~'25 con modelo de lenguaje externo, en diferido}} \\
+    Referencia de la competición \cite{b2t25} & Intracortical & ELA (T15) & 125.000 palabras & 6,7\,\% \\
+    BrainWhisperer \cite{brainwhisperer}      & Intracortical & ELA (T15) & 125.000 palabras & 5,9\,\% \\
+    Primeros puestos \cite{b2t25}             & Intracortical & ELA (T15) & --               & 1,5\,\% \\
     \midrule
-    \multicolumn{6}{l}{\textit{Brain-to-Text~'25 de extremo a extremo, sin modelo de lenguaje externo, en diferido}} \\
-    Red recurrente de referencia \cite{brainwhisperer} & Intracortical & ELA (T15) & Abierto & 16,0\,\%$^{\dagger}$ & -- \\
-    BrainWhisperer \cite{brainwhisperer}       & Intracortical & ELA (T15) & Abierto & 10,2\,\% (8,7\,\%)$^{\dagger}$ & -- \\
-    Khanday \textit{et al.} \cite{khanday2026} & Intracortical & ELA (T15) & Abierto & 23,8\,\%$^{\ddagger}$ & -- \\
+    \multicolumn{5}{l}{\textit{Brain-to-Text~'25 sin modelo de lenguaje externo, en diferido}} \\
+    Red recurrente de referencia \cite{brainwhisperer} & Intracortical & ELA (T15) & Abierto & 16,0\,\% \\
+    BrainWhisperer \cite{brainwhisperer}       & Intracortical & ELA (T15) & Abierto & 10,2\,\% \\
+    Khanday \textit{et al.} \cite{khanday2026} & Intracortical & ELA (T15) & Abierto & 23,8\,\% (CER) \\
     \bottomrule
   \end{tabular}
-
-  \vspace{0.4em}
-  \parbox{\linewidth}{\raggedright\footnotesize ppm: palabras por minuto; cpm: caracteres por minuto. Entre paréntesis, entrenando también con datos de otros participantes (BrainWhisperer) o combinando varios modelos (BIT). $^{*}$Error por carácter, en diferido y con autocorrector. $^{\dagger}$Partición de prueba de la competición. $^{\ddagger}$Error por carácter en la partición de validación.}
 \end{table}
+
+La \cref{tab:sota-resumen} reúne los sistemas que han aparecido en este capítulo. No todas las cifras se pueden  directamente entre sí. Pero podemos usar estos datos para discutir los resultados de este trabajo. Los sistemas clínicos se evaluaron en tiempo real, cada uno con su participante y su vocabulario, mientras que el resto se evalúa en diferido. 
 
 \section{Posicionamiento de este trabajo}
 \label{sec:sota-posicionamiento}

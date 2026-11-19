@@ -1,0 +1,43 @@
+% !TEX root = ../main.tex
+% Resum en valencià (formes de l'AVL, com fa la UPV). Mateix contingut que preliminares/resumen.tex.
+% A main.tex va abans dels altres dos, amb l'entorn sense opció (la classe el pren com a valencià):
+%     \begin{abstract}
+%     \input{preliminares/resum}
+%     \end{abstract}
+% La classe posa el títol («Resum») i les paraules clau (\tfgclaveva de datos.tex).
+
+L'esclerosi lateral amiotròfica (ELA) o un ictus poden deixar una persona sense parla encara
+que continue sabent què vol dir. En l'ELA, entre el 80 i el 95~\% dels pacients acaben sense
+poder cobrir la seua comunicació diària parlant. Les alternatives habituals, com el seguiment
+ocular, necessiten músculs que encara responguen. Les interfícies cervell-ordinador (BCI) de
+parla busquen una altra via: registren l'activitat de l'escorça motora mentre la persona
+intenta parlar i la convertixen en text.
+
+L'any 2024, un participant amb ELA i microelèctrodes en l'escorça motora va arribar a
+comunicar-se amb un 97,5~\% d'encert per paraula. Els seus registres formen el repte públic
+\textit{Brain-to-Text '25}, on els millors sistemes baixen del 2~\% de taxa d'error per paraula
+(WER) amb models de llenguatge externs de centenars de gigabytes; sense ells, els d'extrem a
+extrem estan al voltant del 10~\%. Alguns treballs ja reutilitzen models de veu preentrenats,
+com Whisper, però falta saber quina part del que aprenen amb àudio servix per al senyal
+neuronal, com responen a dies de registre nous i si es poden adaptar amb pocs recursos.
+
+Aquest treball estudia aquestes qüestions adaptant OWSM, un model obert de reconeixement de veu
+codificador-descodificador, per a descodificar activitat neuronal intracortical en el repte. El
+seu \textit{frontend} acústic se substituïx per un de nou per a les 512 característiques
+neuronals que s'obtenen cada 20~ms, i tot s'entrena en una sola GPU, sense model de llenguatge
+extern. Un primer bloc d'experiments, amb totes les sessions, compara el codificador
+preentrenat amb el mateix inicialitzat a l'atzar, el descodificador preentrenat (congelat o amb
+LoRA) amb un entrenat des de zero i diversos \textit{frontends}, en error i en cost. El segon
+simula l'ús real: entrena models amb les primeres sessions en ordre cronològic i els avalua per
+separat en dies vistos i futurs.
+
+Amb els pesos preentrenats d'OWSM, el codificador, congelat o ajustat, no arriba a llegir el
+senyal i el WER es queda en el 97~\%. Amb pesos aleatoris, el mateix codificador baixa al
+20,9~\%. El descodificador sí que servix: congelat, aporta el coneixement del llenguatge i
+generalitza millor que un entrenat des de zero, i LoRA quasi no el millora. El millor
+\textit{frontend}, convolucional profund i amb una trama cada 80~ms, deixa el WER en el
+20,6~\% i s'entrena en unes tres hores, un 40~\% menys que amb trames cada 40~ms. En el bloc
+cronològic, el model funciona bé en els dies que ha vist (WER del 20 al 27~\% a partir de 10
+sessions), però en dies futurs està al voltant del 80~\% tant amb 10 com amb 35 sessions. Per
+tant, d'OWSM servixen l'arquitectura i el descodificador, i el principal obstacle
+per a un ús real és el canvi del senyal entre dies.

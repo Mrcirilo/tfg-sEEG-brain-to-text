@@ -1,21 +1,42 @@
 % !TEX root = ../main.tex
 % Resumen en castellano (200-500 palabras según la guía de la ETSINF).
-% Es el texto de tu main.tex de septiembre: hay que rehacerlo al final con
-% % los resultados del bloque 1, el bloque 2 y el modelo final.
-Resumen
-% Las interfaces cerebro-computador para el habla buscan restaurar la comunicación en personas
-% que han perdido la capacidad de hablar. Este trabajo estudia la viabilidad de adaptar OWSM,
-% un modelo de reconocimiento de voz preentrenado de propósito general, a la decodificación de
-% actividad neuronal intracortical del reto \textit{Brain-to-Text '25}. Se sustituye el
-% \textit{frontend} acústico por un módulo adaptador entrenado desde cero, se incorpora una capa
-% específica de sesión y se entrena el conjunto con un objetivo CTC puro, evaluando mediante
-% ablaciones controladas qué componentes del preentrenamiento transfieren a una modalidad no
-% acústica. El resultado principal es negativo y reproducible: un codificador inicializado
-% aleatoriamente supera al inicializado con los pesos de OWSM (tasa de error por carácter de
-% 0,312 frente a 0,381) con la mitad de coste, y un codificador aleatorio congelado iguala a uno
-% preentrenado congelado. Dos hallazgos colaterales resultan de mayor alcance práctico: la
-% granularidad de la unidad de salida produce un efecto cuatro veces superior al del
-% preentrenamiento, favoreciendo unidades lingüísticamente gruesas frente a las articulatorias,
-% y la degradación ante días de registro no vistos alcanza los 27 puntos porcentuales, con la
-% capa de sesión agravándola. El sistema alcanza una tasa de error por carácter de 0,267 en
-% condiciones comparables a la literatura reciente sobre el mismo conjunto de datos.
+% Va dentro de \begin{abstract}[spanish] ... \end{abstract} en main.tex: la clase pone
+% el título y las palabras clave (\tfgclavees de datos.tex).
+% Cifras: bloque 1 y bloque 2 (fase2_x4) del capítulo de resultados; no incluye el ModeloFinal.
+
+La esclerosis lateral amiotrófica (ELA) o un ictus pueden dejar a una persona sin habla aunque
+siga sabiendo qué quiere decir. En la ELA, entre el 80 y el 95~\% de los pacientes acaban sin
+poder cubrir su comunicación diaria hablando. Las alternativas habituales, como el seguimiento
+ocular, necesitan músculos que todavía respondan. Las interfaces cerebro-computador (BCI) de
+habla buscan otra vía: registran la actividad de la corteza motora mientras la persona intenta
+hablar y la convierten en texto.
+
+En 2024, un participante con ELA y microelectrodos en la corteza motora llegó a comunicarse con
+un 97,5~\% de acierto por palabra. Sus registros forman el reto público
+\textit{Brain-to-Text '25}, donde los mejores sistemas bajan del 2~\% de tasa de error por
+palabra (WER) con modelos de lenguaje externos de cientos de gigabytes; sin ellos, los de
+extremo a extremo rondan el 10~\%. Algunos trabajos ya reutilizan modelos de voz
+preentrenados, como Whisper, pero falta saber qué parte de lo aprendido con audio sirve para la
+señal neuronal, cómo responden a días de registro nuevos y si se pueden adaptar con pocos
+recursos.
+
+Este trabajo estudia esas cuestiones adaptando OWSM, un modelo abierto de reconocimiento de voz
+codificador-decodificador, para decodificar actividad neuronal intracortical en este reto. Su
+\textit{frontend} acústico se sustituye por uno nuevo para las 512 características neuronales
+que se obtienen cada 20~ms, y todo se entrena en una sola GPU, sin modelo de lenguaje externo.
+Un primer bloque de experimentos, con todas las sesiones, compara el codificador preentrenado
+con el mismo inicializado al azar, el decodificador preentrenado (congelado o con LoRA) con uno
+entrenado desde cero y varios \textit{frontends}, en error y en coste. El segundo simula el uso
+real: entrena modelos con las primeras sesiones en orden cronológico y los evalúa por separado
+en días vistos y futuros.
+
+Con los pesos preentrenados de OWSM, el codificador, congelado o ajustado, no llega a leer la
+señal y el WER se queda en el 97~\%. Con pesos aleatorios, el mismo codificador baja al
+20,9~\%. El decodificador sí sirve: congelado, aporta el conocimiento del lenguaje y generaliza
+mejor que uno entrenado desde cero, y LoRA apenas lo mejora. El mejor \textit{frontend},
+convolucional profundo y con una trama cada 80~ms, deja el WER en el 20,6~\% y se entrena en
+unas tres horas, un 40~\% menos que con tramas cada 40~ms. En el bloque cronológico, el modelo
+funciona bien en los días que ha visto (WER del 20 al 27~\% desde 10 sesiones), pero en días
+futuros ronda el 80~\% tanto con 10 como con 35 sesiones. Por tanto, de OWSM
+sirven la arquitectura y el decodificador, y el mayor obstáculo para un uso real es el cambio de
+la señal entre días.

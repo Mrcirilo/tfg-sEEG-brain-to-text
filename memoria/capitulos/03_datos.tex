@@ -73,7 +73,7 @@ Otros aspectos son más discutibles. El primero es el tipo de señal. El EEG de 
 
 Con electrodos implantados (sEEG) la señal es mucho más limpia, pero hay pocos participantes porque suelen ser pacientes a los que se colocan electrodos durante su ingreso para el tratamiento de condiciones, como es la epilepsia refractaria. De este tipo son sEEG2Speech \cite{kohler2022} y SingleWordProductionDutch \cite{verwoert2022}, los dos en neerlandés. El primero es el único con frases: tres pacientes leen 100 frases de cinco a siete palabras. El segundo tiene más participantes, diez, y más de mil electrodos en total, lo que lo hace interesante para comparar entre personas, pero solo contiene palabras sueltas. En los dos casos hay entre 5 y 20 minutos de grabación por paciente, poco para los propósitos propuestos. Además, están pensados para reconstruir el audio de la voz a partir de la señal, mientras que aquí lo que se busca es texto.
 
-Brain-to-Text~'25 \cite{card2024,b2t25} tiene la limitación contraria: un solo participante, que además habla inglés. A cambio, la señal se registra con 256 microelectrodos implantados en la corteza, que dan la señal de más calidad de las cuatro opciones, y hay cerca de 11.000 frases transcritas, grabadas en 45 sesiones a lo largo de 20 meses. Tiene particiones oficiales y una competición pública con resultados publicados, y los datos vienen ya preparados y con código para cargarlos. Es el único que cumple lo que se buscaba y por eso es el que se usa en este trabajo. Que abarque tantos meses es otra ventaja, porque permite estudiar cómo se comporta el modelo con el paso del tiempo, que es uno de los objetivos del trabajo (O4 en la \cref{sec:objetivos}). Tener un solo participante limita las conclusiones a esa persona, pero encaja con el planteamiento intrapersonal del trabajo (\cref{sec:alcance}).
+Brain-to-Text~'25 \cite{card2024,b2t25} tiene la limitación contraria: un solo participante, que además habla inglés. A cambio, la señal se registra con 256 microelectrodos implantados en la corteza, que dan la señal de más calidad de las cuatro opciones, y hay cerca de 11.000 frases transcritas, grabadas en 45 sesiones a lo largo de 20 meses. Tiene particiones oficiales y una competición pública con resultados publicados, y los datos vienen ya preparados y con código para cargarlos. Es el único que cumple lo que se buscaba y por eso es el que se usa en este trabajo. Que abarque tantos meses es otra ventaja, porque permite estudiar cómo se comporta el modelo con el paso del tiempo, que es uno de los objetivos del trabajo (O4 en la \cref{sec:objetivos}). Tener un solo participante limita las conclusiones a esa persona, pero encaja con el planteamiento intrapersonal del trabajo.
 
 \section{El conjunto Brain-to-Text~'25}
 \label{sec:b2t25}
@@ -125,7 +125,7 @@ Las frases proceden de seis corpus distintos (\cref{tab:b2t25-splits}). La mayor
 
 \begin{table}[htbp]
   \centering
-  \caption[Composición de Brain-to-Text~'25 por corpus de origen]{Composición de Brain-to-Text~'25 por corpus de origen, según \cite{lightbeam}. Estos recuentos suman algunas frases más (11.162) que las tres particiones juntas (10.948).}
+  \caption[Composición de Brain-to-Text~'25 por corpus de origen]{Composición de Brain-to-Text~'25 por corpus de origen, según \cite{lightbeam}.\footnote{Estos recuentos suman más (11.162) que las 3 particiones juntas (10.948)}}
   \label{tab:b2t25-splits}
   \small
   \begin{tabular}{lrrl}

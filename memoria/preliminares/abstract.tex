@@ -1,17 +1,38 @@
 % !TEX root = ../main.tex
-% % Abstract in English (same content as the Spanish resumen).
-Abstract
-% Speech brain--computer interfaces aim to restore communication for people who have lost the
-% ability to speak. This work investigates the feasibility of adapting OWSM, a general-purpose
-% pretrained speech recognition model, to decode intracortical neural activity from the
-% \textit{Brain-to-Text '25} challenge. The acoustic frontend is replaced by an adapter module
-% trained from scratch, a session-specific layer is introduced, and the whole system is trained
-% with a pure CTC objective, using controlled ablations to assess which components of
-% pretraining transfer to a non-acoustic modality. The main result is negative and reproducible:
-% a randomly initialised encoder outperforms one initialised with OWSM weights (character error
-% rate of 0.312 versus 0.381) at half the cost, and a frozen random encoder matches a frozen
-% pretrained one. Two secondary findings carry greater practical weight: output unit granularity
-% produces an effect four times larger than pretraining, favouring linguistically coarse units
-% over articulatory ones, and degradation on unseen recording sessions reaches 27 percentage
-% points, with the session layer making it worse. The system reaches a character error rate of
-% 0.267 under conditions comparable to recent literature on the same dataset.
+% Abstract in English (same content as preliminares/resumen.tex).
+% Goes inside \begin{abstract}[english] ... \end{abstract} in main.tex: the class adds the
+% title and the key words (\tfgclaveen in datos.tex), and then the indexes.
+
+Amyotrophic lateral sclerosis (ALS) or a stroke can leave a person unable to speak while they
+still know what they want to say. In ALS, between 80 and 95\% of patients end up unable to meet
+their daily communication needs through speech. The usual alternatives, such as eye tracking,
+need muscles that still respond. Speech brain--computer interfaces (BCIs) take another route:
+they record activity in the motor cortex while the person tries to speak and turn it into text.
+
+In 2024, a participant with ALS and microelectrodes in the motor cortex was able to communicate
+with 97.5\% word accuracy. His recordings make up the public \textit{Brain-to-Text '25}
+challenge, where the best systems go below a 2\% word error rate (WER) with external language
+models of hundreds of gigabytes; without them, end-to-end systems stay around 10\%. Some studies
+already reuse pretrained speech models such as Whisper, but it is still unclear which part of
+what they learn from audio is useful for neural signals, how they cope with new recording days
+and whether they can be adapted with few resources.
+
+This work studies these questions by adapting OWSM, an open encoder--decoder speech recognition
+model, to decode intracortical neural activity using the challenge data. Its acoustic frontend
+is replaced by a new one for the 512 neural features obtained every 20~ms, and everything is
+trained on a single GPU without an external language model. A first block of experiments, using
+all sessions, compares the pretrained encoder with the same encoder randomly initialised, the
+pretrained decoder (frozen or with LoRA) with one trained from scratch, and several frontends in
+terms of error and cost. The second block simulates real use: it trains models on the first
+sessions in chronological order and evaluates them separately on seen and future days.
+
+With OWSM's pretrained weights, the encoder, whether frozen or fine-tuned, does not learn to
+read the signal and the WER stays at 97\%. With random weights, the same encoder reaches
+20.9\%. The decoder, however, is useful: kept frozen, it brings knowledge of the language and
+generalises better than one trained from scratch, and LoRA barely improves it. The best
+frontend, a deep convolutional one with a frame every 80~ms, brings the WER down to 20.6\% and
+trains in about three hours, 40\% less than with frames every 40~ms. In the chronological block,
+the model works well on the days it has seen (WER of 20 to 27\% from 10 sessions onwards), but
+on future days it stays around 80\% whether it is trained on 10 or 35 sessions. OWSM's architecture and
+decoder are therefore worth reusing, and the main obstacle to real use is how the signal changes
+between days.

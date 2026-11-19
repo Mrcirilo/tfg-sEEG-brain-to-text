@@ -20,16 +20,16 @@ La metodología tiene dos fases, que corresponden a los dos bloques de experimen
 \subsection{Configuración de entrenamiento}
 \label{sec:adaptacion-modalidad}
 
-El punto de partida es OWSM v3.1 en su versión base (\cref{sec:owsm-teoria}). Se eligió OWSM porque es abierto y está entrenado solo con datos públicos, lo que permite reproducir el trabajo, y la versión base porque, con unos 100 millones de parámetros, se puede entrenar en una sola GPU y es un tamaño más razonable para las cerca de 8.000 frases de entrenamiento del conjunto. Para que trabaje con señal neuronal en lugar de audio se hacen estos cambios:
+El punto de partida de nuestro método es OWSM v3.1 en su versión base. Se eligió OWSM en su versión base porque, con unos 100 millones de parámetros, se puede entrenar en una sola GPU y es un tamaño más razonable para las cerca de 8.000 frases de entrenamiento del conjunto. Para que trabaje con señal neuronal en lugar de audio, se hacen estos cambios:
 
 \begin{itemize}[leftmargin=*, itemsep=0.3em]
-  \item El \textit{frontend} acústico y el submuestreo convolucional se eliminan, porque están pensados para el espectrograma del audio y aquí la entrada ya son características. En su lugar se pone un \textit{frontend} nuevo (\cref{sec:frontend}) que recibe las 512 características de cada ventana, tal y como se publican, y entrega vectores de dimensión 384. La codificación posicional se reutiliza de OWSM, porque no depende del tipo de entrada.
+  \item El \textit{frontend} acústico y el submuestreo convolucional se eliminan, porque están pensados para el espectrograma del audio y aquí la entrada ya son características. En su lugar se pone un \textit{frontend} nuevo que recibe las 512 características de cada ventana, tal y como se publican, y entrega vectores de dimensión 384. La codificación posicional se reutiliza de OWSM, porque no depende del tipo de entrada.
   \item El codificador mantiene la arquitectura E-Branchformer de OWSM v3.1 base, con 6 bloques y $d = 384$. Según el experimento, sus pesos son los preentrenados o aleatorios.
   \item El decodificador es el de OWSM v3.1 base, con su vocabulario de subpalabras y sus tokens especiales. Cada frase se le presenta como \texttt{<eng> <asr> <notimestamps>} seguido del texto, igual que una transcripción en inglés. Así el decodificador hace la misma tarea para la que se entrenó y puede aprovechar lo que sabe del idioma.
   \item La cabeza CTC trabaja sobre el mismo vocabulario, de modo que CTC y el decodificador escriben con las mismas unidades. Se carga de OWSM y se sigue entrenando junto con el \textit{frontend}.
 \end{itemize}
 
-El modelo se entrena con la pérdida conjunta de la \cref{eq:joint-ctc-att}, con $\lambda = 0{,}3$, el mismo valor con el que se entrenó OWSM. Se añade InterCTC en la segunda capa del codificador, con $w = 0{,}3$ (\cref{eq:interctc}), para que las primeras capas reciban un gradiente más directo, lo que ayuda sobre todo cuando el codificador empieza desde cero. El \textit{frontend} y la cabeza CTC usan una tasa de aprendizaje de $10^{-3}$, y el codificador, una 20 veces menor: con la misma tasa para todo el modelo, el entrenamiento divergía. El resto de la receta está en el \cref{anexo:receta}.
+El modelo se entrena con la pérdida conjunta de la \cref{eq:joint-ctc-att}, con $\lambda = 0{,}3$, el mismo valor con el que se entrenó OWSM. Se añade InterCTC en la segunda capa del codificador, con $w = 0{,}3$ (que es el valor que proponen sus autores \cite{lee2021interctc}), para que las primeras capas reciban un gradiente más directo, lo que ayuda sobre todo cuando el codificador empieza desde cero. El \textit{frontend} y la cabeza CTC usan una tasa de aprendizaje de $10^{-3}$, y el codificador, una 20 veces menor: con la misma tasa para todo el modelo, el entrenamiento divergía. Asimismo, es pŕactica común en adaptaciones para evitar olvidar lo aprendido por los pesos de la preentrenados.
 
 \subsection{Marco de evaluación}
 \label{sec:protocolo-evaluacion}
@@ -39,12 +39,10 @@ Como el test oficial no tiene transcripciones públicas, la validación oficial 
 Cada métrica tiene un papel distinto:
 
 \begin{description}
-  \item[Para comparar modelos.] El WER de corpus (\cref{eq:wer-corpus}) en toda la validación, con la búsqueda en haz de la \cref{sec:decodificacion}: haz de 5, peso de CTC de 0,3, detección automática del final de la frase y sin modelo de lenguaje externo. Es la cifra con la que se comparan los modelos, y la configuración es la misma para todos. Se da también el WER de la decodificación CTC voraz, que muestra lo que consigue el codificador sin la ayuda del decodificador.
-  \item[Para elegir la época.] La acc de ESPnet (\cref{eq:acc}), porque se tiene en cada época sin generar texto. En la fase 1 se calcula sobre la validación y en la fase 2, sobre una reserva sacada del entrenamiento (\cref{sec:fase2}).
-  \item[Para medir la eficiencia.] El número de parámetros, totales y entrenables, y el tiempo de entrenamiento en horas de GPU. En los \textit{frontends} se miden además, sin entrenar, las operaciones por segundo de señal (GFLOPs) y la memoria máxima que ocupan en la GPU.
+  \item[Comparar modelos.] El WER de corpus (\cref{eq:wer-corpus}) en toda la validación, con la búsqueda en haz de la \cref{sec:decodificacion}: haz de 5, peso de CTC de 0,3, detección automática del final de la frase y sin modelo de lenguaje externo. Es la cifra con la que se comparan los modelos, y la configuración es la misma para todos. Se da también el WER de la decodificación CTC voraz, que muestra lo que consigue el codificador sin la ayuda del decodificador.
+  \item[Elegir la época.] La acc de ESPnet (\cref{eq:acc}), porque se tiene en cada época sin generar texto. En la fase 1 se calcula sobre la validación y en la fase 2, sobre una reserva sacada del entrenamiento (\cref{sec:fase2}).
+  \item[Medir la eficiencia.] El número de parámetros, totales y entrenables, y el tiempo de entrenamiento en horas de GPU. En los \textit{frontends} se miden además, sin entrenar, las operaciones por segundo de señal (GFLOPs) y la memoria máxima que ocupan en la GPU.
 \end{description}
-
-Para comprobar que un modelo lee de verdad la señal, se evalúa también con una señal falsa: a cada frase se le da la señal de otra. Si el error apenas cambia, el modelo no está usando la señal y se limita a escribir frases probables con el decodificador.
 
 Hay dos limitaciones que afectan a la lectura de los resultados. En la fase 1, la época se elige con la misma validación con la que se evalúa, lo que da cifras algo optimistas, aunque igual de optimistas para todos los modelos; la fase 2 lo evita con la reserva. Además, por coste, cada configuración se entrena una sola vez y con una sola semilla, así que diferencias de uno o dos puntos de WER pueden deberse al azar. Para tener una idea de cuánto pesa el azar de las frases, en el análisis de la fase 2 se calculan intervalos de confianza (\cref{sec:analisis-modelo}), aunque no recogen la variación entre semillas.
 
@@ -53,37 +51,39 @@ Hay dos limitaciones que afectan a la lectura de los resultados. En la fase 1, l
 
 El objetivo de esta fase es encontrar el mejor modelo dentro de un coste razonable, es decir, ver qué cambios compensan lo que cuestan. Se parte de modelos sencillos y con pocos datos, y se van añadiendo, de uno en uno, elementos que usa la literatura. Después de la puesta en marcha se estudia primero el codificador, que es donde más se nota el cambio de modalidad, luego el \textit{frontend} y por último el decodificador.
 
-\subsection{Puesta en marcha}
+% \paragraph{Audio.} Antes de tocar la señal neuronal, se ajustó OWSM con audio siguiendo el tutorial de ESPnet-EZ. Así se comprobó que la instalación, la carga del modelo preentrenado y el entrenamiento funcionaban, y se tuvo una referencia de cómo se comporta un entrenamiento que va bien.
+
+% \paragraph{Adaptación básica.} El primer paso fue preparar los datos. Hubo que escribir la lectura de los ficheros HDF5, limpiar las transcripciones para que encajaran con el vocabulario de OWSM y con la normalización usada al evaluar, y montar un sistema de guardado en Google Drive: cada entrenamiento guarda sus pesos, su receta y sus resultados, y puede seguir donde se quedó si Colab se desconecta, algo habitual en entrenamientos de varias horas. Después se adaptó el modelo. En lugar de modificar el código de ESPnet, se construye a partir de una copia de OWSM en la que se cambian las dimensiones de entrada, se sustituye el \textit{frontend} y se cargan los pesos de las partes que se reutilizan, comprobando que no falta ni sobra ninguno. También hubo que ajustar algunos detalles a lo que espera ESPnet, como la forma de pasar la máscara al nuevo \textit{frontend}.
+
+% \paragraph{Prueba de sobreajuste.} Una de las primeras pruebas fue comprobar que el modelo era capaz de aprender. Se entrenó con muy pocas frases, buscando a propósito el sobreajuste: si un modelo no puede aprenderse de memoria unas pocas frases, el problema está en la cadena de datos o en el propio modelo; si puede, la cadena funciona y lo que queda es un problema de generalización. El modelo llegó a aprenderse las frases (\cref{fig:sobreajuste}), así que la adaptación era correcta y el modelo podía aprender la tarea.
+% % TODO (Kiril): pon con cuántas frases se hizo. El capítulo viejo decía
+% % 348 frases y un CER final de 0,052; si es esta misma prueba, ponlo.
+
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.7\linewidth]{06_OverfitModel}
+%   \caption{Prueba de sobreajuste: WER por época al entrenar con un subconjunto muy pequeño de frases. El modelo llega a aprendérselas de memoria, lo que muestra que la adaptación funciona y que el modelo puede aprender la tarea.}
+%   \label{fig:sobreajuste}
+% \end{figure}
 
 Adaptar OWSM a la señal neuronal fue un proceso largo, que se hizo por pasos y de menos a más: las pruebas empezaron con casi todo el modelo congelado y lo fueron descongelando poco a poco.
 
-\paragraph{Audio.} Antes de tocar la señal neuronal, se ajustó OWSM con audio siguiendo el tutorial de ESPnet-EZ. Así se comprobó que la instalación, la carga del modelo preentrenado y el entrenamiento funcionaban, y se tuvo una referencia de cómo se comporta un entrenamiento que va bien.
+Congelar una parte del modelo quiere decir que sus pesos no se actualizan durante el entrenamiento. Esa parte sigue funcionando igual en la pasada hacia delante, y el gradiente la sigue atravesando hacia las capas anteriores. Por eso se puede entrenar el codificador con el decodificador congelado: el decodificador no cambia, pero sigue indicando al codificador qué salida necesita. Descongelar es lo contrario, y se puede hacer con un componente entero o solo con algunas de sus capas. Entre los dos extremos hay puntos intermedios, como adaptar un componente con LoRA (\cref{sec:lora-teoria}) o entrenarlo con una tasa de aprendizaje más baja que la de las partes nuevas, que es lo que se hace con el codificador (\cref{sec:adaptacion-modalidad}). Ir de congelado a descongelado permite ver qué partes de OWSM se pueden aprovechar tal cual y cuáles hay que reentrenar, que es lo que se plantea en la \cref{sec:planteamiento}.
 
-\paragraph{Adaptación básica.} El primer paso fue preparar los datos. Hubo que escribir la lectura de los ficheros HDF5, limpiar las transcripciones para que encajaran con el vocabulario de OWSM y con la normalización usada al evaluar, y montar un sistema de guardado en Google Drive: cada entrenamiento guarda sus pesos, su receta y sus resultados, y puede seguir donde se quedó si Colab se desconecta, algo habitual en entrenamientos de varias horas. Después se adaptó el modelo. En lugar de modificar el código de ESPnet, se construye a partir de una copia de OWSM en la que se cambian las dimensiones de entrada, se sustituye el \textit{frontend} y se cargan los pesos de las partes que se reutilizan, comprobando que no falta ni sobra ninguno. También hubo que ajustar algunos detalles a lo que espera ESPnet, como la forma de pasar la máscara al nuevo \textit{frontend}.
-
-\paragraph{Prueba de sobreajuste.} Una de las primeras pruebas fue comprobar que el modelo era capaz de aprender. Se entrenó con muy pocas frases, buscando a propósito el sobreajuste: si un modelo no puede aprenderse de memoria unas pocas frases, el problema está en la cadena de datos o en el propio modelo; si puede, la cadena funciona y lo que queda es un problema de generalización. El modelo llegó a aprenderse las frases (\cref{fig:sobreajuste}), así que la adaptación era correcta y el modelo podía aprender la tarea.
-% TODO (Kiril): pon con cuántas frases se hizo. El capítulo viejo decía
-% 348 frases y un CER final de 0,052; si es esta misma prueba, ponlo.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.7\linewidth]{06_OverfitModel}
-  \caption{Prueba de sobreajuste: WER por época al entrenar con un subconjunto muy pequeño de frases. El modelo llega a aprendérselas de memoria, lo que muestra que la adaptación funciona y que el modelo puede aprender la tarea.}
-  \label{fig:sobreajuste}
-\end{figure}
-
-\paragraph{Primeras pruebas.} A partir de ahí empezaron las pruebas con más datos, que fueron creciendo poco a poco. Las primeras se hicieron con unas diez sesiones, porque cada época tardaba unos 20 minutos en el equipo disponible, y con modelos sencillos: un \textit{frontend} lineal y casi todo OWSM congelado, con solo unas pocas capas del codificador entrenables. Se probaron muchas combinaciones y los resultados eran bajos. En la mayoría, el decodificador acababa escribiendo casi la misma frase para cualquier entrada, con un error por carácter cercano al \SI{99}{\percent}. El cambio llegó al ampliar la escala en Colab: se pasó de unas diez sesiones a las 45, se descongelaron más capas del codificador y el \textit{frontend} lineal se cambió por uno convolucional profundo. Como estos cambios se hicieron a la vez, no se puede saber cuánto aportó cada uno, aunque lo que más parece haber influido es usar todas las sesiones.
+Las primeras pruebas se hicieron con modelos sencillos: un \textit{frontend} lineal y casi todo OWSM congelado, con solo unas pocas capas del codificador entrenables. Se usaron unas diez sesiones, porque cada época tardaba unos 20 minutos en el equipo disponible. Se probaron muchas combinaciones y los resultados no eran buenos. En la mayoría, el decodificador acababa escribiendo casi la misma frase para cualquier entrada, con un error por carácter cercano al \SI{99}{\percent}. El cambio llegó al ampliar la escala en Colab: se pasó de unas diez sesiones a las 45, se descongelaron más capas del codificador y el \textit{frontend} lineal se cambió por uno convolucional profundo. Como estos cambios se hicieron a la vez, no se puede saber cuánto aportó cada uno, aunque lo que más parece haber influido es usar todas las sesiones.
 
 Con lo aprendido se fijó una receta general (\cref{anexo:receta}): como mucho 80 épocas, con parada temprana, quedándose con la época de mejor acc en validación. Desde aquí, cada experimento de la fase cambia una sola cosa respecto a esa receta, para poder atribuirle la diferencia.
 
-\subsection{Codificador (OE2)}
+\paragraph{Primeras pruebas.} A partir de ahí empezaron las pruebas con más datos, que fueron creciendo poco a poco. Las primeras se hicieron con unas diez sesiones, porque cada época tardaba unos 20 minutos en el equipo disponible, y con modelos sencillos: un \textit{frontend} lineal y casi todo OWSM congelado, con solo unas pocas capas del codificador entrenables. Se probaron muchas combinaciones y los resultados eran bajos. En la mayoría, el decodificador acababa escribiendo casi la misma frase para cualquier entrada, con un error por carácter cercano al \SI{99}{\percent}. El cambio llegó  al pasar de unas diez sesiones a las 45 (\SI{100}{\percent} de las sesiones de entrenamiento), se descongelaron más capas del codificador y el \textit{frontend} lineal se cambió por uno convolucional profundo. Con lo aprendido se fijó una receta general: como mucho 80 épocas, con parada temprana, quedándose con la época de mejor acc en validación. Desde aquí, cada experimento de la fase cambia una sola cosa respecto a esa receta, para poder atribuirle la diferencia.
 
-El codificador es la parte del modelo que convierte la señal en una representación que el decodificador pueda leer, así que es la que se enfrenta al cambio de modalidad: OWSM aprendió a codificar audio y ahora recibe actividad neuronal. Por eso fue lo primero que se estudió. Responde a la pregunta principal del trabajo, si lo que OWSM aprendió del audio sirve para la señal neuronal, y es además el paso más grande, porque de él depende todo lo demás. Si el codificador no aprende a leer la señal, da igual qué \textit{frontend} o qué decodificador se usen. Y la decisión cambia lo que se pide al resto del modelo: con un codificador preentrenado, el \textit{frontend} tiene que darle algo parecido a lo que esperaba del audio; con uno aleatorio, basta con que le dé una representación útil.
+\subsection{Codificador (O2)}
 
-Siguiendo la progresión de la puesta en marcha, de congelado a descongelado, se comparan cuatro formas de tratar el codificador (\cref{sec:adaptacion}), de más a menos uso de lo que aprendió OWSM:
+El codificador es la parte del modelo que convierte la señal en una representación que el decodificador pueda leer, así que es la que se enfrenta al cambio de modalidad: OWSM aprendió a codificar audio y ahora recibe actividad neuronal. Por eso fue lo primero que se estudió. Responde a la pregunta principal del trabajo, \textit{si lo que OWSM aprendió del audio sirve para la señal neuronal}, y es además el paso más grande, porque de él depende todo lo demás. Si el codificador no aprende a leer la señal, da igual qué \textit{frontend} o qué decodificador se usen. Y la decisión cambia lo que se pide al resto del modelo: con un codificador preentrenado, el \textit{frontend} tiene que darle algo parecido a lo que esperaba del audio; con uno aleatorio, basta con que le dé una representación útil.
+
+Siguiendo la progresión de la puesta en marcha, de congelado a descongelado, se comparan cuatro formas de tratar el codificador, de más a menos uso de lo que aprendió OWSM:
 
 \begin{itemize}[leftmargin=*, itemsep=0.3em]
-  \item preentrenado y congelado, de modo que solo aprenden el \textit{frontend} y la cabeza CTC, que tienen que traducir la señal a lo que el codificador entiende;
+  \item preentrenado y congelado, de modo que solo aprenden el \textit{frontend} y la cabeza CTC, que tienen que traducir la señal a lo que el codificador entiende y adaptarse a la nueva distribución de lenguaje, respectivamente;
   \item preentrenado con LoRA, que permite pequeños ajustes con pocos parámetros;
   \item preentrenado y ajustado entero, con la tasa de aprendizaje reducida;
   \item con pesos aleatorios, es decir, la misma arquitectura entrenada desde cero.
@@ -93,9 +93,11 @@ El resto del sistema y la receta no cambian. Si el conocimiento del audio se tra
 % TODO (Kiril): si alguna de las variantes se hizo con otra versión del
 % sistema (por ejemplo, sin el decodificador), indícalo aquí.
 
-\subsection{\textit{Frontend} (OE1)}
+\subsection{\textit{Frontend} (O1)}
 
-Con el codificador elegido y el decodificador congelado, se comparan los \textit{frontends} de la \cref{tab:frontends}. Se estudian por dos motivos. El \textit{frontend} decide cuántas ventanas procesa el codificador, que es la parte cara del modelo, así que es donde más se puede ahorrar. Además, cada sistema de la literatura usa uno distinto y ninguno publica una comparación entre ellos. Van de menos a más complejos, cada uno añade algo al anterior y casi todos están tomados de la literatura. Los cuatro primeros reducen la secuencia a la mitad; los dos últimos, a la cuarta parte, que es lo habitual en los sistemas revisados (un vector cada \SI{80}{\milli\second}).
+Con el codificador elegido y el decodificador congelado, se comparan los \textit{frontends} de la \cref{tab:frontends}. Se estudian por dos motivos. El \textit{frontend} decide cuántas ventanas temporales procesa el codificador, que es la parte más costosa de cómputo del modelo, así que es donde más se puede ahorrar. Además, cada sistema de la literatura usa uno distinto y ninguno publica una comparación sistemática entre ellos. Van de menos a más complejos, cada uno añade algo al anterior y casi todos están tomados de la literatura.
+
+Además de en cómo combinan las capas, los \textit{frontends} se diferencian en el submuestreo, es decir, en el factor por el que reducen la longitud de la secuencia antes de pasarla al codificador. Con un submuestreo $\times 2$, cada vector que recibe el codificador resume dos ventanas, es decir, \SI{40}{\milli\second} de señal; con $\times 4$ resume cuatro. Cuanto mayor es el submuestreo, más corta es la secuencia y menos calculos ha de realizar el codificador, aunque no se puede reducir sin límite, porque CTC necesita al menos una ventana por cada token de la frase (\cref{sec:frontend}).
 
 \begin{table}[htbp]
   \centering
@@ -118,12 +120,12 @@ Con el codificador elegido y el decodificador congelado, se comparan los \textit
 
 El \textit{frontend} profundo empieza con una capa lineal de 512 a 512 con LayerNorm y GELU, que mezcla todos los electrodos entre sí. Después vienen una o dos etapas, cada una con una convolución de núcleo 5 y paso 2, que reduce la secuencia a la mitad, y dos bloques convolucionales residuales de núcleo 5 con LayerNorm, GELU y \textit{dropout} de 0,1. Termina con una capa lineal a 384 y la codificación posicional. Con una etapa, cada vector de salida ve \SI{420}{\milli\second} de señal. El submuestreo convolucional original de OWSM y una variante con una capa recurrente solo se midieron en coste, sin entrenarlos, porque eran más lentos.
 
-Todos se entrenan con la misma receta y la misma semilla, durante 40 épocas y sin parada temprana, para que tengan el mismo presupuesto. Así la comparación es justa, aunque las cifras no son el máximo que podría dar cada uno. El profundo $\times 2$ es el mismo sistema de los apartados anteriores, de modo que sirve también de control: sus primeras 40 épocas deben reproducir las de aquel entrenamiento.
+Todos se entrenan con la misma receta y la misma semilla, durante 40 épocas y sin parada temprana, para que tengan las mismas condiciones. Si bien esta configuración no permitiría obtener el máximo rendimiento posible, nos ofrece una comparación factible y justa para la comparación entre los frontends. El profundo $\times 2$ es el mismo sistema de los apartados anteriores, de modo que sirve también de control: sus primeras 40 épocas deben reproducir las de aquel entrenamiento.
 
 Junto con los \textit{frontends} se probó la capa de entrada por sesión (\cref{sec:capa-sesion}), que usan casi todos los sistemas del campo para compensar el cambio de la señal entre días. Se entrenó el mismo sistema con ella y sin ella. No mejoró el resultado y, además, tiene un problema de fondo para este trabajo: solo existe para los días con datos de entrenamiento, y en la fase 2 lo que interesa son los días nuevos. Por eso no forma parte de la receta.
 % TODO (Kiril): gráfica con y sin capa por sesión.
 
-\subsection{Decodificador (OE3)}
+\subsection{Decodificador (O3)}
 
 Por último se estudia el decodificador, que es la parte que aporta el conocimiento del lenguaje y la última que se descongeló. Se comparan tres variantes:
 % ---------------------------------------------------------------------
@@ -135,30 +137,30 @@ Por último se estudia el decodificador, que es la parte que aporta el conocimie
 
 \begin{itemize}[leftmargin=*, itemsep=0.3em]
   \item el decodificador preentrenado y congelado, que es el más barato y el que se ha usado en los apartados anteriores;
-  \item el mismo con LoRA (\cref{sec:lora-teoria}), de rango 8, en las proyecciones de consultas y valores de la autoatención y de la atención cruzada de cada capa, que lo adapta a esta tarea entrenando muy pocos parámetros;
+  \item el mismo con LoRA (\cref{sec:lora-teoria}), de rango 8\footnote{El rango no se ajustó: se tomó un valor pequeño porque en el artículo original de LoRA rangos de este orden, e incluso menores, bastan para adaptar las proyecciones de consultas y valores \cite{hu2022lora}. Con rango 8 se entrenan unos 0,15 millones de parámetros.}, en las proyecciones de consultas y valores de la autoatención y de la atención cruzada de cada capa, que lo adapta a esta tarea entrenando muy pocos parámetros;
   \item un decodificador con la misma arquitectura entrenado desde cero, que dice si lo que el decodificador aprendió en OWSM sirve de algo o si bastan las frases de entrenamiento.
 \end{itemize}
 
-Estas variantes se entrenaron con el \textit{frontend} profundo $\times 2$. Como no cuestan lo mismo, si dos dan un WER parecido se elige la más barata. La variante que se elige aquí es la que se usa en el resto del trabajo.
+Estas variantes se entrenaron con el \textit{frontend} profundo $\times 4$. Se escogió este frontend al ser el que mejores resultados daba en el experimento anterior. Como los decodificadores no cuestan lo mismo, si dos dan un WER parecido se elige la más barata. La variante que se elige aquí es la que se usa en el resto del trabajo.
 
 La combinación de codificador, \textit{frontend} y decodificador que sale de esta fase es la receta final, la que se usa en la fase 2.
 
 \section{Fase 2: comportamiento en el tiempo y cantidad de datos}
 \label{sec:fase2}
 
-\subsection{Variabilidad entre sesiones (OE4)}
+\subsection{Variabilidad entre sesiones (O4)}
 
 Antes de simular el uso real, se evalúa sesión a sesión, sin reentrenarlo, el modelo de la fase 1 con el decodificador congelado, que se entrenó con todas las sesiones. Así se ve cuánto cambia el error de un día a otro incluso cuando el modelo ha visto datos de todos los días. Es una referencia necesaria para la fase 2: si el error ya cambia mucho entre días conocidos, hay que tenerlo en cuenta al leer el error en días nuevos.
 % TODO (Kiril): figura del WER por sesión. Las sesiones sin validación no
 % pueden parecer un WER de 0: quita su marca o pon una X (lo pidió David).
 
-\subsection{Entrenamiento cronológico (OE4)}
+\subsection{Entrenamiento cronológico (O4)}
 
-Evaluar con frases de los mismos días que se han usado para entrenar es optimista y está lejos del uso real de una BCI, en la que el sistema se usa en días que todavía no se han grabado. Por eso se simula ese uso: se graban sesiones, se entrena con ellas y se usa en los días siguientes. Para ello se entrena desde cero un modelo con las $k$ primeras sesiones, en orden de fecha, para $k = 5, 10, \dots, 40$; con las 45 ya no quedarían sesiones futuras. Entrenar un modelo para cada valor de $k$ habría costado demasiado, así que se avanza de cinco en cinco. Todos usan la receta final de la fase 1.
+Tal y como hemos discutido a lo largo de la memoria, evaluar con frases de los mismos días que se han usado para entrenar es optimista y está lejos del uso real de una BCI, en la que el sistema se usa en días que todavía no se han grabado. Por eso, se simula ese uso: se graban sesiones, se entrena con ellas y se usa en los días siguientes. Para ello, se entrena desde cero un modelo con las $k$ primeras sesiones, en orden de fecha, para $k = 5, 10, \dots, 40$; con las 45 ya no quedarían sesiones futuras. Entrenar un modelo para cada valor de $k$ habría costado demasiado, así que se avanza de cinco en cinco. Todos usan la receta final de la fase 1.
 
-Como aquí la validación oficial se usa solo para evaluar, cada modelo aparta como reserva 1 de cada 10 frases de entrenamiento de cada sesión. Con ella se elige la mejor época y se hace la parada temprana, con una paciencia de 6 épocas. Cada modelo da como mucho 40 pasadas por sus datos y como poco 4.000 pasos, para que los modelos con pocas sesiones también entrenen un mínimo. Las épocas de ESPnet se fijan en 250 pasos, unas 8.000 frases, para todos los modelos. Así la paciencia equivale al mismo número de pasos en todos, aunque con pocas sesiones una época suponga varias pasadas por los datos: con $k = 5$, unas siete.
+Como aquí la validación oficial se usa solo para evaluar, cada modelo aparta como reserva 1 aleatoriamente de cada 10 frases de entrenamiento de cada sesión. Con ella se elige la mejor época y se hace la parada temprana, con una paciencia de 6 épocas. Cada modelo da como mucho 40 pasadas por sus datos y como poco 4.000 pasos, para que los modelos con pocas sesiones también entrenen un mínimo. Las épocas de ESPnet se fijan en 250 pasos, unas 8.000 frases, para todos los modelos. Así la paciencia equivale al mismo número de pasos en todos, aunque con pocas sesiones una época suponga varias pasadas por los datos: con $k = 5$, unas siete.
 
-Cada modelo se evalúa en toda la validación. De cada frase se guarda su relación con el entrenamiento: si su sesión estaba entre las de entrenamiento (sesión vista) o es posterior (sesión futura), cuántas sesiones y cuántos días han pasado desde la última sesión de entrenamiento, si la frase aparece tal cual en el entrenamiento, cuánto se parece a la frase de entrenamiento más parecida y cuántas de sus palabras aparecen en él. Esto permite separar el efecto del paso del tiempo del de que la frase o sus palabras ya estuvieran en el entrenamiento, que es otra fuente de optimismo. Con esto se comparan:
+Cada modelo se evalúa en todo el conjunto de validación de el \textit{dataset}. De cada frase, se guarda su relación con el entrenamiento: si su sesión estaba entre las de entrenamiento (sesión vista) o es posterior (sesión futura), cuántas sesiones y cuántos días han pasado desde la última sesión de entrenamiento, si la frase aparece tal cual en el entrenamiento, cuánto se parece a la frase de entrenamiento más parecida y cuántas de sus palabras aparecen en él. Esto permite separar el efecto del paso del tiempo del de que la frase o sus palabras ya estuvieran en el entrenamiento, que es otra fuente de optimismo. Con esto se comparan:
 
 \begin{itemize}[leftmargin=*, itemsep=0.3em]
   \item el error en sesiones vistas y en sesiones futuras para cada $k$;
@@ -175,7 +177,7 @@ El WER resume en una cifra cuánto se equivoca un modelo, pero no dice en qué. 
 
 \paragraph{Cómo salen las frases.} Además del WER y del CER, se cuenta qué parte de los errores son sustituciones, eliminaciones e inserciones, y cómo se reparten las frases según su error: perfectas, con un error de cada cuatro palabras o menos, con hasta la mitad mal y con más de la mitad mal. Un mismo WER puede venir de muchas frases con algún error o de unas pocas totalmente equivocadas, y no es lo mismo para quien usa el sistema.
 
-\paragraph{Intervalos de confianza.} Como cada modelo se entrena una sola vez, se calcula un intervalo de confianza del WER por \textit{bootstrap} sobre las frases \cite{bisani2004bootstrap}: se sacan frases al azar con reemplazo, se recalcula el WER y se repite 2.000 veces. Para comparar dos modelos se remuestrean las mismas frases en los dos. Si el intervalo de la diferencia no incluye el cero, la diferencia no se explica por qué frases han tocado en la validación.
+\paragraph{Intervalos de confianza.} El WER de un modelo depende en parte de qué frases hay en la validación: con otras frases parecidas saldría algo distinto. Para saber cuánto puede variar, en este caso, hemos usado \textit{bootstrap} \cite{bisani2004bootstrap}, que simula muchas validaciones distintas. Se sacan al azar tantas frases como tiene la validación, se calcula el WER de esa muestra y lo repetimos 2.000 veces. El rango en el que cae el \SI{95}{\percent} de esos valores es el intervalo de confianza. De esta manera podemos comparar los modelos viendo si sus intervalos se solapan.
 
 \paragraph{Palabra a palabra.} Cada referencia se alinea con su hipótesis con la misma distancia de Levenshtein del WER, de modo que cada palabra de la referencia queda como acertada, sustituida (y por cuál) o eliminada, y cada palabra de más, como inserción. Con esto se miran tres cosas:
 \begin{itemize}[leftmargin=*, itemsep=0.3em]

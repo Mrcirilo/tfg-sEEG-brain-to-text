@@ -24,7 +24,7 @@
 
 Este capítulo sigue el orden de la metodología. Primero se presentan los experimentos de la fase 1, con los que se elige el sistema, y después los de la fase 2, que estudian cómo se comporta con el paso del tiempo. Al final se compara el resultado con el estado del arte y se discute todo en conjunto.
 
-Salvo que se diga otra cosa, las cifras son el WER de corpus con la búsqueda en haz sobre toda la validación (\cref{sec:protocolo-evaluacion}). Cada configuración se entrenó una sola vez, así que las diferencias pequeñas hay que leerlas con cuidado. Como referencia, para un WER de 0,209 el intervalo de confianza del 95~\% calculado sobre las frases es de unos $\pm 0{,}012$, de modo que diferencias de una o dos centésimas pueden deberse a qué frases hay en la validación.
+\footnote{Salvo que se diga otra cosa, las cifras son el WER de corpus con la búsqueda en haz sobre toda la validación (\cref{sec:protocolo-evaluacion}). Cada configuración se entrenó una sola vez, así que las diferencias pequeñas hay que leerlas con cuidado. Como referencia, para un WER de 0,209 el intervalo de confianza del 95~\% calculado sobre las frases es de unos $\pm 0{,}012$, de modo que diferencias de una o dos centésimas pueden deberse a qué frases hay en la validación.}
 % El ±0,012 es la columna ic95 de comparativa_encoder.csv. Cuadra con el
 % bootstrap de la fase 2: con k = 40, las 1.276 frases vistas dan 0,214
 % con un intervalo de [0,202; 0,225].
@@ -33,7 +33,7 @@ Salvo que se diga otra cosa, las cifras son el WER de corpus con la búsqueda en
 \section{Fase 1: búsqueda del mejor modelo}
 \label{sec:res-fase1}
 
-\subsection{Codificador}
+\subsection{Codificador (O2)}
 \label{sec:res-codificador}
 
 La \cref{tab:res-codificador} compara las cuatro formas de tratar el codificador, de más a menos uso de los pesos de OWSM. El preentrenado ajustado y el aleatorio usan el \textit{frontend} profundo $\times 2$ y el decodificador congelado, y se entrenan con la misma receta.
@@ -41,17 +41,18 @@ La \cref{tab:res-codificador} compara las cuatro formas de tratar el codificador
 
 \begin{table}[htbp]
   \centering
-  \caption{Comparación de las cuatro formas de tratar el codificador. WER y CER con la búsqueda en haz, WER con la decodificación CTC voraz y WER con la señal falsa (200 frases).}
+  \caption{Comparación de las cuatro formas de tratar el codificador. WER y CER con la búsqueda en haz y WER con la decodificación CTC voraz.}
   \label{tab:res-codificador}
   \small
-  \begin{tabular}{lcccc}
+  \begin{tabular}{lcc|c}
     \toprule
-    \textbf{Codificador} & \textbf{WER haz} & \textbf{CER haz} & \textbf{WER CTC voraz} & \textbf{WER señal falsa} \\
+    \textbf{Codificador} & \textbf{WER haz} & \textbf{CER haz} & \textbf{WER CTC voraz} \\
     \midrule
-    Preentrenado y congelado & 0,971          & 0,852          & 0,987          & 0,992 \\
-    Preentrenado con LoRA    & 0,971          & 0,814          & 0,989          & 1,006 \\
-    Preentrenado y ajustado  & 0,967          & 0,780          & 0,972          & 0,992 \\
-    Aleatorio                & \textbf{0,209} & \textbf{0,161} & \textbf{0,273} & 1,160 \\
+    Preentrenado y congelado & 0,971          & 0,852          & 0,987 \\
+    Preentrenado con LoRA    & 0,971          & 0,814          & 0,989 \\
+    Preentrenado y ajustado  & 0,967          & 0,780          & 0,972 \\
+    \midrule
+    Aleatorio                & \textbf{0,209} & \textbf{0,161} & \textbf{0,273} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -66,37 +67,39 @@ Ninguna de las tres variantes que usan los pesos de OWSM llega a aprender: conge
 %   \includegraphics[width=\linewidth]{07_1_1_codificador}
 %   \caption{Acc de validación por época con el codificador preentrenado de OWSM y con el codificador aleatorio, ambos con el \textit{frontend} profundo $\times 2$ y el decodificador congelado.}
 %   \label{fig:res-codificador}
-% \end{figure}
+% \end{figure.
 
-La señal falsa explica qué está pasando. Con el codificador preentrenado, el WER casi no cambia al darle a cada frase la señal de otra (0,992 frente a 0,971 con el congelado, 1,006 frente a 0,971 con LoRA y 0,992 frente a 0,967 con el ajustado), así que el modelo no está leyendo la señal: el decodificador escribe frases en inglés que no tienen que ver con lo que se intentaba decir. Por eso el CER, de entre 0,780 y 0,852, es bastante menor que el WER, como cabe esperar de frases bien escritas pero sin relación con la referencia, que comparten letras y casi ninguna palabra. La rama CTC, que depende solo del codificador, se queda en un WER de entre 0,972 y 0,989: prácticamente no produce texto útil. Con el codificador aleatorio pasa lo contrario. La señal falsa dispara el WER de 0,209 a 1,160, lo que demuestra que el modelo se apoya en la señal, y el CTC voraz llega a 0,273 sin la ayuda del decodificador.
+La explicación más probable tendría dos partes. La primera es que la señal neuronal se parece poco al audio. La segunda es que el conjunto es de una sola persona y tiene bastantes datos, suficientes para que un codificador aprenda desde cero y su pre-entrenamiento en miles de sujetos para ser general resulte más un obstáculo que una ventaja.
 
-La explicación más probable, que se comentó con los tutores, tiene dos partes. La primera es que la señal neuronal se parece poco al audio: son 512 características de los electrodos cada 20~ms, no un espectrograma, y lo que el codificador aprendió de los sonidos no encaja con lo que le llega ahora. La segunda es que el conjunto es de una sola persona y tiene bastantes datos, suficientes para que un codificador aprenda desde cero.
+Otros trabajos han encontrado lo contrario. Fiedler et al. ajustaron wav2vec~2.0 con la señal de otro participante, y con los pesos preentrenados obtuvieron un WER del 31,0~\%, frente al 66,2~\% entrenando desde cero \cite{fiedler2025wav2vec2brain}. Entre los dos trabajos cambian muchas cosas: el modelo y la forma en que se preentrenó (wav2vec~2.0 aprende directamente de la forma de onda y OWSM, de espectrogramas), el participante y los datos. Con un solo experimento no se puede saber cuál pesa más. Lo que sí muestra este resultado es que, en el presente caso de estudio, el codificador preentrenado de OWSM no aporta nada. En consecuencia el resto del trabajo usa el codificador aleatorio.
 
-Otros trabajos han encontrado lo contrario. Fiedler et al. ajustaron wav2vec~2.0 con la señal de otro participante, y con los pesos preentrenados obtuvieron un WER del 31,0~\%, frente al 66,2~\% entrenando desde cero \cite{fiedler2025wav2vec2brain}. Entre los dos trabajos cambian muchas cosas: el modelo y la forma en que se preentrenó (wav2vec~2.0 aprende directamente de la forma de onda y OWSM, de espectrogramas), el participante y los datos. Con un solo experimento no se puede saber cuál pesa más. Lo que sí muestra este resultado es que, en este sistema, el codificador de OWSM no aporta nada, y el resto del trabajo usa el codificador aleatorio.
-
-\subsection{\textit{Frontend}}
+\subsection{\textit{Frontend} (O1)}
 \label{sec:res-frontend}
 
 Con el codificador aleatorio y el decodificador congelado, la \cref{tab:res-frontends} compara los seis \textit{frontends} tras 40 épocas. La \cref{fig:res-frontends-curvas} muestra cómo aprende cada uno y la \cref{fig:res-frontends-coste}, el error frente al coste.
 
 \begin{table}[htbp]
   \centering
-  \caption{Comparación de \textit{frontends} tras 40 épocas, con el codificador aleatorio y el decodificador congelado: WER con la búsqueda en haz y con la decodificación CTC voraz, acc de la mejor época en validación, parámetros del \textit{frontend}, operaciones por segundo de señal del \textit{frontend} y el codificador, y horas de entrenamiento en una L4. En negrita, los mejores WER y acc.}
+  \caption{Comparación de \textit{frontends} tras 40 épocas, con el codificador aleatorio y el decodificador congelado, ordenados de peor a mejor WER: WER con la búsqueda en haz, acc de la mejor época en validación, parámetros del \textit{frontend}, operaciones por segundo de señal del \textit{frontend} y el codificador, y horas de entrenamiento en una L4. En negrita, los mejores WER y acc.}
   \label{tab:res-frontends}
   \small
-  \begin{tabular}{lcccccc}
+  \begin{tabular}{lccccc}
     \toprule
-    \textbf{\textit{Frontend}} & \textbf{WER haz} & \textbf{WER CTC} & \textbf{acc} & \textbf{Parámetros (M)} & \textbf{GFLOPs/s} & \textbf{Horas} \\
+    \textbf{\textit{Frontend}} & \textbf{WER haz} & \textbf{acc} & \textbf{Parámetros (M)} & \textbf{GFLOPs/s} & \textbf{Horas} \\
     \midrule
-    Lineal $\times 2$            & 0,243          & 0,314          & 0,853          & 0,39 & 1,37 & 5,1 \\
-    \textit{Patching} $\times 2$ & 0,305          & 0,462          & 0,824          & 2,75 & 1,49 & 5,2 \\
-    Conv1d $\times 2$            & 0,254          & 0,389          & 0,849          & 1,03 & 1,43 & 5,2 \\
-    Profundo $\times 2$          & 0,224          & 0,293          & 0,864          & 4,40 & 1,58 & 5,2 \\
-    Profundo $\times 4$          & \textbf{0,206} & \textbf{0,287} & \textbf{0,877} & 8,33 & 0,98 & 3,0 \\
-    \textit{Patching} $\times 4$ & 0,329          & 0,453          & 0,810          & 2,75 & 0,72 & 2,9 \\
+    \textit{Patching} $\times 4$ & 0,329          & 0,810          & 2,75 & 0,72 & 2,9 \\
+    \textit{Patching} $\times 2$ & 0,305          & 0,824          & 2,75 & 1,49 & 5,2 \\
+    Conv1d $\times 2$            & 0,254          & 0,849          & 1,03 & 1,43 & 5,2 \\
+    Lineal $\times 2$            & 0,243          & 0,853          & 0,39 & 1,37 & 5,1 \\
+    Profundo $\times 2$          & 0,224          & 0,864          & 4,40 & 1,58 & 5,2 \\
+    Profundo $\times 4$          & \textbf{0,206} & \textbf{0,877} & 8,33 & 0,98 & 3,0 \\
     \bottomrule
   \end{tabular}
 \end{table}
+
+Los dos \textit{frontends} profundos son los mejores y los únicos que bajan de 0,24. El $\times 4$ consigue el WER más bajo, 0,206, y la mejor acc, 0,877. Su rama CTC es también la que mejor funciona por sí sola: con la decodificación voraz llega a 0,287, y el CER de la rama en validación acaba en 0,235, frente a 0,281 del $\times 2$ (\cref{fig:res-frontends-curvas}b).
+
+Además, el $\times 4$ es el más barato de los que funcionan bien. Entrena en 3,0 horas frente a las 5,2 del $\times 2$, un 42~\% menos, porque el codificador procesa la mitad de vectores. Por lo mismo, hace un 38~\% menos de operaciones por segundo de señal (0,98~GFLOPs frente a 1,58), necesita menos de la mitad de memoria al entrenar (7,9~GB de pico frente a 17,0) y transcribe cada frase con la búsqueda en haz en casi la mitad de tiempo (0,77~s frente a 1,37). Y todo ello aunque su \textit{frontend}, con una etapa de convolución más, tiene casi el doble de parámetros (8,3 millones frente a 4,4): lo que añade el \textit{frontend} se recupera con creces en el codificador. En este caso, reducir la secuencia a la cuarta parte abarata el modelo y además baja el error.
 
 \begin{figure}[htbp]
   \centering
@@ -105,6 +108,10 @@ Con el codificador aleatorio y el decodificador congelado, la \cref{tab:res-fron
   \label{fig:res-frontends-curvas}
 \end{figure}
 
+Con el \textit{patching} ocurre lo contrario: el $\times 4$ (0,329) es peor que el $\times 2$ (0,305), y los dos son los peores de la comparación, también en la rama CTC (0,453 y 0,462), aunque el $\times 4$ es el \textit{frontend} del sistema de referencia del Brain-to-Text~'25. Al principio están entre los que más rápido aprenden, pero hacia la época 10 se estancan por debajo de los demás (\cref{fig:res-frontends-curvas}a). Una posible explicación es que juntan 14 ventanas de golpe con una sola capa lineal, de 2,75 millones de parámetros, que tiene muchos pesos que aprender. En el sistema de referencia, además, va acompañado de una capa de entrada por día y de una red recurrente, que aquí no están \cite{b2t25}.
+
+El lineal, el más sencillo de todos y con solo 0,39 millones de parámetros, queda tercero (0,243) y mejora al conv1d (0,254), que imita la entrada de Whisper. Como el codificador ya modela el tiempo, un \textit{frontend} sencillo funciona razonablemente bien, y lo que añade el profundo $\times 2$ frente al lineal son 0,019 de WER con casi el mismo tiempo de entrenamiento.
+
 \begin{figure}[htbp]
   \centering
   \figuranb{07_1_2_frontends_coste}
@@ -112,13 +119,6 @@ Con el codificador aleatorio y el decodificador congelado, la \cref{tab:res-fron
   \label{fig:res-frontends-coste}
 \end{figure}
 
-Los dos \textit{frontends} profundos son los mejores y los únicos que bajan de 0,24. El $\times 4$ consigue el WER más bajo, 0,206, y la mejor acc, 0,877. Su rama CTC es también la que mejor funciona por sí sola: con la decodificación voraz llega a 0,287, y el CER de la rama en validación acaba en 0,235, frente a 0,281 del $\times 2$ (\cref{fig:res-frontends-curvas}b).
-
-Además, el $\times 4$ es el más barato de los que funcionan bien. Entrena en 3,0 horas frente a las 5,2 del $\times 2$, un 42~\% menos, porque el codificador procesa la mitad de vectores. Por lo mismo, hace un 38~\% menos de operaciones por segundo de señal (0,98~GFLOPs frente a 1,58), necesita menos de la mitad de memoria al entrenar (7,9~GB de pico frente a 17,0) y transcribe cada frase con la búsqueda en haz en casi la mitad de tiempo (0,77~s frente a 1,37). Y todo ello aunque su \textit{frontend}, con una etapa de convolución más, tiene casi el doble de parámetros (8,3 millones frente a 4,4): lo que añade el \textit{frontend} se recupera con creces en el codificador. En este caso, reducir la secuencia a la cuarta parte abarata el modelo y además baja el error.
-
-Con el \textit{patching} ocurre lo contrario: el $\times 4$ (0,329) es peor que el $\times 2$ (0,305), y los dos son los peores de la comparación, también en la rama CTC (0,453 y 0,462), aunque el $\times 4$ es el \textit{frontend} del sistema de referencia del Brain-to-Text~'25. Al principio están entre los que más rápido aprenden, pero hacia la época 10 se estancan por debajo de los demás (\cref{fig:res-frontends-curvas}a). Una posible explicación es que juntan 14 ventanas de golpe con una sola capa lineal, de 2,75 millones de parámetros, que tiene muchos pesos que aprender. En el sistema de referencia, además, va acompañado de una capa de entrada por día y de una red recurrente, que aquí no están \cite{b2t25}.
-
-El lineal, el más sencillo de todos y con solo 0,39 millones de parámetros, queda tercero (0,243) y mejora al conv1d (0,254), que imita la entrada de Whisper. Como el codificador ya modela el tiempo, un \textit{frontend} sencillo funciona razonablemente bien, y lo que añade el profundo $\times 2$ frente al lineal son 0,019 de WER con casi el mismo tiempo de entrenamiento.
 
 El profundo $\times 2$ es el mismo sistema de los apartados anteriores, que allí se entrenó 80 épocas y llegó a 0,209. Con 40 se queda en 0,224: entrenar el doble mejora algo, pero poco.
 

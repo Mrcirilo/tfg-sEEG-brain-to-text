@@ -306,14 +306,14 @@ Los \textit{frontends} de la literatura se construyen combinando unas pocas piez
 
 Qué combinación de estas capas forma cada \textit{frontend} probado se explica en el \cref{cap:metodologia}.
 
-Como se vio en el \cref{cap:datos}, la señal que registra cada electrodo cambia de un día a otro. Un mismo intento de habla puede producir una actividad algo distinta en dos sesiones, y un modelo único tendría que aprender a la vez varias correspondencias entre señal y texto. La solución habitual en el campo es poner delante del modelo una capa de entrada propia de cada sesión \cite{willett2021,willett2023}. Es una transformación afín seguida de una no linealidad acotada:
-\begin{equation}
-  \mathbf{z}_t = \mathrm{softsign}\left( \mathbf{W}_{s}\,\mathbf{x}_t + \mathbf{b}_{s} \right), \qquad \mathrm{softsign}(u) = \frac{u}{1+|u|},
-  \label{eq:capa-sesion}
-\end{equation}
-donde $s$ es la sesión a la que pertenece la frase, $\mathbf{W}_{s} \in \mathbb{R}^{512 \times 512}$ y $\mathbf{b}_{s} \in \mathbb{R}^{512}$. La idea es que cada día tenga su propia corrección y que, después de ella, la señal de todos los días se parezca más. 
+% Como se vio en el \cref{cap:datos}, la señal que registra cada electrodo cambia de un día a otro. Un mismo intento de habla puede producir una actividad algo distinta en dos sesiones, y un modelo único tendría que aprender a la vez varias correspondencias entre señal y texto. La solución habitual en el campo es poner delante del modelo una capa de entrada propia de cada sesión \cite{willett2021,willett2023}. Es una transformación afín seguida de una no linealidad acotada:
+% \begin{equation}
+%   \mathbf{z}_t = \mathrm{softsign}\left( \mathbf{W}_{s}\,\mathbf{x}_t + \mathbf{b}_{s} \right), \qquad \mathrm{softsign}(u) = \frac{u}{1+|u|},
+%   \label{eq:capa-sesion}
+% \end{equation}
+% donde $s$ es la sesión a la que pertenece la frase, $\mathbf{W}_{s} \in \mathbb{R}^{512 \times 512}$ y $\mathbf{b}_{s} \in \mathbb{R}^{512}$. La idea es que cada día tenga su propia corrección y que, después de ella, la señal de todos los días se parezca más. 
 
-En consecuencia, cada sesión añade $512^2 + 512 = 262.656$ parámetros, unos 11,8 millones con las 45 sesiones. Además, la capa solo existe para los días que tienen datos de entrenamiento: para un día nuevo no hay matriz aprendida y habría que recalibrar con datos de ese día. Incluimos esto en el marco teórico porque es una capa muy común en la literatura, y exploramos su utilidad en este trabajo.
+% En consecuencia, cada sesión añade $512^2 + 512 = 262.656$ parámetros, unos 11,8 millones con las 45 sesiones. Además, la capa solo existe para los días que tienen datos de entrenamiento: para un día nuevo no hay matriz aprendida y habría que recalibrar con datos de ese día. Incluimos esto en el marco teórico porque es una capa muy común en la literatura, y exploramos su utilidad en este trabajo.
 
 \subsection{Adaptación LoRA}
 \label{sec:adaptacion}

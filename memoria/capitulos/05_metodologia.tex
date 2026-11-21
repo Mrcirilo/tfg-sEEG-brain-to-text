@@ -120,8 +120,8 @@ El \textit{frontend} profundo empieza con una capa lineal de 512 a 512 con Layer
 
 Todos se entrenan con la misma receta y la misma semilla, durante 40 épocas y sin parada temprana, para que tengan las mismas condiciones. Si bien esta configuración no permitiría obtener el máximo rendimiento posible, nos ofrece una comparación factible y justa para la comparación entre los frontends. El profundo $\times 2$ es el mismo sistema de los apartados anteriores, de modo que sirve también de control: sus primeras 40 épocas deben reproducir las de aquel entrenamiento.
 
-Junto con los \textit{frontends} se probó la capa de entrada por sesión (\cref{sec:capa-sesion}), que usan casi todos los sistemas del campo para compensar el cambio de la señal entre días. Se entrenó el mismo sistema con ella y sin ella. No mejoró el resultado y, además, tiene un problema de fondo para este trabajo: solo existe para los días con datos de entrenamiento, y en la fase 2 lo que interesa son los días nuevos. Por eso no forma parte de la receta.
-% TODO (Kiril): gráfica con y sin capa por sesión.
+% Junto con los \textit{frontends} se probó la capa de entrada por sesión (\cref{sec:capa-sesion}), que usan casi todos los sistemas del campo para compensar el cambio de la señal entre días. Se entrenó el mismo sistema con ella y sin ella. No mejoró el resultado y, además, tiene un problema de fondo para este trabajo: solo existe para los días con datos de entrenamiento, y en la fase 2 lo que interesa son los días nuevos. Por eso no forma parte de la receta.
+% % TODO (Kiril): gráfica con y sin capa por sesión.
 
 \subsection{Decodificador (O3)}
 

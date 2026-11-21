@@ -13,29 +13,28 @@
 \providecommand{\ods}{X}
 
 % Tabla en el formato oficial (con cuadrícula), como en el TFG de Elena.
-% Ejemplo de fila marcada:  ODS 3. Salud y bienestar. & \ods & & & \\ \hline
 \begin{table}[H]
   \centering
   \begin{tabular}{|p{0.47\textwidth}|c|c|c|c|}
     \hline
     \textbf{Objetivos de Desarrollo Sostenible} & \textbf{Alto} & \textbf{Medio} & \textbf{Bajo} & \textbf{No procede} \\ \hline
-    ODS 1. Fin de la pobreza.                         & & & & \\ \hline
-    ODS 2. Hambre cero.                               & & & & \\ \hline
-    ODS 3. Salud y bienestar.                         & & & & \\ \hline
-    ODS 4. Educación de calidad.                      & & & & \\ \hline
-    ODS 5. Igualdad de género.                        & & & & \\ \hline
-    ODS 6. Agua limpia y saneamiento.                 & & & & \\ \hline
-    ODS 7. Energía asequible y no contaminante.       & & & & \\ \hline
-    ODS 8. Trabajo decente y crecimiento económico.   & & & & \\ \hline
-    ODS 9. Industria, innovación e infraestructuras.  & & & & \\ \hline
-    ODS 10. Reducción de las desigualdades.           & & & & \\ \hline
-    ODS 11. Ciudades y comunidades sostenibles.       & & & & \\ \hline
-    ODS 12. Producción y consumo responsables.        & & & & \\ \hline
-    ODS 13. Acción por el clima.                      & & & & \\ \hline
-    ODS 14. Vida submarina.                           & & & & \\ \hline
-    ODS 15. Vida de ecosistemas terrestres.           & & & & \\ \hline
-    ODS 16. Paz, justicia e instituciones sólidas.    & & & & \\ \hline
-    ODS 17. Alianzas para lograr objetivos.           & & & & \\ \hline
+    ODS 1. Fin de la pobreza.                         & & & & \ods \\ \hline
+    ODS 2. Hambre cero.                               & & & & \ods \\ \hline
+    ODS 3. Salud y bienestar.                         & \ods & & & \\ \hline
+    ODS 4. Educación de calidad.                      & & & & \ods \\ \hline
+    ODS 5. Igualdad de género.                        & & & & \ods \\ \hline
+    ODS 6. Agua limpia y saneamiento.                 & & & & \ods \\ \hline
+    ODS 7. Energía asequible y no contaminante.       & & & & \ods \\ \hline
+    ODS 8. Trabajo decente y crecimiento económico.   & & & & \ods \\ \hline
+    ODS 9. Industria, innovación e infraestructuras.  & & \ods & & \\ \hline
+    ODS 10. Reducción de las desigualdades.           & & \ods & & \\ \hline
+    ODS 11. Ciudades y comunidades sostenibles.       & & & & \ods \\ \hline
+    ODS 12. Producción y consumo responsables.        & & & \ods & \\ \hline
+    ODS 13. Acción por el clima.                      & & & & \ods \\ \hline
+    ODS 14. Vida submarina.                           & & & & \ods \\ \hline
+    ODS 15. Vida de ecosistemas terrestres.           & & & & \ods \\ \hline
+    ODS 16. Paz, justicia e instituciones sólidas.    & & & & \ods \\ \hline
+    ODS 17. Alianzas para lograr objetivos.           & & & \ods & \\ \hline
   \end{tabular}
   \caption{Grado de relación del trabajo con los Objetivos de Desarrollo Sostenible.}
   \label{tab:ods}
@@ -43,8 +42,8 @@
 
 \section*{Descripción de la alineación del TFG con los ODS con un grado de relación más alto}
 
-% Aquí va tu texto (tantas páginas como haga falta). Lo decides tú; como
-% punto de partida, los que más encajan con una BCI de habla suelen ser el
-% ODS 3 (salud y bienestar) y el ODS 10 (reducción de las desigualdades:
-% accesibilidad para personas con discapacidad), y algo el ODS 9 (innovación).
-\textit{[Pendiente de redactar.]}
+Este trabajo estudia si un modelo de reconocimiento de voz abierto, OWSM, se puede reutilizar para pasar a texto la actividad neuronal de una persona con ELA que intenta hablar. Es un estudio de viabilidad y no un producto para pacientes. Por eso su relación con los ODS es indirecta: aporta conocimiento a una línea de investigación que sí puede cambiar la vida de estas personas. Los ODS con más relación son el 3, el 10 y el 9.
+
+\paragraph{ODS 3. Salud y bienestar.} La ELA va paralizando los músculos, también los del habla, y la mayoría de los pacientes acaban sin poder comunicarse hablando (\cref{cap:introduccion}). Perder el habla aísla a la persona, le dificulta participar en las decisiones sobre su propio cuidado y afecta a su bienestar y al de su entorno. Las BCI de habla buscan devolverle esa capacidad. Este trabajo contribuye a ellas estudiando qué partes de un modelo de voz preentrenado se pueden aprovechar y cómo se comporta el sistema con el paso del tiempo. Encaja con la meta 3.4, que incluye promover el bienestar de las personas con enfermedades no transmisibles. Los resultados también señalan qué falta para un uso real: la señal cambia de un día a otro, y en los días nuevos el error sigue siendo alto.
+
+\paragraph{ODS 10. Reducción de las desigualdades.} La meta 10.2 pide promover la inclusión social, económica y política de todas las personas, independientemente de su discapacidad. Una

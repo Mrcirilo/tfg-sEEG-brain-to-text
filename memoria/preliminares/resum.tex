@@ -4,14 +4,14 @@
 %     \begin{abstract}
 %     \input{preliminares/resum}
 %     \end{abstract}
-% La classe posa el títol («Resum») i les paraules clau (\tfgclaveva de datos.tex).
+% La classe posa el títol («Resum») i les paraules clau (primer argument de \keywords a datos.tex).
 
-L'esclerosi lateral amiotròfica (ELA) o un ictus poden deixar una persona sense parla encara
-que continue sabent què vol dir. En l'ELA, entre el 80 i el 95~\% dels pacients acaben sense
-poder cobrir la seua comunicació diària parlant. Les alternatives habituals, com el seguiment
-ocular, necessiten músculs que encara responguen. Les interfícies cervell-ordinador (BCI) de
-parla busquen una altra via: registren l'activitat de l'escorça motora mentre la persona
-intenta parlar i la convertixen en text.
+L'esclerosi lateral amiotròfica (ELA) és una malaltia neurodegenerativa que va paralitzant els
+músculs, també els de la parla, encara que la persona continue sabent què vol dir. Entre el 80 i
+el 95~\% dels pacients acaben sense poder cobrir la seua comunicació diària parlant. Les
+alternatives habituals, com el seguiment ocular, necessiten músculs que encara responguen. Les
+interfícies cervell-ordinador (BCI) de parla busquen una altra via: registren l'activitat de
+l'escorça motora mentre la persona intenta parlar i la convertixen en text.
 
 L'any 2024, un participant amb ELA i microelèctrodes en l'escorça motora va arribar a
 comunicar-se amb un 97,5~\% d'encert per paraula. Els seus registres formen el repte públic
@@ -25,19 +25,21 @@ Aquest treball estudia aquestes qüestions adaptant OWSM, un model obert de reco
 codificador-descodificador, per a descodificar activitat neuronal intracortical en el repte. El
 seu \textit{frontend} acústic se substituïx per un de nou per a les 512 característiques
 neuronals que s'obtenen cada 20~ms, i tot s'entrena en una sola GPU, sense model de llenguatge
-extern. Un primer bloc d'experiments, amb totes les sessions, compara el codificador
-preentrenat amb el mateix inicialitzat a l'atzar, el descodificador preentrenat (congelat o amb
-LoRA) amb un entrenat des de zero i diversos \textit{frontends}, en error i en cost. El segon
-simula l'ús real: entrena models amb les primeres sessions en ordre cronològic i els avalua per
-separat en dies vistos i futurs.
+extern. Un primer bloc d'experiments, amb totes les sessions, compara diverses maneres de
+tractar el codificador i el descodificador d'OWSM, i diferents \textit{frontends}, en error i en
+cost. El segon simula l'ús real: entrena models amb les primeres sessions en ordre cronològic i
+els avalua per separat en dies vistos i futurs.
 
-Amb els pesos preentrenats d'OWSM, el codificador, congelat o ajustat, no arriba a llegir el
-senyal i el WER es queda en el 97~\%. Amb pesos aleatoris, el mateix codificador baixa al
-20,9~\%. El descodificador sí que servix: congelat, aporta el coneixement del llenguatge i
-generalitza millor que un entrenat des de zero, i LoRA quasi no el millora. El millor
-\textit{frontend}, convolucional profund i amb una trama cada 80~ms, deixa el WER en el
-20,6~\% i s'entrena en unes tres hores, un 40~\% menys que amb trames cada 40~ms. En el bloc
+Amb els pesos d'OWSM, el codificador, congelat, amb LoRA o ajustat, no arriba a llegir el senyal
+i el WER es queda en el 97~\%; amb pesos aleatoris, baixa al 20,9~\%. El descodificador, en
+canvi, sí que servix: el d'OWSM, congelat, millora el que el codificador llig en el senyal
+gràcies a l'idioma que va aprendre de 180.000 hores de transcripcions, mentre que un entrenat
+des de zero amb 8.000 frases ho empitjora. LoRA quasi no el millora. El millor
+\textit{frontend}, convolucional profund i amb un vector cada 80~ms, deixa el WER en el 20,6~\%
+i s'entrena en unes tres hores, un 40~\% menys que amb un vector cada 40~ms. En el bloc
 cronològic, el model funciona bé en els dies que ha vist (WER del 20 al 27~\% a partir de 10
-sessions), però en dies futurs està al voltant del 80~\% tant amb 10 com amb 35 sessions. Per
-tant, d'OWSM servixen l'arquitectura i el descodificador, i el principal obstacle
-per a un ús real és el canvi del senyal entre dies.
+sessions), però en dies futurs està al voltant del 80~\% tant amb 10 com amb 35 sessions.
+
+Per tant, d'OWSM val la pena reutilitzar l'arquitectura i el descodificador, però no els pesos
+del codificador. El principal obstacle perquè una persona amb ELA use el sistema cada dia és que
+el senyal canvia d'un dia a l'altre.

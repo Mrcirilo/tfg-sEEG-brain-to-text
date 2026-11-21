@@ -21,12 +21,20 @@
 %  No lleva portada: la añade la UPV al depositar el TFG (es la de los logos
 %  de la UPV y la ETSINF que se ve en otros TFG).
 %==============================================================================
-\documentclass[spanish,11pt,listoffigures,listoftables]{tfgetsinf}
+% La clase carga tocbibind, que mete los propios índices como entradas del
+% índice general (salían repetidos). Con esto no aparecen.
+\PassOptionsToPackage{nottoc,notlof,notlot}{tocbibind}
+\documentclass[spanish,11pt,openany,listoffigures,listoftables]{tfgetsinf}
 
 % Se anula la portada propia de la clase (ver arriba)
 \makeatletter
 \renewcommand{\m@ketitle}{}
 \makeatother
+
+% Sin páginas en blanco: cada capítulo empieza en la página siguiente, sea par
+% o impar (openany), y \cleardoublepage, que la clase usa antes de los índices,
+% pasa a ser un simple salto de página.
+\let\cleardoublepage\clearpage
 \addto\captionsspanish{\renewcommand{\titulacioname}{Grado en Ciencia de Datos}}
 
 %------------------------------------------------------------------ Paquetes
@@ -86,14 +94,13 @@
 %------------------------------------------------------------------ Resúmenes
 % Se redefine el entorno abstract de la clase para que el título sea un
 % \chapter* (misma altura, letra, alineación y estilo de página que los
-% índices y capítulos). Cada resumen empieza en página nueva, pero sin forzar
-% página impar, para que los tres vayan seguidos. Tras el de inglés se ponen
-% los índices, como hacía la clase.
+% índices y capítulos). Cada resumen empieza en página nueva. Tras el de
+% inglés se ponen los índices, como hacía la clase.
 \makeatletter
 \renewenvironment{abstract}[1][catalan]{%
   \begingroup
     \selectlanguage{#1}%
-    \begingroup\@openrightfalse\chapter*{\abstractname}\endgroup
+    \chapter*{\abstractname}
     \@mkboth{\abstractname}{\abstractname}}{%
     \par\nopagebreak\noindent\textbf{\keywordsname:} \keywords\vspace*{3pt}\hrule
   \iflanguage{english}{\endgroup\makeindexes}{\endgroup\par}}
@@ -132,9 +139,6 @@
 
 %------------------------------------------------------------------ Anexos
 \APPENDIX
-\chapter{Código del pipeline de entrenamiento}\label{anexo:codigo}
-\include{anexos/receta}
-\chapter{Análisis exploratorio adicional}\label{anexo:eda}
 \include{anexos/ods}   % obligatorio y siempre el último
 
 \end{document}

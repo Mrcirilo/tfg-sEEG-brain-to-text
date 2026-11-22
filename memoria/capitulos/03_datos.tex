@@ -121,25 +121,30 @@ Las 45 sesiones van del 11 de agosto de 2023 al 13 de abril de 2025, y en ese ti
 
 El conjunto tiene 8.072 ensayos de entrenamiento, 1.426 de validación y 1.450 de prueba \cite{lightbeam}. Las frases se graban en bloques de entre 5 y 50, y los bloques no se mezclan entre entrenamiento y evaluación: 198 bloques (en 45 sesiones), forman el entrenamiento, y los 67 restantes (en 41 sesiones), forman la validación y la prueba. A pesar de ser un dataset grande para BCI, los modelos se suelen entrenar con muchas más horas de audio. Esto condiciona qué partes del modelo se reutilizan y cómo se entrena, motivación principal de nuestro presente estudio.
 
-Las frases proceden de seis corpus distintos (\cref{tab:b2t25-splits}). La mayoría son de Switchboard \cite{godfrey1992switchboard}, un corpus de conversaciones telefónicas en inglés, seguidas de un corpus de palabras frecuentes preparado por los autores y de frases con un vocabulario cerrado de 50 palabras \cite{b2t25}. Tres corpus aparecen solo en validación y prueba: OpenWebText, con texto de páginas web; las frases Harvard, pensadas para cubrir los sonidos del inglés de forma equilibrada \cite{ieee1969}, y secuencias de palabras al azar. Suman 349 frases de un tipo que el modelo no ve al entrenar. La validación tiene, por tanto, frases de otro estilo y palabras que no salen en el entrenamiento. Llegado el caso, se puede resaltar este subconjunto como prueba para validar el rendimiento del modelo aislando su rendimiento de la influencia del modelo de lenguage - inherenemente entrenados para seguir la gramática.
+Las frases proceden de seis corpus distintos (\cref{tab:b2t25-splits}). La mayoría son de Switchboard \cite{godfrey1992switchboard}, un corpus de conversaciones telefónicas en inglés, seguidas de un corpus de palabras frecuentes preparado por los autores y de frases con un vocabulario cerrado de 50 palabras \cite{b2t25}. Tres corpus aparecen solo en validación y prueba: OpenWebText, con texto de páginas web; las frases Harvard, pensadas para cubrir los sonidos del inglés de forma equilibrada \cite{ieee1969}, y secuencias de palabras al azar. Suman 349 frases de un tipo que el modelo no ve al entrenar. La validación tiene, por tanto, frases de otro estilo y palabras que no salen en el entrenamiento. Llegado el caso, se puede resaltar este subconjunto como prueba para validar el rendimiento del modelo aislando su rendimiento de la influencia del modelo de lenguaje - inherentemente entrenados para seguir la gramática.
 
 \begin{table}[htbp]
   \centering
-  \caption[Composición de Brain-to-Text~'25 por corpus de origen]{Composición de Brain-to-Text~'25 por corpus de origen, según \cite{lightbeam}.\footnote{Estos recuentos suman más (11.162) que las 3 particiones juntas (10.948)}}
+  \caption[Composición de Brain-to-Text~'25 por corpus de origen]{Composición de Brain-to-Text~'25 por corpus de origen, según \cite{lightbeam}.}
   \label{tab:b2t25-splits}
   \small
+  \begin{threeparttable}
   \begin{tabular}{lrrl}
     \toprule
-    \textbf{Corpus} & \textbf{Bloques} & \textbf{Frases} & \textbf{Partición} \\
+    \textbf{Corpus} & \textbf{Bloques} & \textbf{Frases}\tnote{a} & \textbf{Partición} \\
     \midrule
- Switchboard                & 182 & 7.672 & Entrenamiento y validación/prueba \\
- Palabras frecuentes        & 48 & 2.050 & Entrenamiento y validación/prueba \\
- Vocabulario de 50 palabras & 25 & 1.091 & Solo entrenamiento \\
- OpenWebText                & 5 & 172 & Solo validación/prueba \\
- Frases Harvard             & 3 & 98 & Solo validación/prueba \\
- Palabras al azar           & 2 & 79 & Solo validación/prueba \\
+    Switchboard                & 182 & 7.672 & Entrenamiento y validación/prueba \\
+    Palabras frecuentes        & 48  & 2.050 & Entrenamiento y validación/prueba \\
+    Vocabulario de 50 palabras & 25  & 1.091 & Solo entrenamiento \\
+    OpenWebText                & 5   & 172   & Solo validación/prueba \\
+    Frases Harvard             & 3   & 98    & Solo validación/prueba \\
+    Palabras al azar           & 2   & 79    & Solo validación/prueba \\
     \bottomrule
   \end{tabular}
+  \begin{tablenotes}\footnotesize
+    \item[a] Estos recuentos suman 11.162 frases, más que las tres particiones juntas (10.948).
+  \end{tablenotes}
+  \end{threeparttable}
 \end{table}
 
 Sin embargo, las transcripciones de la partición de prueba no son públicas. La clasificación de la competición se calcula con ellas y, como este trabajo no participó, no es posible evaluar con esa partición. Por eso aquí la validación oficial hace de conjunto de prueba. Hay indicios de que esto apenas cambia las cifras: LightBeam, por ejemplo, obtiene un WER del \SI{6.36}{\percent} en validación y del \SI{5.77}{\percent} y el \SI{6.47}{\percent} en las partes pública y privada de la prueba \cite{lightbeam}. Cómo se usa cada partición en los experimentos se explica en el \cref{cap:metodologia}. No obstante, se mencionará cuando los resultado se comparen al conjunto de validación o al de prueba.
@@ -169,7 +174,7 @@ Las frases casi no se repiten. La mayoría aparece una sola vez en todo el conju
 
 % TODO (Kiril): % de palabras de validación que no están en train
 % (palabras_en_train).
-Con las palabras ocurre lo normal en cualquier texto: unas pocas aparecen muchísimo y la mayoría muy poco. Las más frecuentes son pronombres, artículos y preposiciones, como \textit{I}, \textit{the}, \textit{to} o \textit{you} (\cref{fig:palabras-frecuentes}a), que son las más usadas en una conversación normal. El vocabulario de entrenamiento tiene 3.745 palabras, pero las 100 más frecuentes ya cubren el \SI{61}{\percent} del texto (\cref{fig:palabras-frecuentes}b). Aun así, es importante ver que un \SI{4.2}{\percent}  de las palabras de validación no aparece nunca en el entrenamiento. El modelo solo puede escribir estas palabras nuevas relacionándolas con el contexto y usando su conocimiento de los audios.
+Con las palabras ocurre lo normal en cualquier texto: unas pocas aparecen muchísimo y la mayoría muy poco. Las más frecuentes son pronombres, artículos y preposiciones, como \textit{I}, \textit{the}, \textit{to} o \textit{you} (\cref{fig:palabras-frecuentes}a), que son las más usadas en una conversación normal. El vocabulario de entrenamiento tiene 3.745 palabras, pero las 100 más frecuentes ya cubren el \SI{61}{\percent} del texto (\cref{fig:palabras-frecuentes}b). Aun así, es importante destacar que un \SI{6.3}{\percent}  de las palabras de validación no aparece nunca en el entrenamiento. El modelo solo puede escribir estas palabras nuevas relacionándolas con el contexto y usando su conocimiento de los audios.
 
 \begin{figure}[htbp]
   \centering

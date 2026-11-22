@@ -16,12 +16,10 @@ En este capítulo se explican los módulos y técnicas que forman el sistema: qu
 \section{Planteamiento del problema}
 \label{sec:planteamiento-formal}
 
-\subsection{Marco teórico}
-
 Sea $\mathbf{X} = (\mathbf{x}_1, \dots, \mathbf{x}_T)$ una secuencia de $T$ vectores de características neuronales, con $\mathbf{x}_t \in \mathbb{R}^{512}$, obtenida durante un intento de habla, y sea $\mathbf{y} = (y_1, \dots, y_L)$ la secuencia de unidades de texto de la frase que el participante intentaba pronunciar, con $y_l \in \mathcal{V}$. En este trabajo, $\mathcal{V}$ es el vocabulario de subpalabras de OWSM. El problema consiste en aprender una función $f_\theta: \mathbb{R}^{T \times 512} \rightarrow \mathcal{V}^{*}$ que estime $\mathbf{y}$ a partir de $\mathbf{X}$, bajo tres condiciones:
 
 \begin{enumerate}[label=(\alph*), leftmargin=*]
-  \item Es una tarea de transducción de secuencias de longitud variable, con $T > L$. \footnote{Es importante destacar entoncesque a una frecuencia de \SI{50}{\hertz}, una frase corta produce muchas de ventanas temporales frente a unas decenas de unidades de salida.}
+  \item Es una tarea de transducción de secuencias de longitud variable, con $T > L$. \footnote{Es importante destacar entonces que a una frecuencia de \SI{50}{\hertz}, una frase corta produce muchas de ventanas temporales frente a unas decenas de unidades de salida.}
   \item No se dispone de alineamiento entre las posiciones de $\mathbf{X}$ y las de $\mathbf{y}$.
   \item El orden se preserva: la unidad $y_l$ nunca precede temporalmente a $y_{l-1}$.
 \end{enumerate}
@@ -40,7 +38,7 @@ Siguiendo el esquema de entrenamiento de los modelos de aprendizaje profundo, du
   \label{eq:mascara}
 \end{equation}
 
-La máscara se usa en varios sitios. En la atención (\cref{sec:atencion}), las posiciones de relleno reciben una puntuación de $-\infty$ antes de la \textit{softmax}, así que su peso es cero y ninguna posición real las tiene en cuenta. En la pérdida, las posiciones y los tokens de relleno no se cuentan. Hay que tener en cuenta que cualquier capa con término de sesgo convierte los ceros del relleno en otros valores, de modo que antes de una convolución hay que volver a ponerlos a cero multiplicandolos por la máscara. Por último, cuando una capa reduce el número de ventanas, las longitudes y la máscara se recalculan con la misma regla que esa capa, \cref{eq:conv-longitud}.
+La máscara se usa en varios sitios. En la atención (\cref{sec:atencion}), las posiciones de relleno reciben una puntuación de $-\infty$ antes de la \textit{softmax}, así que su peso es cero y ninguna posición real las tiene en cuenta. En la pérdida, las posiciones y los tokens de relleno no se cuentan. Hay que tener en cuenta que cualquier capa con término de sesgo convierte los ceros del relleno en otros valores, de modo que antes de una convolución hay que volver a ponerlos a cero multiplicándolos por la máscara. Por último, cuando una capa reduce el número de ventanas, las longitudes y la máscara se recalculan con la misma regla que esa capa, \cref{eq:conv-longitud}.
 
 % =====================================================================
 % SECCIÓN COMENTADA (pendiente de decidir): preprocesado y aumento de
@@ -68,14 +66,14 @@ La máscara se usa en varios sitios. En la atención (\cref{sec:atencion}), las 
 
 Whisper \cite{radford2023whisper} es un modelo de reconocimiento de voz de OpenAI que, en su versión original, se entrenó con unas 680.000 horas de audio de internet. Es multilingüe y hace varias tareas, como transcribir, traducir o identificar el idioma. Sus pesos son públicos, pero no lo son los datos ni el proceso completo de entrenamiento. OWSM (\textit{Open Whisper-style Speech Model}) reproduce ese tipo de entrenamiento con datos públicos y con la herramienta de código abierto ESPnet \cite{watanabe2018espnet}, y publica las recetas, el código, los registros de entrenamiento y los pesos \cite{peng2023owsm}. Las primeras versiones usan un codificador y un decodificador Transformer, y OWSM v3 se entrenó con unas 180.000 horas.
 
-OWSM v3.1 \cite{peng2024owsmv31} cambia el codificador por un E-Branchformer (\cref{sec:ebranchformer}) con los mismos datos mejorando precisión y velocidad. Cubre 151 idiomas y se publica en tres tamaños: \textit{base} (101 millones de parámetros), \textit{small} (367 millones) y \textit{medium} (1.020 millones). .En este trabajo se usa la version base de v3.1. Aunque hay versiones posteriores como v4, se ha escogido por v3.1 por tener mas información al comienzo del proyecto, pero cabe destacar que hay margen de mejora
+OWSM v3.1 \cite{peng2024owsmv31} cambia el codificador por un E-Branchformer (\cref{sec:ebranchformer}) con los mismos datos mejorando precisión y velocidad. Cubre 151 idiomas y se publica en tres tamaños: \textit{base} (101 millones de parámetros), \textit{small} (367 millones) y \textit{medium} (1.020 millones). . En este trabajo se usa la version base de v3.1. Aunque hay versiones posteriores como v4, se ha escogido por v3.1 por tener mas información al comienzo del proyecto, pero cabe destacar que hay margen de mejora
 
 OWSM es un modelo codificador-decodificador con atención, al que se añade una cabeza CTC sobre la salida del codificador. Con audio, el proceso completo sería el siguiente:
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{esquema_modelo}
-  \caption[Esquema del modelo]{Esquema del modelo.}
+  \caption[Esquema del modelo]{Esquema del modelo. Fuente: elaboración propia.}
   \label{fig:esquema-modelo}
 \end{figure}
 
@@ -129,7 +127,7 @@ donde $\mathrm{LN}$ es la normalización por capas y $\mathrm{MHSA}$, la autoate
   \item[Fusión.] Junta las salidas de las dos ramas y las devuelve a la dimensión $d$. Antes de juntarlas les aplica otra convolución corta, de modo que la mezcla tiene en cuenta los instantes vecinos. Esta convolución es lo que añade E-Branchformer respecto a Branchformer.
 \end{description}
 
-Los bloques se apilan uno detrás de otro, mantienendo la longitud y la dimensión. La salida del último es la secuencia $\mathbf{H}$ que usan tanto el decodificador como la cabeza CTC.
+Los bloques se apilan uno detrás de otro, manteniendo la longitud y la dimensión. La salida del último es la secuencia $\mathbf{H}$ que usan tanto el decodificador como la cabeza CTC.
 % TODO (Kiril): figura de un bloque E-Branchformer (si usas la del artículo
 % original, pon en el pie que está adaptada de Kim et al.).
 
@@ -184,7 +182,7 @@ En este sentido, para calcular la probabilidad de la frase, CTC supone que, cono
   p(\mathbf{y} \mid \mathbf{X}) &= \sum_{\boldsymbol{\pi} \in \mathcal{B}^{-1}(\mathbf{y})} p(\boldsymbol{\pi} \mid \mathbf{X}). \label{eq:ctc-marginal}
 \end{align}
 
-El entrenamiento minimiza $\mathcal{L}_{\mathrm{CTC}} = -\log p(\mathbf{y} \mid \mathbf{X})$, lo que sube a la vez la probabilidad de todos los alineamientos que llevan a la frase correcta. Son tantos que no se pueden sumar uno a uno: su número crece de forma exponencial con $T'$. Pero muchos comparten el principio, así que se puede avanzar ventana a ventana guardando sumas parciales. Este algoritmo de programación dinámica, llamado hacia delante y hacia atrás, da el resultado exacto con un coste proporcional a $T' \cdot L$, donde $L$ es el número de tokens de la frase.
+El entrenamiento minimiza $\mathcal{L}_{\mathrm{CTC}} = -\log p(\mathbf{y} \mid \mathbf{X})$, lo que sube a la vez la probabilidad de todos los alineamientos que llevan a la frase correcta. Son tantos que no se pueden sumar uno a uno: su número crece de forma exponencial con $T'$. Pero muchos comparten el principio, así que se puede avanzar ventana a ventana guardando sumas parciales. Este algoritmo de programación dinámica, llamado hacia delante y hacia atrás (en inglés se conoce como\textit{forward-backward}) da el resultado exacto con un coste proporcional a $T' \cdot L$, donde $L$ es el número de tokens de la frase.
 
 La independencia entre ventanas es lo que permite hacer esta cuenta, pero tiene un precio. Cada ventana decide sin saber qué han emitido las demás, de modo que CTC, por sí solo, no aprende qué palabras suelen ir juntas.
 
@@ -193,11 +191,11 @@ La \cref{fig:ctc-alineamientos} muestra algunos ejemplos con la palabra \texttt{
 \begin{figure}[htbp]
   \centering
   \includegraphics{04_02_ctcAlineamientos}
-  \caption[Alineamientos CTC válidos y no válidos]{Alineamientos CTC para la salida \texttt{datos} en siete ventanas; $\varnothing$ es el blanco. Los de la izquierda colapsan a \texttt{datos}. Los de la derecha no \cite{hannun2017ctc}.}
+  \caption[Alineamientos CTC válidos y no válidos]{Alineamientos CTC para la salida \texttt{datos} en siete ventanas; $\varnothing$ es el blanco. Los de la izquierda colapsan a \texttt{datos}. Los de la derecha no. Fuente. Elaboración propia basada en \cite{hannun2017sequence}.}
   \label{fig:ctc-alineamientos}
 \end{figure}
 
-OWSM se entrena con CTC y con el decodificador a la vez, sumando las dos pérdidas con un peso $\lambda$ \cite{kim2017jointctc,watanabe2017hybrid}:
+OWSM se entrena con CTC y con el decodificador \textit{Tranformer} a la vez, sumando las dos pérdidas con un peso $\lambda$ \cite{kim2017jointctc,watanabe2017hybrid}:
 
 \begin{equation}
   \mathcal{L} = \lambda\, \mathcal{L}_{\mathrm{CTC}} + (1-\lambda)\, \mathcal{L}_{\mathrm{att}}, \qquad \lambda \in [0,1].
@@ -222,7 +220,7 @@ Con el modelo entrenado hay dos maneras de pasar de la señal al texto. La más 
   \label{eq:ctc-greedy}
 \end{equation}
 
-Es muy rápida, porque no pasa por el decodificador \textit{Transformer} autoregresivo, y enseña lo que ha aprendido el codificador sin ayuda. Aun así, es una aproximación: la probabilidad de una frase está repartida entre muchos alineamientos, y la frase más probable no tiene por qué salir del alineamiento más probable.
+Es muy rápida, porque no pasa por el decodificador \textit{Transformer} autorregresivo, y enseña lo que ha aprendido el codificador sin ayuda. Aun así, es una aproximación: la probabilidad de una frase está repartida entre muchos alineamientos, y la frase más probable no tiene por qué salir del alineamiento más probable.
 
 La otra manera es la búsqueda en haz (o \textit{beam-search} en inglés) \cite{watanabe2017hybrid}, que sí usa el decodificador \textit{Transformer}. El texto se escribe token a token, pero en cada paso se guardan las $K$ frases parciales con mejor puntuación, no solo la mejor. La puntuación de cada una, $\hat{y}_{1:l}$, junta las dos partes del modelo:
 
@@ -287,7 +285,7 @@ Los \textit{frontends} de la literatura se construyen combinando unas pocas piez
     \label{eq:layernorm}
   \end{equation}
 
-  \item[\textit{Dropout}.] Durante el entrenamiento pone a cero cada valor con probabilidad $p$ y multiplica los demás por $1/(1-p)$ \cite{srivastava2014dropout}. Se hace para evitar sobreajuste y asi no cae todo el peso en unas pocas neuronas.
+  \item[\textit{Dropout}.] Durante el entrenamiento pone a cero cada valor con probabilidad $p$ y multiplica los demás por $1/(1-p)$ \cite{srivastava2014dropout}. Se hace para evitar sobreajuste y así no cae todo el peso en unas pocas neuronas.
 
   \item[Conexión residual.] Suma la entrada de un bloque a su salida \cite{he2016resnet}:
   \begin{equation}
@@ -321,9 +319,9 @@ Qué combinación de estas capas forma cada \textit{frontend} probado se explica
 
 Un modelo preentrenado es un modelo que ya se ha entrenado con muchos datos para una tarea. OWSM ha sido entrenado con mas de cien mil horas de audio. Reutilizarlo en una tarea nueva se llama aprendizaje por transferencia: en lugar de empezar de cero, se parte de unos pesos que ya han aprendido algo útil y se ajustan con los datos nuevos (\textit{fine-tuning}) \cite{yosinski2014transferable}.
 
-Entrenar un componente desde cero significa partir de pesos aleatorios que sortean valores pequeños, con una escala que depende del tamaño de la capa para que las señales no crezcan ni se apaguen al atravesar la red \cite{glorot2010understanding}. Hay casos concretos en los que sí tiene sentido empezar con un valor fijo, como la identidad de la capa por sesión (\cref{sec:capa-sesion}) o la matriz $\mathbf{B}$ de LoRA.
+Entrenar un componente desde cero significa partir de pesos aleatorios que sortean valores pequeños, con una escala que depende del tamaño de la capa para que las señales no crezcan ni se apaguen al atravesar la red \cite{glorot2010understanding}. Aún así, hay casos concretos en los que sí tiene sentido empezar con un valor fijo, la matriz $\mathbf{B}$ de LoRA.
 
-Cuando mencionamos congelar una capa, nos refierimos a  pesos no se actualizan durante el entrenamiento. Sigue funcionando igual en la pasada hacia delante y el gradiente lo sigue atravesando hacia las capas anteriores, de modo que un decodificador congelado puede seguir indicando al codificador qué salida necesita. Descongelar es lo contrario, y se puede hacer con todo el componente o solo con algunas capas. También se puede dar a cada parte del modelo una tasa de aprendizaje distinta (\cref{sec:entrenamiento-teoria}), por ejemplo más baja para lo preentrenado que para lo nuevo.
+% Cuando mencionamos congelar una capa, nos refierimos a  pesos no se actualizan durante el entrenamiento. Sigue funcionando igual en la pasada hacia delante y el gradiente lo sigue atravesando hacia las capas anteriores, de modo que un decodificador congelado puede seguir indicando al codificador qué salida necesita. Descongelar es lo contrario, y se puede hacer con todo el componente o solo con algunas capas. También se puede dar a cada parte del modelo una tasa de aprendizaje distinta (\cref{sec:entrenamiento-teoria}), por ejemplo más baja para lo preentrenado que para lo nuevo.
 
 LoRA (\textit{Low-Rank Adaptation}) es un método de aprendizaje por transferencia muy eficiente que ajuste cambiando muy pocos parámetros \cite{hu2022lora}. Parte de la idea de que el cambio que necesitan los pesos para la tarea nueva tiene rango bajo. Para una matriz preentrenada $\mathbf{W}_0 \in \mathbb{R}^{d \times k}$, en lugar de aprender un cambio completo $\Delta\mathbf{W}$, se aprende como el producto de dos matrices estrechas:
 \begin{equation}
@@ -340,7 +338,7 @@ Esta sección resume los conceptos de entrenamiento que aparecen en el resto de 
 \begin{description}
   \item[Parámetros e hiperparámetros.] Los parámetros son los pesos que aprende el modelo. Los hiperparámetros se fijan antes de entrenar, como la tasa de aprendizaje, el tamaño del lote o el número de épocas. Los parámetros entrenables son los que se actualizan durante el entrenamiento.
 
-  \item[Conjuntos de datos.] Divisiónes que realizamos sobre los datos para poder obtener métricas reales. El conjunto de entrenamiento sirve para ajustar los pesos. El de validación sirve para tomar decisiones durante el entrenamiento y el de prueba solo se usa al final, para medir el resultado con datos que no han influido en ninguna decisión.
+  \item[Conjuntos de datos.] Divisiones que realizamos sobre los datos para poder obtener métricas reales. El conjunto de entrenamiento sirve para ajustar los pesos. El de validación sirve para tomar decisiones durante el entrenamiento y el de prueba solo se usa al final, para medir el resultado con datos que no han influido en ninguna decisión.
 
   \item[Lote, paso y época.] Un lote es el grupo de frases que se procesa a la vez. En cada paso se calcula la pérdida de un lote y se actualizan los pesos una vez. Una época es una pasada completa por el conjunto de entrenamiento.
 
@@ -388,13 +386,15 @@ Cuanto más bajo es el WER, mejor. En el ejemplo de la \cref{tab:ejemplo-wer}, l
 
 \begin{table}[htbp]
   \centering
-  \caption{Ejemplo de cálculo del WER. $S$: sustitución; $I$: inserción.}
+  \caption{Ejemplo de cálculo del WER. $S$: sustitución; $D$: borrado; $I$: inserción; $N$: palabras de la referencia.}
   \label{tab:ejemplo-wer}
   \begin{tabular}{lccccc}
     \hline
     Referencia & \textit{me} & \textit{encantan} & \textit{los} & \textit{datos} & --- \\
-    Hipótesis  & \textit{me} & \textit{encantan} & \textit{los}  & \textit{datos} & \textit{cerebrales} \\
-    Error      &            &               & $S$           &                & $I$ \\
+    Hipótesis  & \textit{me} & \textit{encantan} & \textit{mis} & \textit{datos} & \textit{cerebrales} \\
+    Error      &             &                   & $S$          &                & $I$ \\
+    \hline
+    \multicolumn{6}{c}{\rule{0pt}{4.5ex}$\mathrm{WER} = \dfrac{S + D + I}{N} = \dfrac{1 + 0 + 1}{4} = 0{,}50$\rule[-2.5ex]{0pt}{0pt}} \\
     \hline
   \end{tabular}
 \end{table}

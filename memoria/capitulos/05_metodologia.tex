@@ -29,18 +29,18 @@ El punto de partida de nuestro método es OWSM v3.1 en su versión base. Se elig
   \item La cabeza CTC trabaja sobre el mismo vocabulario, de modo que CTC y el decodificador escriben con las mismas unidades. Se carga de OWSM y se sigue entrenando junto con el \textit{frontend}.
 \end{itemize}
 
-El modelo se entrena con la pérdida conjunta de la \cref{eq:joint-ctc-att}, con $\lambda = 0{,}3$, el mismo valor con el que se entrenó OWSM. Se añade InterCTC en la segunda capa del codificador, con $w = 0{,}3$ (que es el valor que proponen sus autores \cite{lee2021interctc}), para que las primeras capas reciban un gradiente más directo, lo que ayuda sobre todo cuando el codificador empieza desde cero. El \textit{frontend} y la cabeza CTC usan una tasa de aprendizaje de $10^{-3}$, y el codificador, una 20 veces menor: con la misma tasa para todo el modelo, el entrenamiento divergía. Asimismo, es pŕactica común en adaptaciones para evitar olvidar lo aprendido por los pesos de la preentrenados.
+El modelo se entrena con la pérdida conjunta de la \cref{eq:joint-ctc-att}, con $\lambda = 0{,}3$, el mismo valor con el que se entrenó OWSM. Se añade InterCTC en la segunda capa del codificador, con $w = 0{,}3$ (que es el valor que proponen sus autores \cite{lee2021interctc}), para que las primeras capas reciban un gradiente más directo, lo que ayuda sobre todo cuando el codificador empieza desde cero. El \textit{frontend} y la cabeza CTC usan una tasa de aprendizaje de $10^{-3}$, y el codificador, una 20 veces menor: con la misma tasa para todo el modelo, el entrenamiento divergía. Asimismo, es práctica común en adaptaciones para evitar olvidar lo aprendido por los pesos de la preentrenados.
 
 \subsection{Marco de evaluación}
 \label{sec:protocolo-evaluacion}
 
-Como el test oficial no tiene transcripciones públicas, la validación oficial hace de conjunto de prueba (\cref{sec:b2t25}). Es lo habitual con este conjunto: Khanday et al. solo dan resultados en validación \cite{khanday2026}, y LightBeam da los dos y obtiene cifras parecidas en validación y en las dos partes del test \cite{lightbeam}. Las cuatro sesiones sin validación solo aportan datos de entrenamiento. Antes de calcular el error, la referencia y la hipótesis se normalizan para que las mayúsculas y la puntuación no cuenten como errores: se pasan a minúsculas y se quitan los signos de puntuación, salvo los apóstrofos y los guiones.
+Como el test oficial no tiene transcripciones públicas, la validación oficial hace de conjunto de prueba (\cref{sec:b2t25}). Es lo habitual con este conjunto: Khanday et al. solo dan resultados en validación \cite{khanday2026}, y LightBeam da los dos y obtiene cifras parecidas en validación y en las dos partes del test \cite{lightbeam}. En la fase 1, la validación también se usa para elegir la mejor época de cada modelo. Así se entrena con todos los datos de entrenamiento y la época se elige con las 1.426 frases de la validación. En esta fase solo se trata de comparar los modelos entre sí y decidir cuál es mejor, y para eso basta, porque elegir la época con la misma validación los favorece a todos por igual. En la fase 2, en cambio, la época se elige con una reserva sacada del entrenamiento (\cref{sec:fase2}), así que la validación solo se usa para evaluar y sus cifras no tienen esa ventaja. Las cuatro sesiones sin validación solo aportan datos de entrenamiento. Antes de calcular el error, la referencia y la hipótesis se normalizan para que las mayúsculas y la puntuación no cuenten como errores: se pasan a minúsculas y se quitan los signos de puntuación, salvo los apóstrofos y los guiones.
 
 Cada métrica tiene un papel distinto:
 
 \begin{description}
   \item[Comparar modelos.] El WER de corpus (\cref{eq:wer-corpus}) en toda la validación, con la búsqueda en haz de la \cref{sec:decodificacion}: haz de 5, peso de CTC de 0,3, detección automática del final de la frase y sin modelo de lenguaje externo. Es la cifra con la que se comparan los modelos, y la configuración es la misma para todos. Se da también el WER de la decodificación CTC voraz, que muestra lo que consigue el codificador sin la ayuda del decodificador.
-  \item[Elegir la época.] La acc de ESPnet (\cref{eq:acc}), porque se tiene en cada época sin generar texto. En la fase 1 se calcula sobre la validación y en la fase 2, sobre una reserva sacada del entrenamiento (\cref{sec:fase2}).
+  \item[Elegir la época.] Escogemos la acc de ESPnet (\cref{eq:acc}), porque se tiene en cada época sin generar texto. En la fase 1 se calcula sobre la validación y en la fase 2, sobre una reserva sacada del entrenamiento (\cref{sec:fase2}).
   \item[Medir la eficiencia.] El número de parámetros, totales y entrenables, y el tiempo de entrenamiento en horas de GPU. En los \textit{frontends} se miden además, sin entrenar, las operaciones por segundo de señal (GFLOPs) y la memoria máxima que ocupan en la GPU.
 \end{description}
 
@@ -76,7 +76,7 @@ A partir de ahí empezaron las pruebas con más datos, que fueron creciendo poco
 
 \subsection{Codificador (O2)}
 
-El codificador es la parte del modelo que convierte la señal en una representación que el decodificador pueda leer, así que es la que se enfrenta al cambio de modalidad: OWSM aprendió a codificar audio y ahora recibe actividad neuronal. Por eso fue lo primero que se estudió. Responde a la pregunta principal del trabajo, \textit{si lo que OWSM aprendió del audio sirve para la señal neuronal}, y es además el paso más grande, porque de él depende todo lo demás. Si el codificador no aprende a leer la señal, da igual qué \textit{frontend} o qué decodificador se usen. Y la decisión cambia lo que se pide al resto del modelo: con un codificador preentrenado, el \textit{frontend} tiene que darle algo parecido a lo que esperaba del audio; con uno aleatorio, basta con que le dé una representación útil. Para escoger el \textit{encoder} de manera definitiva se hizo con un frontend profundo $\times 2$ que fue con el que se empezó a trabajar durante la puesta en marcha
+El codificador es la parte del modelo que convierte la señal en una representación que el decodificador pueda leer, así que es la que se enfrenta al cambio de modalidad: OWSM aprendió a codificar audio y ahora recibe actividad neuronal. Por eso fue lo primero que se estudió. Responde a la pregunta principal del trabajo, \textit{si lo que OWSM aprendió del audio sirve para la señal neuronal}, y es además el paso más grande, porque de él depende todo lo demás. Si el codificador no aprende a leer la señal, da igual qué \textit{frontend} o qué decodificador se usen. Y la decisión cambia lo que se pide al resto del modelo: con un codificador preentrenado, el \textit{frontend} tiene que darle algo parecido a lo que esperaba del audio; con uno aleatorio, basta con que le dé una representación útil. Para escoger el \textit{encoder} de manera definitiva se hizo con un frontend profundo $\times 2$ que fue con el que se empezó a trabajar durante la puesta en marcha.
 
 Siguiendo la progresión de la puesta en marcha, de congelado a descongelado, se comparan cuatro formas de tratar el codificador, de más a menos uso de lo que aprendió OWSM:
 
@@ -87,15 +87,15 @@ Siguiendo la progresión de la puesta en marcha, de congelado a descongelado, se
   \item con pesos aleatorios, es decir, la misma arquitectura entrenada desde cero.
 \end{itemize}
 
-El resto del sistema y la receta no cambian. Si el conocimiento del audio se transfiere, las variantes preentrenadas deberían aprender antes o llegar más lejos que la aleatoria. Aquí es donde más útil resulta la señal falsa, porque distingue un codificador que lee la señal de uno que deja todo el trabajo al decodificador. Una vez elegida la forma de tratar el codificador, el resto de la fase 1 se construye sobre ella.
+El resto del sistema y la receta no cambian.
 % TODO (Kiril): si alguna de las variantes se hizo con otra versión del
 % sistema (por ejemplo, sin el decodificador), indícalo aquí.
 
 \subsection{\textit{Frontend} (O1)}
 
-Con el codificador elegido y el decodificador congelado, se comparan los \textit{frontends} de la \cref{tab:frontends}. Se estudian por dos motivos. El \textit{frontend} decide cuántas ventanas temporales procesa el codificador, que es la parte más costosa de cómputo del modelo, así que es donde más se puede ahorrar. Además, cada sistema de la literatura usa uno distinto y ninguno publica una comparación sistemática entre ellos. Van de menos a más complejos, cada uno añade algo al anterior y casi todos están tomados de la literatura.
+Una vez hemos elegido el codificador, se comparan los \textit{frontends} de la \cref{tab:frontends} (aún con el decodificador congelado). Se estudian por dos motivos. El \textit{frontend} decide cuántas ventanas temporales procesa el codificador, que es la parte más costosa de cómputo del modelo, así que es donde más se puede ahorrar. Además, cada sistema de la literatura usa uno distinto y ninguno publica una comparación sistemática entre ellos. Van de menos a más complejos, cada uno añade algo al anterior y casi todos están tomados de la literatura.
 
-Además de en cómo combinan las capas, los \textit{frontends} se diferencian en el submuestreo, es decir, en el factor por el que reducen la longitud de la secuencia antes de pasarla al codificador. Con un submuestreo $\times 2$, cada vector que recibe el codificador resume dos ventanas, es decir, \SI{40}{\milli\second} de señal; con $\times 4$ resume cuatro. Cuanto mayor es el submuestreo, más corta es la secuencia y menos calculos ha de realizar el codificador, aunque no se puede reducir sin límite, porque CTC necesita al menos una ventana por cada token de la frase (\cref{sec:frontend}).
+Además de en cómo combinan las capas, los \textit{frontends} se diferencian en el submuestreo, es decir, en el factor por el que reducen la longitud de la secuencia antes de pasarla al codificador. Con un submuestreo $\times 2$, cada vector que recibe el codificador resume dos ventanas, es decir, \SI{40}{\milli\second} de señal; con $\times 4$ resume cuatro. Cuanto mayor es el submuestreo, más corta es la secuencia y menos cálculos ha de realizar el codificador, aunque no se puede reducir sin límite, porque CTC necesita al menos una ventana por cada token de la frase (\cref{sec:frontend}).
 
 \begin{table}[htbp]
   \centering
@@ -125,7 +125,7 @@ Todos se entrenan con la misma receta y la misma semilla, durante 40 épocas y s
 
 \subsection{Decodificador (O3)}
 
-Por último se estudia el decodificador, que es la parte que aporta el conocimiento del lenguaje y la última que se descongeló. Se comparan tres variantes:
+Por último se estudia el decodificador, que es la parte que aporta el conocimiento del lenguaje y la última que se descongeló. Se comparan cuatro variantes:
 % ---------------------------------------------------------------------
 % COMENTADO (pendiente de preguntar a los tutores): comparación con
 % n-gramas. Si se descomenta, descomenta también la sección de n-gramas
@@ -136,10 +136,11 @@ Por último se estudia el decodificador, que es la parte que aporta el conocimie
 \begin{itemize}[leftmargin=*, itemsep=0.3em]
   \item el decodificador preentrenado y congelado, que es el más barato y el que se ha usado en los apartados anteriores;
   \item el mismo con LoRA (\cref{sec:lora-teoria}), de rango 8\footnote{El rango no se ajustó: se tomó un valor pequeño porque en el artículo original de LoRA rangos de este orden, e incluso menores, bastan para adaptar las proyecciones de consultas y valores \cite{hu2022lora}. Con rango 8 se entrenan unos 0,15 millones de parámetros.}, en las proyecciones de consultas y valores de la autoatención y de la atención cruzada de cada capa, que lo adapta a esta tarea entrenando muy pocos parámetros;
+  \item el mismo ajustado entero, con una tasa de aprendizaje veinte veces menor que la de las piezas nuevas, un valor habitual en ajuste fino;
   \item un decodificador con la misma arquitectura entrenado desde cero, que dice si lo que el decodificador aprendió en OWSM sirve de algo o si bastan las frases de entrenamiento.
 \end{itemize}
 
-Estas variantes se entrenaron con el \textit{frontend} profundo $\times 4$. Se escogió este frontend al ser el que mejores resultados daba en el experimento anterior. Como los decodificadores no cuestan lo mismo, si dos dan un WER parecido se elige la más barata. La variante que se elige aquí es la que se usa en el resto del trabajo.
+Estas variantes se entrenaron con el \textit{frontend} profundo $\times 4$. Se escogió este \textit{frontend} al ser el que mejores resultados daba en el experimento anterior. Las cuatro comparten receta, y como se entrenaron al final del trabajo. Como los decodificadores no tienen el mismo coste computacional, si dos dan un WER parecido se elige el que tenga menos parámmetros a entrenar. La variante que se elige aquí es la que se usa en el resto del trabajo.
 
 La combinación de codificador, \textit{frontend} y decodificador que sale de esta fase es la receta final, la que se usa en la fase 2.
 

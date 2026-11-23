@@ -115,7 +115,7 @@ Los datos se reparten en ficheros HDF5 por sesión. Cada sesión se identifica p
   \item \textbf{Atributos.} Número de ventanas, longitud de la secuencia de fonemas, texto de la frase e identificadores de sesión, bloque y ensayo.
 \end{itemize}
 
-Las 45 sesiones van del 11 de agosto de 2023 al 13 de abril de 2025, y en ese tiempo la señal no se mantiene igual. Lo que capta cada electrodo cambia de un día a otro, e incluso dentro del mismo día por movimiento de los electrodos. Es lo que se conoce como no estacionariedad de la señal. La normalización por bloque corrige una parte de estos cambios, pero no todos. A esto se suma que en unos bloques T15 intenta hablar en voz alta y en otros sin voz, y los organizadores no indican cuál es cuál. Con todo esto, no es lo mismo evaluar el modelo en un día del que ya ha visto frases que en un día nuevo, y es lo que se estudia en el segundo bloque de experimentos (\cref{cap:metodologia}).
+Las 45 sesiones van del 11 de agosto de 2023 al 13 de abril de 2025, y en ese tiempo la señal no se mantiene igual. Lo que capta cada electrodo cambia de un día a otro, e incluso dentro del mismo día por movimiento de los electrodos. Es lo que se conoce como no estacionariedad de la señal. La normalización por bloque corrige una parte de estos cambios, pero no todos. A esto se suma que en unos bloques T15 intenta hablar en voz alta y en otros sin voz, y los organizadores no indican cuál es cuál. Con todo esto, no es lo mismo evaluar el modelo en un día del que ya ha visto frases que en un día nuevo, y es lo que se estudia en el segundo bloque de experimentos (\cref{cap:experimentacion}).
 
 \subsection{Particiones y composición}
 
@@ -147,7 +147,7 @@ Las frases proceden de seis corpus distintos (\cref{tab:b2t25-splits}). La mayor
   \end{threeparttable}
 \end{table}
 
-Sin embargo, las transcripciones de la partición de prueba no son públicas. La clasificación de la competición se calcula con ellas y, como este trabajo no participó, no es posible evaluar con esa partición. Por eso aquí la validación oficial hace de conjunto de prueba. Hay indicios de que esto apenas cambia las cifras: LightBeam, por ejemplo, obtiene un WER del \SI{6.36}{\percent} en validación y del \SI{5.77}{\percent} y el \SI{6.47}{\percent} en las partes pública y privada de la prueba \cite{lightbeam}. Cómo se usa cada partición en los experimentos se explica en el \cref{cap:metodologia}. No obstante, se mencionará cuando los resultado se comparen al conjunto de validación o al de prueba.
+Sin embargo, las transcripciones de la partición de prueba no son públicas. La clasificación de la competición se calcula con ellas y, como este trabajo no participó, no es posible evaluar con esa partición. Por eso aquí la validación oficial hace de conjunto de prueba. Hay indicios de que esto apenas cambia las cifras: LightBeam, por ejemplo, obtiene un WER del \SI{6.36}{\percent} en validación y del \SI{5.77}{\percent} y el \SI{6.47}{\percent} en las partes pública y privada de la prueba \cite{lightbeam}. Cómo se usa cada partición en los experimentos se explica en el \cref{cap:experimentacion}. No obstante, se mencionará cuando los resultado se comparen al conjunto de validación o al de prueba.
 
 \section{Análisis exploratorio}
 \label{sec:eda}

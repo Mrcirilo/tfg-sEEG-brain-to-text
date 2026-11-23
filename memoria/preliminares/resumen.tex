@@ -33,7 +33,7 @@ Con los pesos de OWSM, el codificador, congelado, con LoRA o ajustado, no llega 
 y el WER se queda en el 97~\%; con pesos aleatorios, baja al 20,9~\%. El decodificador, en
 cambio, sí sirve: el de OWSM, congelado, mejora lo que el codificador lee en la señal gracias al
 idioma que aprendió de 180.000 horas de transcripciones, mientras que uno entrenado desde cero
-con 8.000 frases lo empeora. LoRA apenas lo mejora. El mejor \textit{frontend}, convolucional
+con 8.000 frases lo empeora. El mejor \textit{frontend}, convolucional
 profundo y con un vector cada 80~ms, deja el WER en el 20,6~\% y se entrena en unas tres horas,
 un 40~\% menos que con uno cada 40~ms. En el bloque cronológico, el modelo funciona bien en los
 días que ha visto (WER del 20 al 27~\% desde 10 sesiones), pero en días futuros ronda el 80~\%

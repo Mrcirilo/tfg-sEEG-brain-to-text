@@ -302,7 +302,7 @@ Los \textit{frontends} de la literatura se construyen combinando unas pocas piez
   Cada dimensión oscila con una frecuencia distinta, así que cada posición tiene un patrón único y las posiciones cercanas se parecen.
 \end{description}
 
-Qué combinación de estas capas forma cada \textit{frontend} probado se explica en el \cref{cap:metodologia}.
+Qué combinación de estas capas forma cada \textit{frontend} probado se explica en el \cref{cap:experimentacion}.
 
 % Como se vio en el \cref{cap:datos}, la señal que registra cada electrodo cambia de un día a otro. Un mismo intento de habla puede producir una actividad algo distinta en dos sesiones, y un modelo único tendría que aprender a la vez varias correspondencias entre señal y texto. La solución habitual en el campo es poner delante del modelo una capa de entrada propia de cada sesión \cite{willett2021,willett2023}. Es una transformación afín seguida de una no linealidad acotada:
 % \begin{equation}
@@ -333,7 +333,7 @@ $\mathbf{W}_0$ se queda congelada y solo se entrenan $\mathbf{A}$ y $\mathbf{B}$
 \subsection{Entrenamiento}
 \label{sec:entrenamiento-teoria}
 
-Esta sección resume los conceptos de entrenamiento que aparecen en el resto de la memoria. Los valores de cada experimento están en el \cref{cap:metodologia}.
+Esta sección resume los conceptos de entrenamiento que aparecen en el resto de la memoria. Los valores de cada experimento están en el \cref{cap:experimentacion}.
 
 \begin{description}
   \item[Parámetros e hiperparámetros.] Los parámetros son los pesos que aprende el modelo. Los hiperparámetros se fijan antes de entrenar, como la tasa de aprendizaje, el tamaño del lote o el número de épocas. Los parámetros entrenables son los que se actualizan durante el entrenamiento.
@@ -386,7 +386,7 @@ Cuanto más bajo es el WER, mejor. En el ejemplo de la \cref{tab:ejemplo-wer}, l
 
 \begin{table}[htbp]
   \centering
-  \caption{Ejemplo de cálculo del WER. $S$: sustitución; $D$: borrado; $I$: inserción; $N$: palabras de la referencia.}
+  \caption[Ejemplo de cálculo del WER.]{Ejemplo de cálculo del WER. $S$: sustitución; $D$: borrado; $I$: inserción; $N$: palabras de la referencia.}
   \label{tab:ejemplo-wer}
   \begin{tabular}{lccccc}
     \hline

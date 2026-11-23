@@ -31,7 +31,7 @@ With OWSM's weights, the encoder, whether frozen, with LoRA or fine-tuned, does 
 read the signal and the WER stays at 97\%; with random weights, it drops to 20.9\%. The decoder,
 on the other hand, is useful: OWSM's decoder, kept frozen, improves what the encoder reads from
 the signal thanks to the language it learned from 180,000 hours of transcriptions, while one
-trained from scratch on 8,000 sentences makes it worse. LoRA barely improves it. The best
+trained from scratch on 8,000 sentences makes it worse. The best
 frontend, a deep convolutional one with one vector every 80~ms, brings the WER down to 20.6\%
 and trains in about three hours, 40\% less than with one every 40~ms. In the chronological
 block, the model works well on the days it has seen (WER of 20 to 27\% from 10 sessions

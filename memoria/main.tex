@@ -21,9 +21,10 @@
 %  No lleva portada: la añade la UPV al depositar el TFG (es la de los logos
 %  de la UPV y la ETSINF que se ve en otros TFG).
 %==============================================================================
-% La clase carga tocbibind, que mete los propios índices como entradas del
-% índice general (salían repetidos). Con esto no aparecen.
-\PassOptionsToPackage{nottoc,notlof,notlot}{tocbibind}
+% La clase carga tocbibind, que mete los índices como entradas del índice
+% general. Se quita solo la del propio índice general; las de figuras y tablas
+% se mantienen (con su página en números romanos).
+\PassOptionsToPackage{nottoc}{tocbibind}
 \documentclass[spanish,11pt,openany,listoffigures,listoftables]{tfgetsinf}
 
 % Se anula la portada propia de la clase (ver arriba)
@@ -56,6 +57,9 @@
 \usepackage{csquotes}                 % antes que biblatex
 \usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
 \addbibresource{referencias.bib}
+% El estilo IEEE no trae traducción al español de «Art. no.» (artículos con
+% número de artículo en vez de páginas) y escribía «artno».
+\DefineBibliographyStrings{spanish}{artno = {art.~n.\textsuperscript{o}}}
 
 %------------------------------------------------------------------ Enlaces y referencias cruzadas
 % Como en el TFG de Elena: referencias internas en negro, citas en verde,
@@ -121,8 +125,7 @@
 \begin{abstract}[english]
 \input{preliminares/abstract}
 \end{abstract}
-% Al cerrar el abstract en inglés se ponen los índices; después, agradecimientos.
-\input{preliminares/agradecimientos}
+% Al cerrar el abstract en inglés se ponen los índices.
 
 %------------------------------------------------------------------ Capítulos
 \mainmatter

@@ -1,31 +1,35 @@
 % !TEX root = ../main.tex
 % =====================================================================
-%  CAPÍTULO 9 — CONCLUSIONES
+%  CAPÍTULO 8 — CONCLUSIONES
 % =====================================================================
 
 \chapter{Conclusiones}
 \label{cap:conclusiones}
 
-Este trabajo se planteó como un estudio de viabilidad: comprobar si se puede reutilizar OWSM, un modelo de reconocimiento de voz abierto y entrenado con 180.000 horas de audio, para pasar a texto la actividad neuronal de una persona que intenta hablar, qué partes del modelo se aprovechan y cómo se comporta el sistema con el paso del tiempo. La respuesta corta es que sí se puede, pero solo en parte. El decodificador de OWSM se aprovecha tal cual y el codificador hay que entrenarlo desde cero. Con una sola GPU, el sistema llega a un WER de 0,206 en los días que conoce, pero en los días nuevos se queda en torno a 0,8.
+Este trabajo se planteó como un estudio de viabilidad: comprobar si se puede reutilizar OWSM, un modelo de reconocimiento de voz abierto y entrenado con 180.000 horas de audio, para pasar a texto la actividad neuronal de una persona que intenta hablar, qué partes del modelo se aprovechan y cómo se comporta el sistema con el paso del tiempo. La respuesta corta es que sí se puede, pero solo en parte. El decodificador de OWSM se aprovecha tal cual y el codificador, al menos con la receta usada, hay que entrenarlo desde cero. Con una sola GPU, el sistema llega a un WER de 0,206 en los días que conoce, pero en los días nuevos se queda en torno a 0,8.
+
+De OWSM se aprovecha, sobre todo, lo que sabe del idioma. Su decodificador lo aprendió de las transcripciones de 180.000 horas de habla, algo que no se consigue con las 8.000 frases del conjunto, y con él el sistema escribe frases mucho mejores que con un decodificador entrenado desde cero. Además, funciona mejor congelado que ajustado a estas frases. Por otro lado, se ha de crear un codificador propio que aprenda de las señales cerebrales ya que el conocimiento o la seguridad de que la entrada es un audio empeora significativamente los resultados. 
+
+Asimismo, lo que separa al sistema de un uso real, por ejemplo por parte de una persona con ELA que ya no puede hablar, es que la señal cambia de un día a otro y el sistema no se adapta a los días nuevos.
 
 \section{Respuesta a los objetivos}
 
 \begin{description}
-  \item[O1, \textit{frontend}.] El \textit{frontend} decide cuánto cuesta el modelo y cambia el error en hasta 0,12. El profundo $\times 4$ es el mejor compromiso: da el WER más bajo, 0,206, y entrena un 40~\% más rápido que los $\times 2$, porque el codificador procesa la mitad de ventanas. Pasar a un vector cada 80~ms no perjudica, y el \textit{patching} del sistema de referencia del Brain-to-Text~'25 es el que peor funciona en este modelo. La capa de entrada por sesión no cambia el resultado de forma apreciable.
-  \item[O2, codificador.] Los pesos de OWSM no se transfieren a la señal neuronal. Con ellos el sistema no aprende, ni congelados, ni con LoRA, ni ajustados enteros (WER de 0,97 en los tres, frente a 0,209 desde cero). El mismo codificador entrenado desde cero aprende sin problemas.
-  \item[O3, decodificador.] El decodificador preentrenado sí se transfiere y es necesario. Congelado da prácticamente lo mismo que ajustado con LoRA (0,209 frente a 0,202, dentro del margen de error), y entrenado desde cero aprende de memoria las frases de entrenamiento y generaliza mucho peor (su acc de validación no pasa de 0,770, frente a 0,873).
+  \item[O1, \textit{frontend}.] El \textit{frontend} decide cuánto cuesta el modelo y cambia el error en hasta 0,12. El profundo $\times 4$ es el mejor compromiso: da el WER más bajo, 0,206, y entrena un 40~\% más rápido que los $\times 2$, porque el codificador procesa la mitad de vectores. Pasar a un vector cada 80~ms no perjudica, y el \textit{patching} del sistema de referencia del Brain-to-Text~'25 es el que peor funciona en este modelo.
+  \item[O2, codificador.] Con esta receta no hemos conseguido que el codificador preentrenado aprenda, ni congelado, ni con LoRA, ni ajustado entero (WER de 0,97 en los tres, frente a 0,209 desde cero). El mismo codificador entrenado desde cero aprende sin problemas. Como Fiedler et al. sí sacaron partido de los pesos preentrenados de otro modelo de voz \cite{fiedler2025wav2vec2brain}, esto no permite concluir que lo aprendido con audio no sirva para la señal neuronal.
+  \item[O3, decodificador.] El decodificador preentrenado sí se transfiere y es necesario. En el experimento del decodificador, que usa una receta algo distinta (60 épocas y otra optimización), congelado da el mejor resultado, con un WER de 0,199: ajustarlo lo empeora un poco (0,222 con LoRA y 0,212 entero), y entrenado desde cero generaliza mucho peor (0,275, con una acc de validación de 0,802 frente a 0,873).
   \item[O4, caso de uso real.] Incluso en los días que conoce, el error cambia mucho de una sesión a otra. En el entrenamiento cronológico, el modelo funciona bien en las sesiones vistas (WER de 0,20 a 0,27 desde diez sesiones) y falla en las futuras (de 0,78 a 0,81), y entrenar con más sesiones antiguas no lo arregla. En un día nuevo pierde sobre todo las palabras de contenido, y sus errores dejan de parecerse, fonéticamente hablando, a la palabra correcta.
 \end{description}
 
 Respecto al objetivo general, reutilizar OWSM es viable para los días que el sistema ha visto. Su WER de 0,206 queda por encima del 10-16~\% de los sistemas de extremo a extremo del estado del arte, que tienen muchos más recursos, pero en un rango razonable para una sola GPU y sin modelo de lenguaje externo. Para días nuevos no es viable todavía sin recalibrar.
 % TODO (Kiril): comprueba que los nombres de los OE y del objetivo
-% general coinciden con tu versión del capítulo 2.
+% general coinciden con tu versión del capítulo 1.
 
 \section{Aportaciones}
 
 \begin{enumerate}[leftmargin=*, itemsep=0.35em]
   \item \textbf{Una adaptación completa de OWSM a la señal intracortical}, con herramientas abiertas, datos públicos y una sola GPU, que incluye los problemas prácticos que hubo que resolver por el camino.
-  \item \textbf{Una comparación controlada de qué parte del modelo se transfiere.} El decodificador sí y el codificador no, comprobado con la señal falsa.
+  \item \textbf{Una comparación controlada de qué parte del modelo se transfiere.} El decodificador sí; el codificador, con esta receta, no.
   \item \textbf{Una comparación de seis \textit{frontends} que mide a la vez el error y el coste.} En la literatura revisada cada sistema usa uno distinto sin compararlo con los demás.
   \item \textbf{Una evaluación cronológica} que separa las frases de días vistos y futuros, mide el hueco entre ambos y muestra que más sesiones antiguas no lo cierran.
   \item \textbf{Un análisis de los errores palabra a palabra}, que muestra qué se pierde en los días nuevos más allá del WER.
@@ -37,7 +41,7 @@ Además de los resultados, el trabajo deja algunas lecciones sobre cómo hacerlo
 
 La primera es comprobar lo que hacen las herramientas por defecto. Varios problemas no dieron ningún error y solo aparecieron al revisar: la parada temprana de ESPnet vigilaba la pérdida y no la métrica de la tarea, un parámetro de la búsqueda en haz desactivaba la detección del final de la frase y hacía la evaluación siete veces más lenta, y ESPnet-EZ no aplicaba el preprocesado de texto de OWSM.
 
-La segunda es hacer pruebas sencillas antes de las grandes. La prueba de memorización separó los errores del código de los problemas de generalización al principio, y la señal falsa explicó en un momento por qué fallaba el codificador preentrenado.
+La segunda es hacer pruebas sencillas antes de las grandes. La prueba de memorización separó los errores del código de los problemas de generalización al principio, y darle al modelo la señal de otra frase mostró enseguida que el codificador preentrenado no estaba leyendo la señal.
 
 La tercera es medir con la métrica adecuada y saber cuánta precisión tiene. La acc de ESPnet sirve para elegir la época, pero para comparar modelos hay que generar texto, y con 1.426 frases una diferencia de menos de una centésima de WER no dice nada.
 
@@ -45,20 +49,24 @@ La cuarta es evaluar como se usaría el sistema. Con frases de los mismos días 
 
 \section{Relación con los estudios cursados}
 
-Este trabajo pone en práctica buena parte de lo aprendido en el Grado en Ciencia de Datos. Las redes neuronales, que son el núcleo del sistema, se estudian en Modelos descriptivos y predictivos II (MDP II), y las redes convolucionales con las que se construyen los \textit{frontends}, en Técnicas escalables en aprendizaje automático (TEAA). Lenguaje natural y recuperación de la información (LNR) está detrás de la parte de texto: los modelos de lenguaje, la atención en la que se basan el codificador y el decodificador, y la tokenización en subpalabras. Evaluación, despliegue y monitorización de modelos está en la forma de evaluar: elegir la métrica adecuada, separar bien los datos y no dar por buena una cifra sin saber cuánto puede variar. Las asignaturas de estadística, álgebra y programación, como Modelos estadísticos para la toma de decisiones I y II, Álgebra lineal o Programación, son la base de todo lo demás, desde los intervalos de confianza por \textit{bootstrap} hasta el código de los experimentos. Por último, Proyecto I, II y III enseñan a trabajar en un proyecto de datos de principio a fin, que es justo lo que exige un trabajo de este tamaño.
+Este trabajo pone en práctica buena parte de lo aprendido en el Grado en Ciencia de Datos en especial las redes neuronales y los modelos de lenguaje. 
+
+Las redes neuronales que son el núcleo del sistema, se estudian en Modelos descriptivos y predictivos II (MDP II), y las redes convolucionales con las que se construyen los \textit{frontends}, en Técnicas escalables en aprendizaje automático (TEAA). Lenguaje natural y recuperación de la información (LNR) está detrás de la parte de texto: la atención en la que se basan el codificador y el decodificador, y la tokenización en subpalabras, conceptos esenciales para este proyecto. Evaluación, despliegue y monitorización de modelos está en la forma de evaluar: elegir la métrica adecuada, separar bien los datos y no dar por buena una cifra sin saber cuánto puede variar. 
+
+Por último tenemos que mencionar los fundamentos, las asignaturas de estadística, álgebra y programación, como Modelos estadísticos para la toma de decisiones I y II, Álgebra lineal o Programación, son la base de todo lo demás, desde los intervalos de confianza por \textit{bootstrap} hasta el código de los experimentos. Por último, Proyecto I, II y III enseñan a trabajar en un proyecto de datos de principio a fin, estableciendo objetivos fechas y organización que es justo lo que exige un trabajo de este tamaño.
 % TODO (Kiril): si en TEAA viste algo más que las convoluciones (por
 % ejemplo, entrenar en GPU), añádelo en esa frase.
 
-Además, ha exigido competencias que van más allá de una asignatura concreta: leer literatura reciente, decidir qué experimentos hacer con recursos limitados y contar los resultados con honestidad, incluidos los que no salieron como se esperaba.
+Además, ha exigido competencias que van más allá de una asignatura concreta: leer literatura reciente, decidir qué experimentos hacer con recursos limitados y contar los resultados con honestidad, incluidos los que no salieron como se esperaba. Me gustaría mencionar a Daidalonic UPV, el grupo de GE por darme las bases de conocimiento del cerebro y sus señales para poder entender conceptos principales.
 
 \section{Legado}
 
 % TODO (Kiril): comprueba que los notebooks están en el repositorio.
-El código del trabajo, con los notebooks de entrenamiento, evaluación y análisis, y esta memoria están en un repositorio público de GitHub\footnote{\url{https://github.com/Mrcirilo/tfg-sEEG-brain-to-text}}. Los datos son públicos \cite{b2t25} y el sistema solo usa herramientas abiertas, ESPnet y OWSM, así que los experimentos se pueden reproducir con una GPU como la usada aquí. Cada entrenamiento guarda su receta junto a sus resultados, lo que facilita repetirlo.
+El código del trabajo, con los notebooks de entrenamiento, evaluación y análisis, y esta memoria están en un repositorio público de GitHub\footnote{\url{https://github.com/Mrcirilo/OWSM-brain-to-text}}. Los datos son públicos \cite{b2t25} y el sistema solo usa herramientas abiertas, ESPnet y OWSM, así que los experimentos se pueden reproducir con una GPU como la usada aquí. Cada entrenamiento guarda su receta junto a sus resultados, lo que facilita repetirlo.
 
 \section{Valoración final}
 
-El trabajo no termina con un sistema listo para que alguien lo use, y tampoco era ese el objetivo. Lo que sí deja es una respuesta concreta a la pregunta de partida: de OWSM sirve el decodificador y no el codificador, y con eso se llega, con muy pocos recursos, a un error razonable en los días que el modelo conoce.
+El trabajo no termina con un sistema listo para que alguien lo use, y tampoco era ese el objetivo. Lo que sí deja es una respuesta concreta a la pregunta de partida: de OWSM sirve el decodificador y, con esta receta, no el codificador, y con eso se llega, con muy pocos recursos, a un error razonable en los días que el modelo conoce.
 
 Deja también claro cuál es el siguiente problema. Ninguna decisión sobre el modelo cambia tanto el error como pasar de un día conocido a uno nuevo, y resolverlo es lo que separa a estos sistemas de un uso diario. Es, además, un problema que se puede atacar con lo construido aquí, como se propone en el \cref{cap:limitaciones}.
 % TODO (Kiril): si quieres, una o dos frases personales para cerrar.

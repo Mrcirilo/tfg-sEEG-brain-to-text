@@ -1,19 +1,17 @@
 % !TEX root = ../main.tex
 % =====================================================================
-%  CAPÍTULO 7 — RESULTADOS Y DISCUSIÓN
+%  CAPÍTULO 6 — RESULTADOS Y DISCUSIÓN
 % =====================================================================
 % Requiere en el preámbulo: booktabs, array, xcolor, cleveref
-% Sigue el orden de la metodología (capítulo 6).
+% Sigue el orden del diseño de la experimentación (capítulo 5).
 % Figuras: las de los notebooks graficas_07_frontends.ipynb y
 % graficas_07_fase2.ipynb se llaman como su sección (07_1_2_...,
 % 07_2_1_...) y su PDF va en images/. Si falta alguno, sale un recuadro
 % con su nombre en lugar de parar la compilación.
 % Cifras: de cifras_frontends.json, cifras_fase2.json,
-% comparativa_encoder.csv, comparativa_decoder.csv y resumen_decoders.csv.
-% Lo único que queda en rojo es la fila del decodificador desde cero con
-% la tasa del frontend: son estimaciones mientras se repite ese
-% entrenamiento (hay una nota visible para los tutores). La figura del
-% codificador está comentada hasta tenerla.
+% comparativa_encoder.csv y, para el decodificador,
+% decoders_x4/comparativa_decoders.csv (frontend x4, 60 épocas).
+% La figura del codificador está comentada hasta tenerla.
 % =====================================================================
 
 \providecommand{\figpendiente}[1]{\fbox{\parbox{0.92\textwidth}{\centering\vspace{1.3cm}\textit{[Figura pendiente: #1]}\vspace{1.3cm}}}}
@@ -22,9 +20,7 @@
 \chapter{Resultados y discusión}
 \label{cap:resultados}
 
-Este capítulo sigue el orden de la metodología. Primero se presentan los experimentos de la fase 1, con los que se elige el sistema, y después los de la fase 2, que estudian cómo se comporta con el paso del tiempo. Al final se compara el resultado con el estado del arte y se discute todo en conjunto.
-
-\footnote{Salvo que se diga otra cosa, las cifras son el WER de corpus con la búsqueda en haz sobre toda la validación (\cref{sec:protocolo-evaluacion}). Cada configuración se entrenó una sola vez, así que las diferencias pequeñas hay que leerlas con cuidado. Como referencia, para un WER de 0,209 el intervalo de confianza del 95~\% calculado sobre las frases es de unos $\pm 0{,}012$, de modo que diferencias de una o dos centésimas pueden deberse a qué frases hay en la validación.}
+Este capítulo sigue el orden del diseño de la experimentación (\cref{cap:experimentacion}). Primero se presentan los experimentos de la fase 1, con los que se elige el sistema, y después los de la fase 2, que estudian cómo se comporta con el paso del tiempo. Al final se compara el resultado con el estado del arte y se discute todo en conjunto.\footnote{Salvo que se diga otra cosa, las cifras son el WER de corpus con la búsqueda en haz sobre toda la validación (\cref{sec:protocolo-evaluacion}). Cada configuración se entrenó una sola vez, así que las diferencias pequeñas hay que leerlas con cuidado. Como referencia, para un WER de 0,209 el intervalo de confianza del 95~\% calculado sobre las frases es de unos $\pm 0{,}012$, de modo que diferencias de una o dos centésimas pueden deberse a qué frases hay en la validación.}
 % El ±0,012 es la columna ic95 de comparativa_encoder.csv. Cuadra con el
 % bootstrap de la fase 2: con k = 40, las 1.276 frases vistas dan 0,214
 % con un intervalo de [0,202; 0,225].
@@ -36,8 +32,7 @@ Este capítulo sigue el orden de la metodología. Primero se presentan los exper
 \subsection{Codificador (O2)}
 \label{sec:res-codificador}
 
-La \cref{tab:res-codificador} compara las cuatro formas de tratar el codificador, de más a menos uso de los pesos de OWSM. El preentrenado ajustado y el aleatorio usan el \textit{frontend} profundo $\times 2$ y el decodificador congelado, y se entrenan con la misma receta.
-% TODO (Kiril): di con qué sistema se hicieron el congelado y el de LoRA.
+La \cref{tab:res-codificador} compara las cuatro formas de tratar el codificador, de más a menos uso de los pesos de OWSM. Las cuatro variantes usan el \textit{frontend} profundo $\times 2$ y el decodificador congelado, y se entrenan con la misma receta.
 
 \begin{table}[htbp]
   \centering
@@ -69,9 +64,9 @@ Ninguna de las tres variantes que usan los pesos de OWSM llega a aprender: conge
 %   \label{fig:res-codificador}
 % \end{figure.
 
-La explicación más probable tendría dos partes. La primera es que la señal neuronal se parece poco al audio. La segunda es que el conjunto es de una sola persona y tiene bastantes datos, suficientes para que un codificador aprenda desde cero y su pre-entrenamiento en miles de sujetos para ser general resulte más un obstáculo que una ventaja.
+La explicación más probable tendría dos partes. La primera es que la señal neuronal se parece poco al audio. La segunda es que el conjunto es de una sola persona y tiene bastantes datos, suficientes para que un codificador aprenda desde cero, de modo que el preentrenamiento de OWSM en miles de hablantes, pensado para ser general, no supone una ventaja. Esto explicaría que el preentrenamiento no ayude, pero no que impida aprender: una posible causa, que no se ha comprobado, es que el codificador y la cabeza CTC, ya entrenados juntos con audio, hagan que el modelo esté muy seguro de sus errores desde el principio.
 
-Otros trabajos han encontrado lo contrario. Fiedler et al. ajustaron wav2vec~2.0 con la señal de otro participante, y con los pesos preentrenados obtuvieron un WER del 31,0~\%, frente al 66,2~\% entrenando desde cero \cite{fiedler2025wav2vec2brain}. Entre los dos trabajos cambian muchas cosas: el modelo y la forma en que se preentrenó (wav2vec~2.0 aprende directamente de la forma de onda y OWSM, de espectrogramas), el participante y los datos. Con un solo experimento no se puede saber cuál pesa más. Lo que sí muestra este resultado es que, en el presente caso de estudio, el codificador preentrenado de OWSM no aporta nada. En consecuencia el resto del trabajo usa el codificador aleatorio.
+Otros trabajos han encontrado lo contrario. Fiedler et al. ajustaron wav2vec~2.0 con la señal de otro participante, y con los pesos preentrenados obtuvieron un WER del 31,0~\%, frente al 66,2~\% entrenando desde cero \cite{fiedler2025wav2vec2brain}. Entre los dos trabajos cambian muchas cosas: el modelo y la forma en que se preentrenó (wav2vec~2.0 aprende directamente de la forma de onda y OWSM, de espectrogramas), el participante y los datos. Con un solo experimento no se puede saber cuál pesa más. Lo que sí muestra este resultado es que, en el presente caso de estudio, con esta receta no hemos conseguido que el codificador preentrenado de OWSM aprenda. En consecuencia el resto del trabajo usa el codificador aleatorio.
 
 \subsection{\textit{Frontend} (O1)}
 \label{sec:res-frontend}
@@ -80,7 +75,7 @@ Con el codificador aleatorio y el decodificador congelado, la \cref{tab:res-fron
 
 \begin{table}[htbp]
   \centering
-  \caption{Comparación de \textit{frontends} tras 40 épocas, con el codificador aleatorio y el decodificador congelado. WER con la búsqueda en haz, acc de la mejor época en validación, parámetros del \textit{frontend}, operaciones por segundo de señal del \textit{frontend} y horas de entrenamiento en una L4.}
+  \caption[Comparación de los frontends]{Comparación de \textit{frontends} tras 40 épocas, con el codificador aleatorio y el decodificador congelado. WER con la búsqueda en haz, acc de la mejor época en validación, parámetros del \textit{frontend}, operaciones por segundo de señal del \textit{frontend} y horas de entrenamiento en una L4.}
   \label{tab:res-frontends}
   \small
   \begin{tabular}{lccccc}
@@ -102,13 +97,13 @@ Los dos \textit{frontends} profundos son los mejores y los únicos que bajan de 
 \begin{figure}[htbp]
   \centering
   \figuranb{07_1_2_frontends_curvas}
-  \caption{Entrenamiento de los seis \textit{frontends} durante 40 épocas: acc de validación por época (a), CER de la rama CTC en validación (b) y acc frente a las horas de entrenamiento en una L4 (c). Las líneas discontinuas son los \textit{frontends} $\times 4$.}
+  \caption[Entrenamiento de los \textit{frontends}]{Entrenamiento de los seis \textit{frontends} durante 40 épocas: acc de validación por época (a), CER de la rama CTC en validación (b) y acc frente a las horas de entrenamiento en una L4 (c). Las líneas discontinuas son los \textit{frontends} $\times 4$.}
   \label{fig:res-frontends-curvas}
 \end{figure}
 
 Con el \textit{patching} ocurre lo contrario: el $\times 4$ (0,329) es peor que el $\times 2$ (0,305), y los dos son los peores de la comparación, aunque el $\times 4$ es el \textit{frontend} del sistema de referencia del Brain-to-Text~'25. Al principio están entre los que más rápido aprenden, pero hacia la época 10 se estancan por debajo de los demás (\cref{fig:res-frontends-curvas}a). Una posible explicación es que juntan 14 ventanas de golpe con una sola capa lineal, de 2,75 millones de parámetros, que tiene muchos pesos que aprender. En el sistema de referencia, además, va acompañado de una capa de entrada por día y de una red recurrente, que aquí no están \cite{b2t25}.
 
-El lineal, el más sencillo de todos y con solo 0,39 millones de parámetros, queda tercero (0,243) y mejora al conv1d (0,254), que imita la entrada de Whisper. Como el codificador ya modela el tiempo, un \textit{frontend} sencillo funciona razonablemente bien, y lo que añade el profundo $\times 2$ frente al lineal son 0,019 de WER con casi el mismo tiempo de entrenamiento. El profundo $\times 2$ es el mismo sistema de los apartados anteriores, que allí se entrenó 80 épocas y llegó a 0,209. Con 40 se queda en 0,224: entrenar el doble mejora algo, pero poco.
+El lineal, el más sencillo de todos y con solo 0,39 millones de parámetros, queda tercero (0,243) y mejora al conv1d (0,254), que imita la entrada de Whisper. Como el codificador ya modela el tiempo, un \textit{frontend} sencillo funciona razonablemente bien, y lo que añade el profundo $\times 2$ frente al lineal son 0,019 de WER con casi el mismo tiempo de entrenamiento. El profundo $\times 2$ es el mismo sistema del apartado anterior, que allí se entrenó 80 épocas y llegó a 0,209. Con 40 se queda en 0,224: entrenar el doble mejora algo, pero poco.
 
 Los otros dos \textit{frontends}, el submuestreo convolucional original de OWSM y la variante con una capa recurrente, solo se midieron en coste. El de OWSM necesita 5,35~GFLOPs por segundo de señal, más de cinco veces los del profundo $\times 4$, y tiene 20,1 millones de parámetros solo en el \textit{frontend}. La variante recurrente hace menos operaciones (1,54~GFLOPs), pero su capa recurrente recorre los vectores uno detrás de otro y aprovecha peor la GPU. En la prueba de velocidad, cada lote de ocho frases tardaba 0,28~s con el primero y 0,33~s con el segundo, frente a 0,19~s del profundo $\times 4$, es decir, entre un 45 y un 73~\% más, así que no se entrenaron.
 
@@ -117,71 +112,53 @@ En conjunto, el profundo $\times 4$ es el mejor compromiso entre resultado y cos
 \begin{figure}[htbp]
   \centering
   \figuranb{07_1_2_frontends_coste}
-  \caption{WER de cada \textit{frontend} frente al coste: horas de entrenamiento en una L4 durante 40 épocas (a) y operaciones por segundo de señal del \textit{frontend} y el codificador (b). Los círculos son los \textit{frontends} $\times 2$ y los cuadrados, los $\times 4$. Abajo a la izquierda es mejor.}
+  \caption[WER de cada frontend frente al coste]{WER de cada \textit{frontend} frente al coste: horas de entrenamiento en una L4 durante 40 épocas (a) y operaciones por segundo de señal del \textit{frontend} y el codificador (b). Los círculos son los \textit{frontends} $\times 2$ y los cuadrados, los $\times 4$. Abajo a la izquierda es mejor.}
   \label{fig:res-frontends-coste}
 \end{figure}
-
-% \subsection{Capa de entrada por sesión}
-% \label{sec:res-capa-sesion}
-
-% Con tres de los \textit{frontends} se entrenó también el mismo sistema con una capa de entrada por sesión (\cref{tab:res-capa-sesion}). La capa cambia el WER en menos de 0,015 y no siempre a mejor: con el conv1d sube de 0,254 a 0,259, con el profundo $\times 2$ baja de 0,224 a 0,211 y con el profundo $\times 4$, el mejor, apenas se mueve, de 0,206 a 0,203. Son diferencias del mismo orden que el margen de error de cada cifra (unos $\pm 0{,}012$), así que en este sistema la capa no aporta nada apreciable, aunque añade unos 11,8 millones de parámetros. Esto no coincide con lo que se hace en el campo, donde casi todos los sistemas la usan. Puede que el resto del modelo ya compense las diferencias entre los días que ha visto, pero con un solo entrenamiento por configuración no se puede comprobar.
-
-% \begin{table}[htbp]
-%   \centering
-%   \caption{WER con la búsqueda en haz de tres \textit{frontends} sin y con capa de entrada por sesión, con la misma receta que la comparación de \textit{frontends}. La capa añade unos 11,8 millones de parámetros.}
-%   \label{tab:res-capa-sesion}
-%   \small
-%   \begin{tabular}{lccc}
-%     \toprule
-%     \textbf{\textit{Frontend}} & \textbf{Sin capa} & \textbf{Con capa} & \textbf{Diferencia} \\
-%     \midrule
-%     Conv1d $\times 2$   & 0,254 & 0,259 & $+0{,}005$ \\
-%     Profundo $\times 2$ & 0,224 & 0,211 & $-0{,}013$ \\
-%     Profundo $\times 4$ & 0,206 & 0,203 & $-0{,}003$ \\
-%     \bottomrule
-%   \end{tabular}
-% \end{table}
-
-% En cualquier caso, la capa tiene un problema de fondo para este trabajo: solo existe para los días con datos de entrenamiento. En un día nuevo, que es lo que estudia la fase 2, no habría ninguna matriz aprendida y habría que recalibrar con datos de ese día. Por eso la receta final no la incluye.
 
 \subsection{Decodificador (O3)}
 \label{sec:res-decodificador}
 
-Por último, la \cref{tab:res-decodificador} compara las tres formas de tratar el decodificador, todas con el codificador aleatorio y el \textit{frontend} profundo $\times 2$, y la \cref{fig:res-decodificadores} muestra sus curvas. El decodificador entrenado desde cero se probó con dos tasas de aprendizaje: la del \textit{frontend} y la del codificador, veinte veces menor.
+Por último, la \cref{tab:res-decodificador} compara las cuatro formas de tratar el decodificador, todas con el codificador aleatorio y el \textit{frontend} profundo $\times 4$, y la \cref{fig:res-decodificadores} muestra sus curvas. Las cuatro se entrenan igual entre sí. El decodificador ajustado entero usa una tasa de aprendizaje veinte veces menor que la de las piezas nuevas, como es habitual al ajustar un modelo preentrenado, y LoRA y el decodificador entrenado desde cero usan la misma que ellas.
 
 \begin{table}[htbp]
   \centering
-  \caption{Comparación de decodificadores, con el codificador aleatorio y el \textit{frontend} profundo $\times 2$: acc de la mejor época en validación y WER y CER con la búsqueda en haz. En negrita, el mejor valor de cada columna; en rojo, estimaciones.}
+  \caption[Comparación de los decodificadores]{Comparación de decodificadores, con el codificador aleatorio y el \textit{frontend} profundo $\times 4$, entrenados durante 60 épocas: acc de la mejor época en validación y WER y CER con la búsqueda en haz. En negrita, el mejor valor de cada columna.}
   \label{tab:res-decodificador}
   \small
   \begin{tabular}{lccc}
     \toprule
     \textbf{Decodificador} & \textbf{acc} & \textbf{WER haz} & \textbf{CER haz} \\
     \midrule
-    Preentrenado y congelado               & 0,873          & 0,209                  & 0,161 \\
-    Preentrenado con LoRA                  & \textbf{0,885} & \textbf{0,202}         & \textbf{0,153} \\
-    Desde cero, tasa del codificador       & 0,726          & 0,542                  & 0,491 \\
+    Preentrenado y congelado & \textbf{0,873} & \textbf{0,201} & \textbf{0,154} \\
+    Preentrenado con LoRA    & 0,863          & 0,222          & 0,170 \\
+    Preentrenado y ajustado  & 0,871          & 0,212          & 0,170 \\
+    \midrule
+    Desde cero               & 0,802          & 0,275          & 0,235 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-% Estimación: con la acc, entre (0,726; 0,542) y (0,873; 0,209) sale un
-% WER de 0,442 para 0,770; el CER, igual, 0,392. Su CER del CTC en
-% validación (0,229) es casi el de la tasa del codificador (0,231), cuyo
-% WER del CTC voraz es 0,292.
+% Cifras de decoders_x4/comparativa_decoders.csv (congelado / LoRA /
+% ajustado / desde cero). WER CTC voraz: 0,270 / 0,281 / 0,286 / 0,305.
+% Diferencia de WER con el congelado, con las mismas frases remuestreadas
+% (IC del 95 %): LoRA +0,023 [0,017; 0,030]; ajustado +0,014 [0,007;
+% 0,021]; desde cero +0,077 [0,069; 0,085]. Mejor época: 59 / 60 / 33 / 59.
+% Entrenables: 52,7 / 52,9 / 105,4 / 105,4 M. Horas: 3,45 / 3,82 / 3,87 / 3,86.
 
+% TODO: actualizar figura
 \begin{figure}[htbp]
   \centering
   \figuranb{06_curvas_decoders}
-  \caption{Comparación de decodificadores, todos con el codificador aleatorio: acc de validación (izquierda), acc de entrenamiento (centro) y CER de la rama CTC en validación (derecha). El punto marca la mejor época de cada uno. «Aleatorio» es el decodificador entrenado desde cero.}
+    \caption[Comparación de decodificadores]{Comparación de decodificadores, todos con el codificador aleatorio y el \textit{frontend} profundo $\times 4$: acc de validación en cada época, con un punto en la mejor (a), y WER final frente a los parámetros entrenables, con su intervalo de confianza del 95~\% (b).}
   \label{fig:res-decodificadores}
 \end{figure}
 
-El decodificador entrenado desde cero es claramente peor. Su acc de validación se queda en 0,770, frente a 0,873 del congelado, aunque en entrenamiento llega casi al 100~\% de acierto antes de la época 25, mucho antes que los demás. Aprende de memoria las frases de entrenamiento, pero 8.000 frases no bastan para aprender el idioma, y su WER es más del doble que el del congelado.
+El decodificador entrenado desde cero es claramente peor. Su acc de validación se queda en 0,802, frente a 0,873 del congelado: 8.000 frases no bastan para aprender el idioma, y su WER, 0,275, está casi ocho centésimas por encima del congelado.
 
-La rama CTC, en cambio, llega a valores parecidos en todas las variantes, con un CER en validación de entre 0,20 y 0,24 (\cref{fig:res-decodificadores}). El codificador aprende a leer la señal más o menos igual en todos los casos, así que la diferencia está en el decodificador, y en concreto en lo que sabe del idioma. El de OWSM trae lo que aprendió de las transcripciones de 180.000 horas de habla y funciona como un modelo de lenguaje interno (\cref{sec:decoder-teoria}). Con él, la búsqueda en haz mejora lo que el codificador lee solo: el WER pasa de 0,273 con el CTC voraz a 0,209. Con el decodificador entrenado desde cero ocurre lo contrario, y la búsqueda en haz queda por detrás del CTC voraz, porque ese decodificador no conoce el idioma más allá de las frases de entrenamiento. Por tanto, para decidir qué frase escribir, el modelo usa el idioma que aprendió el decodificador de OWSM.
+La rama CTC, en cambio, cambia mucho menos de una variante a otra: con la decodificación CTC voraz, el WER está entre 0,270 y 0,286 con los tres decodificadores preentrenados y en 0,305 con el entrenado desde cero. El codificador aprende a leer la señal de forma parecida en todos los casos, así que lo que más cambia es lo que el decodificador añade a esa lectura con lo que sabe del idioma. El de OWSM trae lo que aprendió de las transcripciones de 180.000 horas de habla y funciona como un modelo de lenguaje interno (\cref{sec:decoder-teoria}). Con él, la búsqueda en haz mejora mucho lo que el codificador lee solo: congelado, el WER pasa de 0,270 con el CTC voraz a 0,201. Con el decodificador entrenado desde cero, la búsqueda en haz también mejora al CTC voraz, de 0,305 a 0,275, pero menos de la mitad que con el de OWSM, porque ese decodificador no conoce el idioma más allá de las frases de entrenamiento. Por tanto, para decidir qué frase escribir, el modelo usa el idioma que aprendió el decodificador de OWSM.
 
-Con LoRA, el WER baja de 0,209 a 0,202. Es una diferencia de 0,007, más pequeña que el margen de error de cada cifra (unos $\pm 0{,}012$), así que puede deberse al azar. Encaja con lo anterior: si lo que aporta el decodificador es lo que ya sabe del idioma, ajustarlo a estas 8.000 frases tiene poco margen. Además, LoRA añade 0,15 millones de parámetros que entrenar. Por eso se mantiene el decodificador congelado, que da prácticamente lo mismo con menos coste.
+Ajustar el decodificador preentrenado no lo mejora; al contrario, lo empeora un poco. Con LoRA, el WER sube de 0,201 a 0,222, y ajustado entero, a 0,212. Son diferencias de una o dos centésimas, del orden del margen de error de cada cifra, pero si se compara cada variante con el congelado remuestreando las mismas frases para los dos, el intervalo de confianza del 95~\% de la diferencia no incluye el cero: va de 0,017 a 0,030 con LoRA y de 0,007 a 0,021 ajustado entero. Con un solo entrenamiento por variante no se puede asegurar del todo, pero en ningún caso ajustarlo lo mejora. Encaja con lo anterior: si lo que aporta el decodificador es lo que ya sabe del idioma, ajustarlo a estas 8.000 frases no tiene margen de mejora y puede hacerle perder algo de lo que sabía. El ajustado entero, de hecho, llega a su mejor época en la 33 y después ya no mejora, mientras que los demás siguen mejorando casi hasta la 60. Además, los dos cuestan más que el congelado: LoRA añade 0,15 millones de parámetros que entrenar, ajustarlo entero duplica los entrenables, de 52,7 a 105,4 millones, y los dos entrenan entre un 11 y un 12~\% más despacio. Por eso se mantiene el decodificador congelado, que da el mejor resultado con el menor coste.
 
 % ---------------------------------------------------------------------
 % SECCIÓN COMENTADA: comparación con n-gramas (pendiente de preguntar a
@@ -194,7 +171,7 @@ Con LoRA, el WER baja de 0,209 a 0,202. Es una diferencia de 0,007, más pequeñ
 \subsection{Resumen de la fase 1}
 \label{sec:res-resumen-fase1}
 
-La fase 1 deja como receta final un codificador entrenado desde cero, el \textit{frontend} profundo $\times 4$ y el decodificador de OWSM congelado. Con 40 épocas, unas 3 horas en una L4, llega a un WER de 0,206 en la validación. La decisión que más pesa es la del codificador: con los pesos de OWSM el sistema no funciona. El decodificador, en cambio, tiene que ser el preentrenado, porque es el que aporta el conocimiento del idioma. El codificador lee la señal igual con cualquiera de ellos, pero solo el de OWSM, que aprendió el idioma de cientos de miles de horas de transcripciones, mejora esa lectura; entrenado desde cero, con 8.000 frases, la empeora. Entre congelarlo o ajustarlo con LoRA apenas hay diferencia. El \textit{frontend} cambia el WER en hasta 0,12 y decide además buena parte del coste, mientras que la capa de entrada por sesión no cambia el resultado de forma apreciable. Esta es la receta que se usa en la fase 2.
+La fase 1 deja como receta final un codificador entrenado desde cero, el \textit{frontend} profundo $\times 4$ y el decodificador de OWSM congelado. Con 40 épocas, unas 3 horas en una L4, llega a un WER de 0,206 en la validación, y a 0,201 con el entrenamiento del experimento del decodificador. La decisión que más pesa es la del codificador: con esta receta no hemos conseguido que el codificador preentrenado de OWSM aprenda. El decodificador, en cambio, tiene que ser el preentrenado, porque es el que aporta el conocimiento del idioma. El codificador lee la señal de forma parecida con cualquiera de ellos, pero el de OWSM, que aprendió el idioma de cientos de miles de horas de transcripciones, mejora esa lectura mucho más que uno entrenado desde cero con 8.000 frases. Ajustarlo, con LoRA o entero, lo empeora un poco, así que se deja congelado. El \textit{frontend} cambia el WER en hasta 0,12 y decide además buena parte del coste. Esta es la receta que se usa en la fase 2.
 % =====================================================================
 \section{Fase 2: comportamiento en el tiempo}
 \label{sec:res-fase2}
@@ -210,7 +187,7 @@ La \cref{fig:res-wer-sesion} muestra el WER de cada sesión con el modelo de la 
 \begin{figure}[htbp]
   \centering
   \figuranb{07_2_1_wer_por_sesion}
-  \caption{WER de cada sesión con el modelo de la fase 1 entrenado con todas las sesiones. Las cruces marcan las sesiones sin frases de validación (1, 29, 33 y 34).}
+  \caption[WER en cada sesión]{WER de cada sesión con el modelo de la fase 1 entrenado con todas las sesiones. Las cruces marcan las sesiones sin frases de validación (1, 29, 33 y 34).}
   \label{fig:res-wer-sesion}
 \end{figure}
 
@@ -219,41 +196,44 @@ Una parte del error, por tanto, depende de cómo es cada día, aunque el modelo 
 \subsection{Entrenamiento cronológico}
 \label{sec:res-cronologico}
 
-La \cref{tab:res-cronologico} y la \cref{fig:res-cronologico} resumen los ocho modelos entrenados con las $k$ primeras sesiones. Hay tres resultados claros.
+La \cref{tab:res-cronologico} y la \cref{fig:res-cronologico} resumen los ocho modelos entrenados con las $k$ primeras sesiones. Ninguno tiene partes propias de cada sesión, así que en una sesión futura el modelo se usa tal cual. Hay tres resultados claros.
 
-% \begin{table}[htbp]
-%   \centering
-%   \caption{Entrenamiento cronológico. Para cada modelo, entrenado con las $k$ primeras sesiones: número de frases de validación y WER en las sesiones vistas y en las futuras, WER en esas mismas frases futuras del modelo de la fase 1 que vio todas las sesiones, y WER en toda la validación.}
-%   \label{tab:res-cronologico}
-%   \small
-%   \begin{tabular}{rcccccc}
-%     \toprule
-%     & \multicolumn{2}{c}{\textbf{Sesiones vistas}} & \multicolumn{2}{c}{\textbf{Sesiones futuras}} & \textbf{Vio todas} & \textbf{Toda la} \\
-%     \cmidrule(lr){2-3} \cmidrule(lr){4-5}
-%     $k$ & \textbf{Frases} & \textbf{WER} & \textbf{Frases} & \textbf{WER} & \textbf{(futuras)} & \textbf{validación} \\
-%     \midrule
-%     5  & 157   & 0,449 & 1.269 & 0,955 & 0,212 & 0,904 \\
-%     10 & 348   & 0,266 & 1.078 & 0,783 & 0,218 & 0,667 \\
-%     15 & 533   & 0,254 & 893   & 0,803 & 0,201 & 0,606 \\
-%     20 & 665   & 0,261 & 761   & 0,813 & 0,197 & 0,564 \\
-%     25 & 838   & 0,226 & 588   & 0,811 & 0,220 & 0,478 \\
-%     30 & 965   & 0,222 & 461   & 0,777 & 0,227 & 0,408 \\
-%     35 & 1.086 & 0,203 & 340   & 0,790 & 0,245 & 0,347 \\
-%     40 & 1.276 & 0,214 & 150   & 0,657 & 0,255 & 0,261 \\
-%     \bottomrule
-%   \end{tabular}
-% \end{table}
+% La columna de las sesiones 41 a 45 está leída del PDF de la figura
+% 07_2_2_ultimas_sesiones (altura de las barras, con cuatro decimales).
+% Compruébala con cifras_fase2.json: k = 35 da 0,9075 (0,907 o 0,908).
+\begin{table}[htbp]
+  \centering
+  \caption[Entrenamiento cronológico. Para cada modelo, entrenado con las $k$ primeras sesiones]{Entrenamiento cronológico. Para cada modelo, entrenado con las $k$ primeras sesiones: frases de validación y WER en las sesiones vistas y en las futuras, WER en esas mismas frases futuras del modelo de la fase 1 que vio todas las sesiones y WER en las cinco últimas sesiones (de la 41 a la 45), que son futuras para todos los modelos.}
+  \label{tab:res-cronologico}
+  \small
+  \begin{tabular}{rcccccc}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{Sesiones vistas}} & \multicolumn{2}{c}{\textbf{Sesiones futuras}} & \textbf{Vio todas} & \textbf{Sesiones} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-5}
+    $k$ & \textbf{Frases} & \textbf{WER} & \textbf{Frases} & \textbf{WER} & \textbf{(futuras)} & \textbf{41 a 45} \\
+    \midrule
+    5  & 157   & 0,449 & 1.269 & 0,955 & 0,212 & 1,028 \\
+    10 & 348   & 0,266 & 1.078 & 0,783 & 0,218 & 0,987 \\
+    15 & 533   & 0,254 & 893   & 0,803 & 0,201 & 1,007 \\
+    20 & 665   & 0,261 & 761   & 0,813 & 0,197 & 0,975 \\
+    25 & 838   & 0,226 & 588   & 0,811 & 0,220 & 0,961 \\
+    30 & 965   & 0,222 & 461   & 0,777 & 0,227 & 0,956 \\
+    35 & 1.086 & 0,203 & 340   & 0,790 & 0,245 & 0,908 \\
+    40 & 1.276 & 0,214 & 150   & 0,657 & 0,255 & 0,657 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \begin{figure}[htbp]
   \centering
   \figuranb{07_2_2_wer_por_k}
-  \caption{WER de los modelos entrenados con las $k$ primeras sesiones, en las sesiones vistas y en las futuras. Las bandas son el intervalo de confianza del 95~\%. La línea gris discontinua es el modelo de la fase 1 que vio todas las sesiones, evaluado sobre las mismas frases futuras.}
+  \caption[WER de los modelos entrenados con las $k$ primeras sesiones, en las sesiones vistas y en las futuras]{WER de los modelos entrenados con las $k$ primeras sesiones, en las sesiones vistas y en las futuras. Las bandas son el intervalo de confianza del 95~\%. La línea gris discontinua es el modelo de la fase 1 que vio todas las sesiones, evaluado sobre las mismas frases futuras.}
   \label{fig:res-cronologico}
 \end{figure}
 
 El primero es que en los días que ha visto el modelo funciona bien. Desde $k = 10$, el WER en las sesiones vistas está entre 0,20 y 0,27, y con 35 o 40 sesiones baja a 0,20-0,21, lo mismo que el modelo de la fase 1 entrenado con todas (0,206). Con cinco sesiones se queda en 0,449, porque son muy pocos datos.
 
-El segundo es que en los días nuevos falla. Con $k$ entre 10 y 35, el WER en las sesiones futuras se queda entre 0,78 y 0,81, y añadir sesiones antiguas casi no lo cambia: con 35 sesiones, más del triple que con 10, el error es prácticamente el mismo, y los intervalos de confianza de esos seis modelos se solapan. Las frases de esos días, además, no son más difíciles: el modelo de la fase 1, que sí vio esas sesiones, tiene en las mismas frases un WER de entre 0,20 y 0,26. Podríamos concluir entonces que la diferencia observada, de más de 0,5, se debe por tanto a no haber visto el día.
+El segundo es que en los días nuevos falla. Con $k$ entre 10 y 35, el WER en las sesiones futuras se queda entre 0,78 y 0,81, y añadir sesiones antiguas casi no lo cambia: con 35 sesiones, más del triple que con 10, el error es prácticamente el mismo, y los intervalos de confianza de esos seis modelos se solapan. Las frases de esos días, además, no son más difíciles: el modelo de la fase 1, que sí vio esas sesiones, tiene en las mismas frases un WER de entre 0,20 y 0,26. Podríamos concluir entonces que la diferencia observada, de más de 0,5, se debe por tanto a no haber visto el día. Además, los datos vienen normalizados con la media y la desviación de cada bloque, también los de evaluación, lo que ya compensa una parte de los cambios entre días y favorece algo a las sesiones futuras; que aun así fallen refuerza esta conclusión.
 
 El tercero es la bajada con $k = 40$, hasta 0,657. Para este modelo, las sesiones futuras son justo las cinco últimas (de la 41 a la 45, de enero a abril de 2025). Entre $k = 35$ y $k = 40$ entran en el entrenamiento las sesiones 36 a 40, y la 40 ya es de enero de 2025: llega tras casi seis meses sin grabaciones y está a solo dos días de la 41. Lo más probable es que las sesiones 40 a 45 se parezcan entre sí por estar cerca en el tiempo. Con estos datos no se puede decir que 40 sesiones sean un umbral.
 % TODO (Kiril): comprueba las fechas en la columna fecha de
@@ -265,7 +245,7 @@ Para comparar todos los modelos sobre las mismas frases, la \cref{fig:res-ultima
 \begin{figure}[htbp]
   \centering
   \figuranb{07_2_2_ultimas_sesiones}
-  \caption{WER en las cinco últimas sesiones (de la 41 a la 45), que son futuras para todos los modelos, según el número de sesiones de entrenamiento $k$.}
+  \caption[WER en las últimas cinco sesiones]{WER en las cinco últimas sesiones (de la 41 a la 45), que son futuras para todos los modelos, según el número de sesiones de entrenamiento $k$.}
   \label{fig:res-ultimas}
 \end{figure}
 
@@ -279,7 +259,7 @@ Este resultado encaja con los conocidos desafíos asociados con las señales int
   % epocas.csv de fase2_x4/k05 ... k40. Si no la tienes, quita la figura
   % y la frase de las curvas del párrafo anterior.
   \figuranb{07_2_2_curvas_aprendizaje}
-  \caption{Curvas de aprendizaje de los modelos entrenados con las $k$ primeras sesiones: acc en la reserva por época.}
+  \caption[Curvas de aprendizaje de los modelos entrenados con las $k$ primeras sesione]{Curvas de aprendizaje de los modelos entrenados con las $k$ primeras sesiones: acc en la reserva por época.}
   \label{fig:res-curvas-cronologico}
 \end{figure}
 
@@ -303,7 +283,7 @@ Este resultado encaja con los conocidos desafíos asociados con las señales int
 
 Este apartado mira dentro de los errores, tanto de los modelos cronológicos como del modelo de la fase 1 que vio todas las sesiones, el profundo $\times 4$.
 
-\paragraph{Cómo salen las frases.} El modelo que vio todas las sesiones transcribe perfecta algo más de una de cada tres frases (el 35~\%), y otro 33~\% tiene como mucho un error de cada cuatro palabras. Un 23~\% tiene hasta la mitad mal y solo un 9~\%, más de la mitad. Con los modelos cronológicos (\cref{fig:res-calidad}), el reparto en las sesiones vistas mejora a medida que crece $k$, y en las futuras casi ninguna frase sale perfecta: menos del 6~\% tiene bien siquiera todas sus palabras de contenido.
+% \paragraph{Cómo salen las frases.} El modelo que vio todas las sesiones transcribe perfecta algo más de una de cada tres frases (el 35~\%), y otro 33~\% tiene como mucho un error de cada cuatro palabras. Un 23~\% tiene hasta la mitad mal y solo un 9~\%, más de la mitad. Con los modelos cronológicos (\cref{fig:res-calidad}), el reparto en las sesiones vistas mejora a medida que crece $k$, y en las futuras casi ninguna frase sale perfecta: menos del 6~\% tiene bien siquiera todas sus palabras de contenido.
 
 \begin{figure}[htbp]
   \centering
@@ -330,6 +310,8 @@ Este apartado mira dentro de los errores, tanto de los modelos cronológicos com
 %   \end{tabular}
 % \end{table}
 
+\paragraph{Cómo salen las frases.} El modelo que vio todas las sesiones transcribe perfecta algo más de una de cada tres frases (el 35~\%), y otro 33~\% tiene como mucho un error de cada cuatro palabras. Un 23~\% tiene hasta la mitad mal y solo un 9~\%, más de la mitad. Con los modelos cronológicos (\cref{fig:res-calidad}), el reparto en las sesiones vistas mejora a medida que crece $k$, y en las futuras casi ninguna frase sale perfecta: menos del 6~\% tiene bien siquiera todas sus palabras de contenido.
+
 \paragraph{Qué palabras acierta.} El modelo entrenado con todas las sesiones acierta casi siempre las palabras funcionales (\cref{fig:res-clases}a): el 96~\% de los determinantes, el 93~\% de los pronombres y el 92~\% de las preposiciones y de los auxiliares. Con las de contenido le cuesta más: acierta el 68~\% de los adjetivos y de los verbos, el 59~\% de los sustantivos y solo el 28~\% de los nombres propios. En total, acierta el 93~\% de las palabras funcionales y el 66~\% de las de contenido. De las 322 palabras que aparecen al menos cinco veces en la validación, solo hay dos que no acierta nunca: \textit{york} e \textit{its}, que confunde con \textit{it's}. Es un error típico del sistema: cuando falla, muchas veces escribe una palabra que suena igual o casi igual. Entre las confusiones más repetidas están \textit{to} en lugar de \textit{two}, \textit{too} o \textit{do}, \textit{close} en lugar de \textit{clothes}, \textit{think} en lugar de \textit{thank} y \textit{of} en lugar de \textit{have}.
 % TODO (Kiril): mira la figura (b), el acierto según la longitud de la
 % palabra; si se ve una tendencia clara, añade aquí una frase.
@@ -337,29 +319,32 @@ Este apartado mira dentro de los errores, tanto de los modelos cronológicos com
 \begin{figure}[htbp]
   \centering
   \figuranb{07_2_3_acierto_por_clase}
-  \caption{Acierto del modelo entrenado con todas las sesiones por clase de palabra (a) y según el número de letras de la palabra (b). En azul, las palabras de contenido; en verde, las funcionales.}
+  \caption[Acierto del modelo entrenado con todas las sesiones por clase de palabra (a) y según el número de letras de la palabra (b)]{Acierto del modelo entrenado con todas las sesiones por clase de palabra (a) y según el número de letras de la palabra (b). En azul, las palabras de contenido; en verde, las funcionales.}
   \label{fig:res-clases}
 \end{figure}
 
 Por eso el WER dice menos de lo que parece. Buena parte de los aciertos son palabras funcionales, frecuentes y fáciles de adivinar, y en las palabras de contenido, que son las que llevan el significado, el error es bastante mayor.
 
-\paragraph{Palabras vistas y no vistas.} El acierto depende sobre todo de si la palabra estaba en el entrenamiento del modelo. En las sesiones vistas, los modelos cronológicos aciertan el 87~\% de las palabras que habían visto al entrenar y apenas el 1~\% de las que no; en las futuras, el 22~\% y prácticamente ninguna (el 0,1~\%). Y no son pocas: el 6,3~\% de las palabras de la validación no sale nunca en el entrenamiento, y más de una de cada cuatro frases tiene alguna (\cref{sec:eda}). El decodificador de OWSM conoce esas palabras y el vocabulario de subpalabras permitiría escribirlas, pero en la práctica el sistema se comporta casi como si tuviera un vocabulario cerrado: solo escribe bien las palabras que ha visto junto a su señal.
+\paragraph{Palabras vistas y no vistas.} El acierto depende sobre todo de si la palabra estaba en el entrenamiento del modelo. En las sesiones vistas, los modelos cronológicos aciertan el 87~\% de las palabras que habían visto al entrenar y apenas el 1~\% de las que no; en las futuras, el 22~\% y prácticamente ninguna (el 0,1~\%). Y no son pocas: el 6,3~\% de las palabras de la validación no sale nunca en el entrenamiento, y más de una de cada cuatro frases tiene alguna (\cref{sec:eda}). El decodificador de OWSM conoce esas palabras y el vocabulario de subpalabras permitiría escribirlas, pero en la práctica el sistema se comporta casi como si tuviera un vocabulario cerrado: solo escribe bien las palabras que ha visto junto a su señal. Una posible causa, que no se ha comprobado, es que la cabeza CTC dé muy poca probabilidad a lo que no ha visto en el entrenamiento y, como tiene un peso de 0,3 en la búsqueda en haz, descarte esas hipótesis. Solo lo explicaría en parte, porque muchas de esas palabras se forman con subpalabras que sí salen en el entrenamiento.
 
 \paragraph{Cómo evolucionan con $k$.} La \cref{fig:res-evolucion} separa el acierto en palabras de contenido, en funcionales y en la palabra clave de cada frase, que es la de contenido menos frecuente. En las sesiones vistas, las funcionales se aciertan entre el 92 y el 95~\% desde $k = 10$, mientras que las de contenido suben del 29~\% con cinco sesiones al 53~\% con diez y a cerca del 65~\% con 35 o 40, y la palabra clave, del 12~\% al 51~\%. El modelo que vio todas las sesiones llega al 66~\% en las de contenido y al 52~\% en la palabra clave, así que con 35 o 40 sesiones ya se está a su nivel. En las sesiones futuras todo cae, incluso las funcionales, que se quedan entre el 27 y el 33~\% de $k = 10$ a $k = 35$. Las de contenido no pasan del 14~\% en esos modelos y solo suben al 21~\% con $k = 40$, y la palabra clave se queda en el 10~\% o menos. En un día nuevo, por tanto, el modelo casi nunca acierta la palabra que más información lleva.
 
 \begin{figure}[htbp]
   \centering
   \figuranb{07_2_3_evolucion_palabras}
-  \caption{Acierto en palabras de contenido (a), en palabras funcionales (b) y en la palabra clave de cada frase (c), en las sesiones vistas y en las futuras, según el número de sesiones de entrenamiento $k$. El cuadrado gris de la derecha es el modelo de la fase 1 que vio todas las sesiones.}
+  \caption[Acierto en palabras de contenido (a), en palabras funcionales (b) y en la palabra clave de cada frase (c), en las sesiones vistas y en las futuras, según el número de sesiones de entrenamiento $k$]{Acierto en palabras de contenido (a), en palabras funcionales (b) y en la palabra clave de cada frase (c), en las sesiones vistas y en las futuras, según el número de sesiones de entrenamiento $k$. El cuadrado gris de la derecha es el modelo de la fase 1 que vio todas las sesiones.}
   \label{fig:res-evolucion}
 \end{figure}
 
-\paragraph{Parecido en la pronunciación.} Cuando el modelo se equivoca en un día que ha visto, la palabra que escribe suele sonar parecido a la correcta (\cref{fig:res-pronunciacion}). Desde $k = 10$, el parecido medio en la pronunciación de las sustituciones está entre el 33 y el 37~\%, en una escala en la que el 100~\% es la misma pronunciación, frente a un 8~\% entre palabras tomadas al azar, y entre el 5 y el 8~\% de las sustituciones son casi homófonas (con un parecido del 75~\% o más). El modelo que vio todas las sesiones da lo mismo: un 34~\%, con un 6~\% de casi homófonas. Es lo que cabe esperar si el codificador lee la articulación y falla en los detalles. En las sesiones futuras, el parecido baja a entre el 8 y el 18~\%, cerca del azar (un 6~\%), y las casi homófonas se quedan por debajo del 1~\%: en un día nuevo, los errores se parecen a la palabra correcta poco más que dos palabras cualquiera, así que el modelo escribe sin apoyarse en la señal. El valor más alto, el 18~\%, es el del modelo con 40 sesiones, cuyas sesiones futuras son las más cercanas a las de entrenamiento. Hay que tener en cuenta que el parecido en la escritura sale casi igual (entre el 34 y el 37~\% en los días vistos), así que no se puede separar del todo si las palabras se confunden por cómo suenan o por cómo se escriben.
+\paragraph{Parecido en la pronunciación.} Cuando el modelo se equivoca en un día que ha visto, la palabra que escribe suele sonar parecido a la correcta (\cref{fig:res-pronunciacion}). Desde $k = 10$, el parecido medio en la pronunciación de las sustituciones está entre el 33 y el 37~\%, en una escala en la que el 100~\% es la misma pronunciación, frente a un 7~\% entre palabras tomadas al azar, y entre el 5 y el 8~\% de las sustituciones son casi homófonas (con un parecido del 75~\% o más). El modelo que vio todas las sesiones da lo mismo: un 34~\%, con un 6~\% de casi homófonas. Es lo que cabe esperar si el codificador lee la articulación y falla en los detalles. En las sesiones futuras, el parecido baja a entre el 8 y el 18~\%, cerca del azar (un 7~\%), y las casi homófonas se quedan por debajo del 1~\%: en un día nuevo, los errores se parecen a la palabra correcta poco más que dos palabras cualquiera, así que el modelo escribe sin apoyarse en la señal. El valor más alto, el 18~\%, es el del modelo con 40 sesiones, cuyas sesiones futuras son las más cercanas a las de entrenamiento. Hay que tener en cuenta que el parecido en la escritura sale casi igual (entre el 34 y el 37~\% en los días vistos), así que no se puede separar del todo si las palabras se confunden por cómo suenan o por cómo se escriben.
+% Parejas al azar: leído de la figura 07_2_3_parecido_pronunciacion
+% (6,4 % con k = 5 y entre 6,8 y 7,1 % con el resto). Compruébalo con
+% cifras_fase2.json.
 
 \begin{figure}[htbp]
   \centering
   \figuranb{07_2_3_parecido_pronunciacion}
-  \caption{Parecido medio en la pronunciación entre la palabra correcta y la que escribe el modelo en las sustituciones (100~\% = misma pronunciación), en las sesiones vistas y en las futuras, según el número de sesiones de entrenamiento $k$. La línea gris clara es el parecido entre parejas de palabras tomadas al azar, y el cuadrado, el modelo de la fase 1 que vio todas las sesiones.}
+  \caption[Parecido medio en la pronunciación entre la palabra correcta y la que escribe el modelo en las sustituciones (100~\% = misma pronunciación), en las sesiones vistas y en las futuras, según el número de sesiones de entrenamiento $k$]{Parecido medio en la pronunciación entre la palabra correcta y la que escribe el modelo en las sustituciones (100~\% = misma pronunciación), en las sesiones vistas y en las futuras, según el número de sesiones de entrenamiento $k$. La línea gris clara es el parecido entre parejas de palabras tomadas al azar, y el cuadrado, el modelo de la fase 1 que vio todas las sesiones.}
   \label{fig:res-pronunciacion}
 \end{figure}
 
@@ -376,11 +361,11 @@ Por eso el WER dice menos de lo que parece. Buena parte de los aciertos son pala
 \section{Comparación con el estado del arte}
 \label{sec:res-sota}
 
-El mejor sistema de este trabajo tiene un WER de 0,206 en la validación, es decir, fallaría 2 de cada 10 palabras aproximadamente. La referencia justa son los sistemas de extremo a extremo sin modelo de lenguaje externo de la \cref{tab:sota-resumen}. En el Brain-to-Text~'25, la red recurrente del sistema de referencia llega sin modelo de lenguaje al 16,0~\%, BIT al 11,1~\% y BrainWhisperer al 10,2~\%. Ellos dan la partición de prueba de la competición y aquí se usa la validación, pero en este conjunto las dos dan cifras parecidas \cite{lightbeam}. El sistema queda, por tanto, unos cinco puntos por encima de la red recurrente y con el doble de error que los mejores.
+El mejor sistema de este trabajo tiene un WER de 0,201 en la validación (\cref{tab:res-decodificador}), es decir, fallaría 2 de cada 10 palabras aproximadamente. En la fase 2 usando diferents conjuntos para validación y test, el resultados final es 0,206 La referencia justa son los sistemas de extremo a extremo sin modelo de lenguaje externo de la \cref{tab:sota-resumen}. En el Brain-to-Text~'25, la red recurrente del sistema de referencia llega sin modelo de lenguaje al 16,0~\%, BIT al 11,1~\% y BrainWhisperer al 10,2~\%. Ellos dan la partición de prueba de la competición y aquí se usa la validación, pero en este conjunto las dos dan cifras parecidas \cite{lightbeam}. El sistema queda, por tanto, unos cuatro puntos por encima de la red recurrente y con casi el doble de error que los mejores.
 
-Con Khanday et al. sí se puede comparar sobre la misma partición: su Conformer entrenado desde cero, con caracteres y sin modelo de lenguaje, tiene un CER del 23,8~\% en validación \cite{khanday2026}. El sistema de este trabajo tiene un CER de 0,157 con el profundo $\times 4$, aunque con una diferencia importante: usa el decodificador preentrenado de OWSM, que aporta un conocimiento del idioma que un sistema solo con caracteres no tiene.
+Con Khanday et al. sí se puede comparar sobre la misma partición: su Conformer entrenado desde cero, con caracteres y sin modelo de lenguaje, tiene un CER del 23,8~\% en validación \cite{khanday2026}. El sistema de este trabajo tiene un CER de 0,154, aunque con una diferencia importante: usa el decodificador preentrenado de OWSM, que aporta un conocimiento del idioma que un sistema solo con caracteres no tiene. Con el decodificador entrenado desde cero, que no tiene esa ventaja, el CER sube a 0,235, prácticamente el mismo que el suyo.
 
-Los mejores sistemas tienen ventajas que este no tiene aumentos de datos más fuertes, como el enmascarado temporal, supervisión adicional en capas intermedias del codificador, entrenamientos mucho más largos y decodificadores más grandes o ajustados. BrainWhisperer, por ejemplo, ajusta el decodificador de Whisper con LoRA y, en su mejor versión, añade datos de otros participantes \cite{brainwhisperer}. El objetivo de este trabajo, con una sola GPU y cada configuración entrenada una vez, era ver si reutilizar la arquitectura OWSM era viable. En los días vistos lo es, a una distancia razonable de sistemas mucho más costosos.
+Los mejores sistemas tienen ventajas que este no tiene: aumentos de datos más fuertes, como el enmascarado temporal, supervisión adicional en capas intermedias del codificador, entrenamientos mucho más largos y decodificadores más grandes o ajustados. BrainWhisperer, por ejemplo, ajusta el decodificador de Whisper con LoRA y, en su mejor versión, añade datos de otros participantes \cite{brainwhisperer}. El objetivo de este trabajo, con una sola GPU y cada configuración entrenada una vez, era ver si reutilizar la arquitectura OWSM era viable. En los días vistos lo es, a una distancia razonable de sistemas mucho más costosos.
 
 % =====================================================================
 \section{Discusión}
@@ -389,15 +374,15 @@ Los mejores sistemas tienen ventajas que este no tiene aumentos de datos más fu
 \subsection{Resultados por objetivo}
 
 \begin{description}
-  \item[O1, \textit{frontend}.] El profundo $\times 4$ es el mejor compromiso: tiene el WER más bajo (0,206) y entrena un 40~\% más rápido que los $\times 2$. Reducir la secuencia a una ventana cada 80~ms no perjudica, y el \textit{patching} del sistema de referencia es el que peor encaja en este modelo. La capa de entrada por sesión no aporta nada apreciable.
-  \item[O2, codificador.] Los pesos de OWSM no se transfieren a la señal neuronal. Con ellos el modelo no aprende, ni congelados, ni con LoRA, ni ajustados enteros, y la señal falsa confirma que no lee la señal. El codificador entrenado desde cero, en cambio, aprende sin problemas.
-  \item[O3, decodificador.] El decodificador preentrenado sí se transfiere. Congelado da prácticamente lo mismo que con LoRA, y entrenado desde cero memoriza las frases de entrenamiento y generaliza mucho peor.
+  \item[O1, \textit{frontend}.] El profundo $\times 4$ es el mejor compromiso: tiene el WER más bajo (0,206) y entrena un 40~\% más rápido que los $\times 2$. Reducir la secuencia a un vector cada 80~ms no perjudica, y el \textit{patching} del sistema de referencia es el que peor encaja en este modelo.
+  \item[O2, codificador.] Con esta receta no hemos conseguido que el codificador preentrenado aprenda, ni congelado, ni con LoRA, ni ajustado entero. El codificador entrenado desde cero, en cambio, aprende sin problemas. Como Fiedler et al. sí sacaron partido de los pesos preentrenados de otro modelo de voz \cite{fiedler2025wav2vec2brain}, este resultado no permite concluir que lo aprendido con audio no sirva para la señal neuronal.
+  \item[O3, decodificador.] El decodificador preentrenado sí se transfiere. Congelado da el mejor resultado: ajustarlo, con LoRA o entero, lo empeora un poco, y entrenado desde cero generaliza mucho peor.
   \item[O4, ventana temporal.] El sistema funciona bien en los días que ha visto, al nivel del modelo entrenado con todas las sesiones, pero falla en los días nuevos, con un WER de 0,78 a 0,81, y más sesiones antiguas no lo arreglan. En un día nuevo pierde sobre todo las palabras de contenido, y sus errores dejan de parecerse a la palabra correcta.
 \end{description}
 
 \subsection{Una lectura conjunta}
 
-Los resultados muestran una transferencia a medias. La parte de OWSM que trabaja con el idioma, el decodificador, sirve tal cual y aporta lo que un decodificador no puede aprender con 8.000 frases. La parte que trabaja con la señal, el codificador, hay que aprenderla desde cero, porque lo que sabe del audio no encaja con la actividad de los electrodos. Lo mismo se ve en el resto de resultados: las diferencias entre configuraciones están en las piezas que aprenden a leer la señal, el \textit{frontend} y el codificador. El decodificador hace que el texto salga bien escrito como frase, pero solo acierta las palabras que el codificador ha aprendido a reconocer en la señal, como muestra el análisis de las palabras vistas y no vistas.
+Los resultados muestran una transferencia a medias. La parte de OWSM que trabaja con el idioma, el decodificador, sirve tal cual y aporta lo que un decodificador no puede aprender con 8.000 frases. La parte que trabaja con la señal, el codificador, se ha tenido que aprender desde cero, porque con esta receta lo que sabe del audio no ha servido para la actividad de los electrodos. Lo mismo se ve en el resto de resultados: las diferencias entre configuraciones están en las piezas que aprenden a leer la señal, el \textit{frontend} y el codificador. El decodificador hace que el texto salga bien escrito como frase, pero solo acierta las palabras que el codificador ha aprendido a reconocer en la señal, como muestra el análisis de las palabras vistas y no vistas.
 
 Para el uso real, el problema que más pesa es el paso de los días. Ninguna decisión de la fase 1 cambia tanto el error como pasar de un día visto a uno nuevo, de 0,2 a 0,8. Resolverlo exige datos del día nuevo, ya sea para recalibrar el sistema o para adaptarlo mientras se usa.
 
